@@ -44,3 +44,36 @@ test "GridMap supports eight-way neighbors" {
     ),
   )
 }
+
+///|
+test "SearchTrace stores stable step snapshots" {
+  let start = @frontierlab.Position::new(x=0, y=0)
+  let goal = @frontierlab.Position::new(x=1, y=0)
+  let frontier = [goal]
+  let visited = [start]
+  let costs = [@frontierlab.CostEntry::new(position=start, cost=0)]
+  let parents = [@frontierlab.ParentLink::new(child=goal, parent=start)]
+  let step = @frontierlab.TraceStep::new(
+    current=Some(start),
+    frontier~,
+    visited~,
+    cost=costs,
+    parent=parents,
+  )
+  frontier.clear()
+  visited.clear()
+  debug_inspect(
+    step,
+    content=(
+      #|{
+      #|  current: Some({ x: 0, y: 0 }),
+      #|  frontier: [{ x: 1, y: 0 }],
+      #|  visited: [{ x: 0, y: 0 }],
+      #|  cost: [{ position: { x: 0, y: 0 }, cost: 0 }],
+      #|  parent: [{ child: { x: 1, y: 0 }, parent: { x: 0, y: 0 } }],
+      #|}
+
+
+    ),
+  )
+}
