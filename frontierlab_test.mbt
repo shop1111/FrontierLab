@@ -77,3 +77,65 @@ test "SearchTrace stores stable step snapshots" {
     ),
   )
 }
+
+///|
+test "BFS finds the shortest unweighted path" {
+  let grid = @frontierlab.GridMap::new(width=4, height=3)
+    .with_obstacle(@frontierlab.Position::new(x=1, y=0))
+    .with_obstacle(@frontierlab.Position::new(x=1, y=1))
+  let result = @frontierlab.bfs(
+    grid,
+    start=@frontierlab.Position::new(x=0, y=0),
+    goal=@frontierlab.Position::new(x=3, y=0),
+  )
+  assert_true(result.reachable)
+  assert_eq(result.cost, 7)
+  debug_inspect(
+    result.path,
+    content=(
+      #|[
+      #|  { x: 0, y: 0 },
+      #|  { x: 0, y: 1 },
+      #|  { x: 0, y: 2 },
+      #|  { x: 1, y: 2 },
+      #|  { x: 2, y: 2 },
+      #|  { x: 2, y: 1 },
+      #|  { x: 2, y: 0 },
+      #|  { x: 3, y: 0 },
+      #|]
+
+
+    ),
+  )
+}
+
+///|
+test "BFS handles unreachable and start equals goal" {
+  let blocked = @frontierlab.GridMap::new(width=2, height=2)
+    .with_obstacle(@frontierlab.Position::new(x=1, y=0))
+    .with_obstacle(@frontierlab.Position::new(x=0, y=1))
+  let result = @frontierlab.bfs(
+    blocked,
+    start=@frontierlab.Position::new(x=0, y=0),
+    goal=@frontierlab.Position::new(x=1, y=1),
+  )
+  assert_false(result.reachable)
+  let same = @frontierlab.bfs(
+    blocked,
+    start=@frontierlab.Position::new(x=0, y=0),
+    goal=@frontierlab.Position::new(x=0, y=0),
+  )
+  assert_true(same.reachable)
+  assert_eq(same.cost, 0)
+}
+
+///|
+test "BFS trace result matches normal search" {
+  let grid = @frontierlab.GridMap::new(width=3, height=1)
+  let start = @frontierlab.Position::new(x=0, y=0)
+  let goal = @frontierlab.Position::new(x=2, y=0)
+  let result = @frontierlab.bfs(grid, start~, goal~)
+  let trace = @frontierlab.bfs_trace(grid, start~, goal~)
+  assert_true(trace.result == result)
+  assert_true(trace.steps.length() > 0)
+}
