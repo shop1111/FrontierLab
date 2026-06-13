@@ -179,3 +179,50 @@ test "Dijkstra handles unreachable weighted maps" {
   assert_false(result.reachable)
   assert_eq(result.visited_count, 1)
 }
+
+///|
+test "A star finds an optimal weighted path with Manhattan heuristic" {
+  let grid = @frontierlab.GridMap::new(width=3, height=2)
+    .with_weight(@frontierlab.Position::new(x=1, y=0), 9)
+  let result = @frontierlab.astar(
+    grid,
+    start=@frontierlab.Position::new(x=0, y=0),
+    goal=@frontierlab.Position::new(x=2, y=0),
+    heuristic=@frontierlab.Manhattan,
+  )
+  assert_true(result.reachable)
+  assert_eq(result.cost, 4)
+}
+
+///|
+test "A star zero heuristic matches Dijkstra cost" {
+  let grid = @frontierlab.GridMap::new(width=4, height=3)
+    .with_obstacle(@frontierlab.Position::new(x=1, y=1))
+    .with_weight(@frontierlab.Position::new(x=2, y=0), 5)
+  let start = @frontierlab.Position::new(x=0, y=0)
+  let goal = @frontierlab.Position::new(x=3, y=0)
+  let dijkstra = @frontierlab.dijkstra(grid, start~, goal~)
+  let astar = @frontierlab.astar(
+    grid,
+    start~,
+    goal~,
+    heuristic=@frontierlab.Zero,
+  )
+  assert_true(astar.reachable)
+  assert_eq(astar.cost, dijkstra.cost)
+  assert_true(astar.path == dijkstra.path)
+}
+
+///|
+test "Chebyshev heuristic supports eight-way movement" {
+  let grid = @frontierlab.GridMap::new(width=3, height=3)
+  let result = @frontierlab.astar(
+    grid,
+    start=@frontierlab.Position::new(x=0, y=0),
+    goal=@frontierlab.Position::new(x=2, y=2),
+    rule=@frontierlab.EightDirections,
+    heuristic=@frontierlab.Chebyshev,
+  )
+  assert_true(result.reachable)
+  assert_eq(result.cost, 2)
+}
