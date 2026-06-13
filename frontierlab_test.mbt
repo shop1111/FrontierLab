@@ -258,3 +258,24 @@ test "SVG export includes map layers and labels" {
   assert_true(svg.contains(">S<"))
   assert_true(svg.contains(">E<"))
 }
+
+///|
+test "Compare report includes BFS Dijkstra and A star metrics" {
+  let grid = @frontierlab.GridMap::new(width=3, height=2)
+    .with_weight(@frontierlab.Position::new(x=1, y=0), 9)
+  let report = @frontierlab.compare_algorithms(
+    grid,
+    start=@frontierlab.Position::new(x=0, y=0),
+    goal=@frontierlab.Position::new(x=2, y=0),
+  )
+  assert_eq(report.entries.length(), 3)
+  assert_eq(report.entries[0].algorithm, "BFS")
+  assert_eq(report.entries[1].algorithm, "Dijkstra")
+  assert_eq(report.entries[2].algorithm, "A*")
+  assert_true(report.entries[0].reachable)
+  assert_true(report.entries[1].reachable)
+  assert_true(report.entries[2].reachable)
+  assert_eq(report.entries[0].path_length, 2)
+  assert_eq(report.entries[1].total_cost, 4)
+  assert_eq(report.entries[2].total_cost, 4)
+}
