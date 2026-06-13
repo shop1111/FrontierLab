@@ -226,3 +226,20 @@ test "Chebyshev heuristic supports eight-way movement" {
   assert_true(result.reachable)
   assert_eq(result.cost, 2)
 }
+
+///|
+test "ASCII export marks map search state and path" {
+  let grid = @frontierlab.GridMap::new(width=3, height=2)
+    .with_obstacle(@frontierlab.Position::new(x=1, y=0))
+  let start = @frontierlab.Position::new(x=0, y=0)
+  let goal = @frontierlab.Position::new(x=2, y=0)
+  let trace = @frontierlab.bfs_trace(grid, start~, goal~)
+  let text = @frontierlab.export_ascii(grid, start~, goal~, trace~)
+  inspect(
+    text,
+    content=(
+      #|S#E
+      #|***
+    ),
+  )
+}
