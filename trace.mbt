@@ -22,7 +22,7 @@ pub struct PathResult {
 pub fn PathResult::found(
   path~ : Array[Position],
   cost~ : Int,
-  visited_count~ : Int
+  visited_count~ : Int,
 ) -> PathResult {
   { reachable: true, path, cost, visited_count }
 }
@@ -47,7 +47,7 @@ pub fn TraceStep::new(
   frontier~ : Array[Position],
   visited~ : Array[Position],
   cost~ : Array[CostEntry],
-  parent~ : Array[ParentLink]
+  parent~ : Array[ParentLink],
 ) -> TraceStep {
   {
     current,
@@ -65,7 +65,10 @@ pub struct SearchTrace {
 } derive(Debug, Eq, ToJson)
 
 ///|
-pub fn SearchTrace::new(result~ : PathResult, steps~ : Array[TraceStep]) -> SearchTrace {
+pub fn SearchTrace::new(
+  result~ : PathResult,
+  steps~ : Array[TraceStep],
+) -> SearchTrace {
   { result, steps }
 }
 
@@ -88,7 +91,11 @@ fn cost_lookup(entries : Array[CostEntry], position : Position) -> Int? {
 }
 
 ///|
-fn cost_put(entries : Array[CostEntry], position : Position, cost : Int) -> Unit {
+fn cost_put(
+  entries : Array[CostEntry],
+  position : Position,
+  cost : Int,
+) -> Unit {
   match entries.search_by(fn(entry) { entry.position == position }) {
     Some(index) => entries[index] = { position, cost }
     None => entries.push({ position, cost })
@@ -96,7 +103,11 @@ fn cost_put(entries : Array[CostEntry], position : Position, cost : Int) -> Unit
 }
 
 ///|
-fn parent_put(entries : Array[ParentLink], child : Position, parent : Position) -> Unit {
+fn parent_put(
+  entries : Array[ParentLink],
+  child : Position,
+  parent : Position,
+) -> Unit {
   match entries.search_by(fn(entry) { entry.child == child }) {
     Some(index) => entries[index] = { child, parent }
     None => entries.push({ child, parent })
@@ -107,7 +118,7 @@ fn parent_put(entries : Array[ParentLink], child : Position, parent : Position) 
 fn reconstruct_path(
   start : Position,
   goal : Position,
-  parents : Array[ParentLink]
+  parents : Array[ParentLink],
 ) -> Array[Position] {
   let reversed : Array[Position] = [goal]
   for current = goal; current != start; {

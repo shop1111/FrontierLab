@@ -6,7 +6,11 @@ pub(all) enum Heuristic {
 } derive(Debug, Eq, ToJson)
 
 ///|
-pub fn heuristic_distance(kind : Heuristic, from : Position, to : Position) -> Int {
+pub fn heuristic_distance(
+  kind : Heuristic,
+  from : Position,
+  to : Position,
+) -> Int {
   let dx = abs_int(from.x - to.x)
   let dy = abs_int(from.y - to.y)
   match kind {
@@ -22,7 +26,7 @@ pub fn astar(
   start~ : Position,
   goal~ : Position,
   rule? : MoveRule = FourDirections,
-  heuristic? : Heuristic = Manhattan
+  heuristic? : Heuristic = Manhattan,
 ) -> PathResult raise {
   astar_trace(grid, start~, goal~, rule~, heuristic~).result
 }
@@ -33,7 +37,7 @@ pub fn astar_trace(
   start~ : Position,
   goal~ : Position,
   rule? : MoveRule = FourDirections,
-  heuristic? : Heuristic = Manhattan
+  heuristic? : Heuristic = Manhattan,
 ) -> SearchTrace raise {
   ensure_search_points(grid, start, goal)
   let frontier : Array[Position] = [start]
@@ -128,7 +132,7 @@ fn astar_frontier_index(
   frontier : Array[Position],
   costs : Array[CostEntry],
   goal : Position,
-  heuristic : Heuristic
+  heuristic : Heuristic,
 ) -> Int {
   let mut best_index = 0
   let mut best_score = astar_score(frontier[0], costs, goal, heuristic)
@@ -147,12 +151,17 @@ fn astar_score(
   position : Position,
   costs : Array[CostEntry],
   goal : Position,
-  heuristic : Heuristic
+  heuristic : Heuristic,
 ) -> Int {
-  cost_lookup(costs, position).unwrap() + heuristic_distance(heuristic, position, goal)
+  cost_lookup(costs, position).unwrap() +
+  heuristic_distance(heuristic, position, goal)
 }
 
 ///|
 fn abs_int(value : Int) -> Int {
-  if value < 0 { 0 - value } else { value }
+  if value < 0 {
+    0 - value
+  } else {
+    value
+  }
 }

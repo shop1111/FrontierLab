@@ -16,7 +16,6 @@ test "GridMap tracks bounds obstacles weights and four-way neighbors" {
     grid.neighbors(start, @frontierlab.FourDirections),
     content=(
       #|[{ x: 2, y: 1 }, { x: 1, y: 2 }, { x: 0, y: 1 }]
-
     ),
   )
 }
@@ -40,7 +39,6 @@ test "GridMap supports eight-way neighbors" {
       #|  { x: 0, y: 2 },
       #|  { x: 0, y: 0 },
       #|]
-
     ),
   )
 }
@@ -72,8 +70,6 @@ test "SearchTrace stores stable step snapshots" {
       #|  cost: [{ position: { x: 0, y: 0 }, cost: 0 }],
       #|  parent: [{ child: { x: 1, y: 0 }, parent: { x: 0, y: 0 } }],
       #|}
-
-
     ),
   )
 }
@@ -103,8 +99,6 @@ test "BFS finds the shortest unweighted path" {
       #|  { x: 2, y: 0 },
       #|  { x: 3, y: 0 },
       #|]
-
-
     ),
   )
 }
@@ -142,8 +136,10 @@ test "BFS trace result matches normal search" {
 
 ///|
 test "Dijkstra avoids high weighted terrain" {
-  let grid = @frontierlab.GridMap::new(width=3, height=2)
-    .with_weight(@frontierlab.Position::new(x=1, y=0), 9)
+  let grid = @frontierlab.GridMap::new(width=3, height=2).with_weight(
+    @frontierlab.Position::new(x=1, y=0),
+    9,
+  )
   let result = @frontierlab.dijkstra(
     grid,
     start=@frontierlab.Position::new(x=0, y=0),
@@ -161,7 +157,6 @@ test "Dijkstra avoids high weighted terrain" {
       #|  { x: 2, y: 1 },
       #|  { x: 2, y: 0 },
       #|]
-
     ),
   )
 }
@@ -182,8 +177,10 @@ test "Dijkstra handles unreachable weighted maps" {
 
 ///|
 test "A star finds an optimal weighted path with Manhattan heuristic" {
-  let grid = @frontierlab.GridMap::new(width=3, height=2)
-    .with_weight(@frontierlab.Position::new(x=1, y=0), 9)
+  let grid = @frontierlab.GridMap::new(width=3, height=2).with_weight(
+    @frontierlab.Position::new(x=1, y=0),
+    9,
+  )
   let result = @frontierlab.astar(
     grid,
     start=@frontierlab.Position::new(x=0, y=0),
@@ -229,8 +226,9 @@ test "Chebyshev heuristic supports eight-way movement" {
 
 ///|
 test "ASCII export marks map search state and path" {
-  let grid = @frontierlab.GridMap::new(width=3, height=2)
-    .with_obstacle(@frontierlab.Position::new(x=1, y=0))
+  let grid = @frontierlab.GridMap::new(width=3, height=2).with_obstacle(
+    @frontierlab.Position::new(x=1, y=0),
+  )
   let start = @frontierlab.Position::new(x=0, y=0)
   let goal = @frontierlab.Position::new(x=2, y=0)
   let trace = @frontierlab.bfs_trace(grid, start~, goal~)
@@ -246,8 +244,9 @@ test "ASCII export marks map search state and path" {
 
 ///|
 test "SVG export includes map layers and labels" {
-  let grid = @frontierlab.GridMap::new(width=3, height=2)
-    .with_obstacle(@frontierlab.Position::new(x=1, y=0))
+  let grid = @frontierlab.GridMap::new(width=3, height=2).with_obstacle(
+    @frontierlab.Position::new(x=1, y=0),
+  )
   let start = @frontierlab.Position::new(x=0, y=0)
   let goal = @frontierlab.Position::new(x=2, y=0)
   let trace = @frontierlab.bfs_trace(grid, start~, goal~)
@@ -261,8 +260,10 @@ test "SVG export includes map layers and labels" {
 
 ///|
 test "Compare report includes BFS Dijkstra and A star metrics" {
-  let grid = @frontierlab.GridMap::new(width=3, height=2)
-    .with_weight(@frontierlab.Position::new(x=1, y=0), 9)
+  let grid = @frontierlab.GridMap::new(width=3, height=2).with_weight(
+    @frontierlab.Position::new(x=1, y=0),
+    9,
+  )
   let report = @frontierlab.compare_algorithms(
     grid,
     start=@frontierlab.Position::new(x=0, y=0),

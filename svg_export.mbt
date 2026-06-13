@@ -4,7 +4,7 @@ pub fn export_svg(
   start~ : Position,
   goal~ : Position,
   trace? : SearchTrace,
-  cell_size? : Int = 32
+  cell_size? : Int = 32,
 ) -> String {
   let path = match trace {
     Some(t) => t.result.path
@@ -32,7 +32,12 @@ pub fn export_svg(
   for y in 0..<grid.height {
     for x in 0..<grid.width {
       let pos = Position::new(x~, y~)
-      svg_rect(out, pos, cell_size, svg_cell_color(grid, pos, path, visited, frontier))
+      svg_rect(
+        out,
+        pos,
+        cell_size,
+        svg_cell_color(grid, pos, path, visited, frontier),
+      )
     }
   }
   svg_rect(out, start, cell_size, "#22c55e")
@@ -49,7 +54,7 @@ fn svg_cell_color(
   position : Position,
   path : Array[Position],
   visited : Array[Position],
-  frontier : Array[Position]
+  frontier : Array[Position],
 ) -> String {
   if grid.is_obstacle(position) {
     "#111827"
@@ -65,7 +70,12 @@ fn svg_cell_color(
 }
 
 ///|
-fn svg_rect(out : StringBuilder, position : Position, cell_size : Int, fill : String) -> Unit {
+fn svg_rect(
+  out : StringBuilder,
+  position : Position,
+  cell_size : Int,
+  fill : String,
+) -> Unit {
   let x = position.x * cell_size
   let y = position.y * cell_size
   out.write_string(
@@ -74,7 +84,12 @@ fn svg_rect(out : StringBuilder, position : Position, cell_size : Int, fill : St
 }
 
 ///|
-fn svg_label(out : StringBuilder, position : Position, cell_size : Int, label : String) -> Unit {
+fn svg_label(
+  out : StringBuilder,
+  position : Position,
+  cell_size : Int,
+  label : String,
+) -> Unit {
   let x = position.x * cell_size + cell_size / 2
   let y = position.y * cell_size + cell_size / 2 + 5
   out.write_string(

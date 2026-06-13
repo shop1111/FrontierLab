@@ -1,5 +1,5 @@
 import {
-  "shop1111/frontierlab" @frontierlab,
+  "shop1111/frontierlab",
 }
 
 options(

@@ -3,7 +3,7 @@ pub fn dijkstra(
   grid : GridMap,
   start~ : Position,
   goal~ : Position,
-  rule? : MoveRule = FourDirections
+  rule? : MoveRule = FourDirections,
 ) -> PathResult raise {
   dijkstra_trace(grid, start~, goal~, rule~).result
 }
@@ -13,7 +13,7 @@ pub fn dijkstra_trace(
   grid : GridMap,
   start~ : Position,
   goal~ : Position,
-  rule? : MoveRule = FourDirections
+  rule? : MoveRule = FourDirections,
 ) -> SearchTrace raise {
   ensure_search_points(grid, start, goal)
   let frontier : Array[Position] = [start]
@@ -104,7 +104,10 @@ pub fn dijkstra_trace(
 }
 
 ///|
-fn cheapest_frontier_index(frontier : Array[Position], costs : Array[CostEntry]) -> Int {
+fn cheapest_frontier_index(
+  frontier : Array[Position],
+  costs : Array[CostEntry],
+) -> Int {
   let mut best_index = 0
   let mut best_cost = cost_lookup(costs, frontier[0]).unwrap()
   for i in 1..<frontier.length() {

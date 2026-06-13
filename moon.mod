@@ -19,6 +19,6 @@ repository = ""
 
 license = "MIT"
 
-keywords = ["pathfinding", "visualization", "education", "grid", "moonbit"]
+keywords = [ "pathfinding", "visualization", "education", "grid", "moonbit" ]
 
 description = "A MoonBit path-search visualization and algorithm teaching lab centered on frontier/open-set traces."

@@ -1,0 +1,120 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "shop1111/frontierlab"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn astar(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule, heuristic? : Heuristic) -> PathResult raise
+
+pub fn astar_trace(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule, heuristic? : Heuristic) -> SearchTrace raise
+
+pub fn bfs(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule) -> PathResult raise
+
+pub fn bfs_trace(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule) -> SearchTrace raise
+
+pub fn compare_algorithms(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule, heuristic? : Heuristic) -> CompareReport raise
+
+pub fn dijkstra(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule) -> PathResult raise
+
+pub fn dijkstra_trace(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule) -> SearchTrace raise
+
+pub fn export_ascii(GridMap, start~ : Position, goal~ : Position, trace? : SearchTrace) -> String
+
+pub fn export_svg(GridMap, start~ : Position, goal~ : Position, trace? : SearchTrace, cell_size? : Int) -> String
+
+pub fn heuristic_distance(Heuristic, Position, Position) -> Int
+
+pub let project_name : String
+
+// Errors
+
+// Types and methods
+pub struct AlgorithmReport {
+  algorithm : String
+  reachable : Bool
+  visited_count : Int
+  path_length : Int
+  total_cost : Int
+} derive(Eq, ToJson, @debug.Debug)
+pub fn AlgorithmReport::from_result(String, PathResult) -> Self
+
+pub struct CompareReport {
+  entries : Array[AlgorithmReport]
+} derive(Eq, ToJson, @debug.Debug)
+
+pub struct CostEntry {
+  position : Position
+  cost : Int
+} derive(Eq, ToJson, @debug.Debug)
+pub fn CostEntry::new(position~ : Position, cost~ : Int) -> Self
+
+pub struct GridMap {
+  width : Int
+  height : Int
+  obstacles : Array[Position]
+  weights : Array[WeightedCell]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn GridMap::contains(Self, Position) -> Bool
+pub fn GridMap::is_obstacle(Self, Position) -> Bool
+pub fn GridMap::is_walkable(Self, Position) -> Bool
+pub fn GridMap::neighbors(Self, Position, MoveRule) -> Array[Position]
+pub fn GridMap::new(width~ : Int, height~ : Int) -> Self raise
+pub fn GridMap::weight_at(Self, Position) -> Int
+pub fn GridMap::with_obstacle(Self, Position) -> Self raise
+pub fn GridMap::with_weight(Self, Position, Int) -> Self raise
+
+pub(all) enum Heuristic {
+  Manhattan
+  Chebyshev
+  Zero
+} derive(Eq, ToJson, @debug.Debug)
+
+pub(all) enum MoveRule {
+  FourDirections
+  EightDirections
+} derive(Eq, ToJson, @debug.Debug)
+
+pub struct ParentLink {
+  child : Position
+  parent : Position
+} derive(Eq, ToJson, @debug.Debug)
+pub fn ParentLink::new(child~ : Position, parent~ : Position) -> Self
+
+pub struct PathResult {
+  reachable : Bool
+  path : Array[Position]
+  cost : Int
+  visited_count : Int
+} derive(Eq, ToJson, @debug.Debug)
+pub fn PathResult::found(path~ : Array[Position], cost~ : Int, visited_count~ : Int) -> Self
+pub fn PathResult::not_found(visited_count~ : Int) -> Self
+
+pub struct Position {
+  x : Int
+  y : Int
+} derive(Eq, ToJson, @debug.Debug)
+pub fn Position::new(x~ : Int, y~ : Int) -> Self
+
+pub struct SearchTrace {
+  result : PathResult
+  steps : Array[TraceStep]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn SearchTrace::new(result~ : PathResult, steps~ : Array[TraceStep]) -> Self
+
+pub struct TraceStep {
+  current : Position?
+  frontier : Array[Position]
+  visited : Array[Position]
+  cost : Array[CostEntry]
+  parent : Array[ParentLink]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn TraceStep::new(current~ : Position?, frontier~ : Array[Position], visited~ : Array[Position], cost~ : Array[CostEntry], parent~ : Array[ParentLink]) -> Self
+
+type WeightedCell derive(Eq, ToJson, @debug.Debug)
+
+// Type aliases
+
+// Traits
+

@@ -3,7 +3,7 @@ pub fn bfs(
   grid : GridMap,
   start~ : Position,
   goal~ : Position,
-  rule? : MoveRule = FourDirections
+  rule? : MoveRule = FourDirections,
 ) -> PathResult raise {
   bfs_trace(grid, start~, goal~, rule~).result
 }
@@ -13,7 +13,7 @@ pub fn bfs_trace(
   grid : GridMap,
   start~ : Position,
   goal~ : Position,
-  rule? : MoveRule = FourDirections
+  rule? : MoveRule = FourDirections,
 ) -> SearchTrace raise {
   ensure_search_points(grid, start, goal)
   let queue : Array[Position] = [start]
@@ -81,7 +81,11 @@ pub fn bfs_trace(
 }
 
 ///|
-fn ensure_search_points(grid : GridMap, start : Position, goal : Position) -> Unit raise {
+fn ensure_search_points(
+  grid : GridMap,
+  start : Position,
+  goal : Position,
+) -> Unit raise {
   if !grid.is_walkable(start) {
     fail("Search start must be inside the grid and walkable")
   }

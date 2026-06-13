@@ -1,7 +1,3 @@
-// import {
-//   "shop1111/frontierlab" @lib,
-// }
-
 options(
   "is-main": true,
 )

@@ -56,7 +56,10 @@ pub fn GridMap::is_walkable(self : GridMap, position : Position) -> Bool {
 }
 
 ///|
-pub fn GridMap::with_obstacle(self : GridMap, position : Position) -> GridMap raise {
+pub fn GridMap::with_obstacle(
+  self : GridMap,
+  position : Position,
+) -> GridMap raise {
   if !self.contains(position) {
     fail("Obstacle position is outside the grid")
   }
@@ -71,7 +74,7 @@ pub fn GridMap::with_obstacle(self : GridMap, position : Position) -> GridMap ra
 pub fn GridMap::with_weight(
   self : GridMap,
   position : Position,
-  weight : Int
+  weight : Int,
 ) -> GridMap raise {
   if !self.contains(position) {
     fail("Weighted position is outside the grid")
@@ -100,15 +103,12 @@ pub fn GridMap::weight_at(self : GridMap, position : Position) -> Int {
 pub fn GridMap::neighbors(
   self : GridMap,
   position : Position,
-  rule : MoveRule
+  rule : MoveRule,
 ) -> Array[Position] {
   let deltas = match rule {
     FourDirections => [(0, -1), (1, 0), (0, 1), (-1, 0)]
     EightDirections =>
-      [
-        (0, -1), (1, 0), (0, 1), (-1, 0),
-        (1, -1), (1, 1), (-1, 1), (-1, -1),
-      ]
+      [(0, -1), (1, 0), (0, 1), (-1, 0), (1, -1), (1, 1), (-1, 1), (-1, -1)]
   }
   let out : Array[Position] = []
   for delta in deltas {

@@ -18,7 +18,7 @@ pub fn compare_algorithms(
   start~ : Position,
   goal~ : Position,
   rule? : MoveRule = FourDirections,
-  heuristic? : Heuristic = Manhattan
+  heuristic? : Heuristic = Manhattan,
 ) -> CompareReport raise {
   {
     entries: [
@@ -38,13 +38,17 @@ pub fn compare_algorithms(
 ///|
 pub fn AlgorithmReport::from_result(
   algorithm : String,
-  result : PathResult
+  result : PathResult,
 ) -> AlgorithmReport {
   {
     algorithm,
     reachable: result.reachable,
     visited_count: result.visited_count,
-    path_length: if result.reachable { result.path.length() - 1 } else { 0 },
+    path_length: if result.reachable {
+      result.path.length() - 1
+    } else {
+      0
+    },
     total_cost: result.cost,
   }
 }
