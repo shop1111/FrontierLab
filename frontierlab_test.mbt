@@ -243,3 +243,18 @@ test "ASCII export marks map search state and path" {
     ),
   )
 }
+
+///|
+test "SVG export includes map layers and labels" {
+  let grid = @frontierlab.GridMap::new(width=3, height=2)
+    .with_obstacle(@frontierlab.Position::new(x=1, y=0))
+  let start = @frontierlab.Position::new(x=0, y=0)
+  let goal = @frontierlab.Position::new(x=2, y=0)
+  let trace = @frontierlab.bfs_trace(grid, start~, goal~)
+  let svg = @frontierlab.export_svg(grid, start~, goal~, trace~, cell_size=20)
+  assert_true(svg.contains("<svg"))
+  assert_true(svg.contains("#111827"))
+  assert_true(svg.contains("#facc15"))
+  assert_true(svg.contains(">S<"))
+  assert_true(svg.contains(">E<"))
+}
