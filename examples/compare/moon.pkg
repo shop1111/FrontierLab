@@ -1,0 +1,7 @@
+import {
+  "shop1111/frontierlab" @frontierlab,
+}
+
+options(
+  "is-main": true,
+)
