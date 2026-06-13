@@ -139,3 +139,43 @@ test "BFS trace result matches normal search" {
   assert_true(trace.result == result)
   assert_true(trace.steps.length() > 0)
 }
+
+///|
+test "Dijkstra avoids high weighted terrain" {
+  let grid = @frontierlab.GridMap::new(width=3, height=2)
+    .with_weight(@frontierlab.Position::new(x=1, y=0), 9)
+  let result = @frontierlab.dijkstra(
+    grid,
+    start=@frontierlab.Position::new(x=0, y=0),
+    goal=@frontierlab.Position::new(x=2, y=0),
+  )
+  assert_true(result.reachable)
+  assert_eq(result.cost, 4)
+  debug_inspect(
+    result.path,
+    content=(
+      #|[
+      #|  { x: 0, y: 0 },
+      #|  { x: 0, y: 1 },
+      #|  { x: 1, y: 1 },
+      #|  { x: 2, y: 1 },
+      #|  { x: 2, y: 0 },
+      #|]
+
+    ),
+  )
+}
+
+///|
+test "Dijkstra handles unreachable weighted maps" {
+  let grid = @frontierlab.GridMap::new(width=2, height=2)
+    .with_obstacle(@frontierlab.Position::new(x=1, y=0))
+    .with_obstacle(@frontierlab.Position::new(x=0, y=1))
+  let result = @frontierlab.dijkstra(
+    grid,
+    start=@frontierlab.Position::new(x=0, y=0),
+    goal=@frontierlab.Position::new(x=1, y=1),
+  )
+  assert_false(result.reachable)
+  assert_eq(result.visited_count, 1)
+}
