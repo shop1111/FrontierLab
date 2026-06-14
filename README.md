@@ -14,7 +14,9 @@ version focuses on:
 
 ## Status
 
-Local-first development. No remote repository is configured yet.
+The project is in early contest development. The core library, tests, and
+terminal examples are already usable; later work may add a Wasm or browser
+playground after the API settles.
 
 ## Public API Overview
 
@@ -81,5 +83,4 @@ moon info
 ## Current Non-goals
 
 - No arbitrary graph abstraction in the first version.
-- No remote repository setup in this local phase.
 - No Wasm or browser playground until the core API is stable.

@@ -13,9 +13,9 @@ name = "shop1111/frontierlab"
 
 version = "0.1.0"
 
-readme = "README.mbt.md"
+readme = "README.md"
 
-repository = ""
+repository = "https://github.com/shop1111/FrontierLab.git"
 
 license = "MIT"
 
