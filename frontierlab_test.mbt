@@ -280,3 +280,79 @@ test "Compare report includes BFS Dijkstra and A star metrics" {
   assert_eq(report.entries[1].total_cost, 4)
   assert_eq(report.entries[2].total_cost, 4)
 }
+
+///|
+test "legacy exporters support a map without a search trace" {
+  let grid = @frontierlab.GridMap::new(width=3, height=2)
+  let start = @frontierlab.Position::new(x=0, y=0)
+  let goal = @frontierlab.Position::new(x=2, y=1)
+  let ascii = @frontierlab.export_ascii(grid, start~, goal~)
+  assert_true(ascii.contains("S"))
+  assert_true(ascii.contains("E"))
+  assert_true(ascii.contains(" "))
+  let svg = @frontierlab.export_svg(grid, start~, goal~)
+  assert_true(svg.contains("#ffffff"))
+}
+
+///|
+test "legacy grid and search validation errors are explicit" {
+  try @frontierlab.GridMap::new(width=0, height=1) catch {
+    _ => ()
+  } noraise {
+    _ => fail("expected invalid dimensions")
+  }
+  let grid = @frontierlab.GridMap::new(width=2, height=2)
+  try grid.with_obstacle(@frontierlab.Position::new(x=3, y=0)) catch {
+    _ => ()
+  } noraise {
+    _ => fail("expected outside obstacle")
+  }
+  try grid.with_weight(@frontierlab.Position::new(x=0, y=0), -1) catch {
+    _ => ()
+  } noraise {
+    _ => fail("expected negative weight")
+  }
+  try
+    @frontierlab.bfs(
+      grid,
+      start=@frontierlab.Position::new(x=-1, y=0),
+      goal=@frontierlab.Position::new(x=1, y=1),
+    )
+  catch {
+    _ => ()
+  } noraise {
+    _ => fail("expected invalid start")
+  }
+  try
+    @frontierlab.bfs(
+      grid,
+      start=@frontierlab.Position::new(x=0, y=0),
+      goal=@frontierlab.Position::new(x=3, y=1),
+    )
+  catch {
+    _ => ()
+  } noraise {
+    _ => fail("expected invalid goal")
+  }
+}
+
+///|
+test "Dijkstra and A star cover same-point and unreachable traces" {
+  let open = @frontierlab.GridMap::new(width=2, height=2)
+  let point = @frontierlab.Position::new(x=0, y=0)
+  assert_eq(
+    @frontierlab.dijkstra_trace(open, start=point, goal=point).result.cost,
+    0,
+  )
+  assert_eq(
+    @frontierlab.astar_trace(open, start=point, goal=point).result.cost,
+    0,
+  )
+  let blocked = open
+    .with_obstacle(@frontierlab.Position::new(x=1, y=0))
+    .with_obstacle(@frontierlab.Position::new(x=0, y=1))
+  let goal = @frontierlab.Position::new(x=1, y=1)
+  assert_false(@frontierlab.astar(blocked, start=point, goal~).reachable)
+  let report = @frontierlab.compare_algorithms(blocked, start=point, goal~)
+  assert_eq(report.entries[0].path_length, 0)
+}

@@ -26,7 +26,21 @@ pub fn export_svg(GridMap, start~ : Position, goal~ : Position, trace? : SearchT
 
 pub fn heuristic_distance(Heuristic, Position, Position) -> Int
 
+pub fn insertion_sort_demo_trace(Array[Int]) -> AlgorithmTrace raise
+
+pub fn pathfinding_demo_trace() -> AlgorithmTrace raise
+
 pub let project_name : String
+
+pub fn render_trace_html(AlgorithmTrace) -> String
+
+pub fn render_trace_svg(AlgorithmTrace, step? : Int, width? : Int) -> String raise
+
+pub fn render_trace_svg_frames(AlgorithmTrace, width? : Int) -> Array[String] raise
+
+pub fn search_trace_to_algorithm_trace(GridMap, start~ : Position, goal~ : Position, algorithm~ : String, trace~ : SearchTrace) -> AlgorithmTrace raise
+
+pub fn union_find_demo_trace() -> AlgorithmTrace raise
 
 // Errors
 
@@ -40,6 +54,31 @@ pub struct AlgorithmReport {
 } derive(Eq, ToJson, @debug.Debug)
 pub fn AlgorithmReport::from_result(String, PathResult) -> Self
 
+pub struct AlgorithmTrace {
+  schema_version : String
+  title : String
+  algorithm : String
+  description : String
+  initial_scene : Scene
+  steps : Array[AlgorithmTraceStep]
+  summary : Array[TraceAttribute]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn AlgorithmTrace::to_json_string(Self) -> String
+
+pub struct AlgorithmTraceStep {
+  index : Int
+  event : TraceEvent
+  scene : Scene
+  annotation : Annotation?
+} derive(Eq, ToJson, @debug.Debug)
+
+pub struct Annotation {
+  title : String
+  body : String
+  pseudocode_line : Int?
+} derive(Eq, ToJson, @debug.Debug)
+pub fn Annotation::new(title~ : String, body~ : String, pseudocode_line? : Int) -> Self
+
 pub struct CompareReport {
   entries : Array[AlgorithmReport]
 } derive(Eq, ToJson, @debug.Debug)
@@ -49,6 +88,38 @@ pub struct CostEntry {
   cost : Int
 } derive(Eq, ToJson, @debug.Debug)
 pub fn CostEntry::new(position~ : Position, cost~ : Int) -> Self
+
+pub struct GraphEdge {
+  id : String
+  from : String
+  to : String
+  label : String
+  directed : Bool
+} derive(Eq, ToJson, @debug.Debug)
+pub fn GraphEdge::new(id~ : String, from~ : String, to~ : String, label? : String, directed? : Bool) -> Self
+
+pub struct GraphNode {
+  id : String
+  label : String
+} derive(Eq, ToJson, @debug.Debug)
+pub fn GraphNode::new(id~ : String, label~ : String) -> Self
+
+pub struct GraphState {
+  id : String
+  label : String
+  nodes : Array[GraphNode]
+  edges : Array[GraphEdge]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn GraphState::new(id~ : String, label~ : String, nodes~ : Array[GraphNode], edges~ : Array[GraphEdge]) -> Self raise
+
+pub struct GridCellState {
+  id : String
+  x : Int
+  y : Int
+  label : String
+  blocked : Bool
+} derive(Eq, ToJson, @debug.Debug)
+pub fn GridCellState::new(id~ : String, x~ : Int, y~ : Int, label? : String, blocked? : Bool) -> Self
 
 pub struct GridMap {
   width : Int
@@ -65,10 +136,36 @@ pub fn GridMap::weight_at(Self, Position) -> Int
 pub fn GridMap::with_obstacle(Self, Position) -> Self raise
 pub fn GridMap::with_weight(Self, Position, Int) -> Self raise
 
+pub struct GridState {
+  id : String
+  label : String
+  width : Int
+  height : Int
+  cells : Array[GridCellState]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn GridState::new(id~ : String, label~ : String, width~ : Int, height~ : Int, cells~ : Array[GridCellState]) -> Self raise
+
 pub(all) enum Heuristic {
   Manhattan
   Chebyshev
   Zero
+} derive(Eq, ToJson, @debug.Debug)
+
+pub struct Highlight {
+  target : String
+  role : HighlightRole
+} derive(Eq, ToJson, @debug.Debug)
+pub fn Highlight::new(target~ : String, role~ : HighlightRole) -> Self
+
+pub(all) enum HighlightRole {
+  Current
+  Candidate
+  Compared
+  Changed
+  Visited
+  Frontier
+  Result
+  Error
 } derive(Eq, ToJson, @debug.Debug)
 
 pub(all) enum MoveRule {
@@ -97,11 +194,80 @@ pub struct Position {
 } derive(Eq, ToJson, @debug.Debug)
 pub fn Position::new(x~ : Int, y~ : Int) -> Self
 
+pub struct Scene {
+  objects : Array[SceneObject]
+  highlights : Array[Highlight]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn Scene::new(objects~ : Array[SceneObject], highlights? : Array[Highlight]) -> Self raise
+
+pub(all) enum SceneObject {
+  Sequence(SequenceState)
+  Sets(SetState)
+  Graph(GraphState)
+  Grid(GridState)
+} derive(Eq, ToJson, @debug.Debug)
+
 pub struct SearchTrace {
   result : PathResult
   steps : Array[TraceStep]
 } derive(Eq, ToJson, @debug.Debug)
 pub fn SearchTrace::new(result~ : PathResult, steps~ : Array[TraceStep]) -> Self
+
+pub struct SequenceItem {
+  id : String
+  value : String
+} derive(Eq, ToJson, @debug.Debug)
+pub fn SequenceItem::new(id~ : String, value~ : String) -> Self
+
+pub struct SequenceState {
+  id : String
+  label : String
+  items : Array[SequenceItem]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn SequenceState::new(id~ : String, label~ : String, items~ : Array[SequenceItem]) -> Self
+
+pub struct SetGroup {
+  id : String
+  label : String
+  members : Array[String]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn SetGroup::new(id~ : String, label~ : String, members~ : Array[String]) -> Self
+
+pub struct SetState {
+  id : String
+  label : String
+  groups : Array[SetGroup]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn SetState::new(id~ : String, label~ : String, groups~ : Array[SetGroup]) -> Self
+
+pub struct TraceAttribute {
+  key : String
+  value : String
+} derive(Eq, ToJson, @debug.Debug)
+pub fn TraceAttribute::new(key~ : String, value~ : String) -> Self
+
+pub struct TraceBuilder {
+  title : String
+  algorithm : String
+  description : String
+  initial_scene : Scene
+  steps : Array[AlgorithmTraceStep]
+} derive(@debug.Debug)
+pub fn TraceBuilder::finish(Self, summary? : Array[TraceAttribute]) -> AlgorithmTrace
+pub fn TraceBuilder::new(title~ : String, algorithm~ : String, description? : String, initial_scene~ : Scene) -> Self
+pub fn TraceBuilder::record(Self, event~ : TraceEvent, scene~ : Scene, annotation? : Annotation) -> Unit raise
+
+pub(all) enum TraceEvent {
+  Initialize
+  Compare(Array[String])
+  Swap(String, String)
+  Visit(String)
+  Update(String, String)
+  Union(String, String)
+  Relax(String, String, String)
+  Complete
+  Custom(String, Array[TraceAttribute])
+} derive(Eq, ToJson, @debug.Debug)
 
 pub struct TraceStep {
   current : Position?

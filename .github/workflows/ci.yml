@@ -24,7 +24,7 @@ jobs:
         run: moon update
 
       - name: Check
-        run: moon check
+        run: moon check --target all
 
       - name: Test
         run: moon test
@@ -34,3 +34,13 @@ jobs:
           moon run examples/maze_bfs
           moon run examples/weighted_astar
           moon run examples/compare
+          moon run examples/insertion_sort > /tmp/insertion-sort.html
+          moon run examples/union_find > /tmp/union-find.html
+          moon run examples/pathfinding_trace > /tmp/pathfinding.html
+
+      - name: Verify exporters and CLI
+        run: |
+          moon run cmd/main -- insertion-sort svg /tmp/insertion-sort.svg
+          moon run cmd/main -- union-find json /tmp/union-find.json
+          test -s /tmp/insertion-sort.svg
+          test -s /tmp/union-find.json

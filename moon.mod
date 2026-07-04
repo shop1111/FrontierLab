@@ -9,9 +9,13 @@
 //   "moonbitlang/x@0.4.6",
 // }
 
+import {
+  "moonbitlang/x@0.4.45",
+}
+
 name = "shop1111/frontierlab"
 
-version = "0.1.0"
+version = "0.2.0"
 
 readme = "README.md"
 
@@ -19,6 +23,6 @@ repository = "https://github.com/shop1111/FrontierLab.git"
 
 license = "MIT"
 
-keywords = [ "pathfinding", "visualization", "education", "grid", "moonbit" ]
+keywords = [ "algorithm", "trace", "visualization", "education", "svg", "html" ]
 
-description = "A MoonBit path-search visualization and algorithm teaching lab centered on frontier/open-set traces."
+description = "A MoonBit algorithm trace protocol and offline HTML/SVG visualization kit."
