@@ -28,6 +28,7 @@ jobs:
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
       - name: Generate interactive demos
         run: |
+          moon update
           moon run cmd/main -- demo insertion-sort --format html --output docs/insertion-sort.html
           moon run cmd/main -- demo union-find --format html --output docs/union-find.html
           moon run cmd/main -- demo pathfinding --format html --output docs/pathfinding.html
