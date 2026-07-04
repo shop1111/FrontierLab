@@ -3,6 +3,7 @@ package "shop1111/frontierlab"
 
 import {
   "moonbitlang/core/debug",
+  "moonbitlang/core/json",
 }
 
 // Values
@@ -43,6 +44,20 @@ pub fn search_trace_to_algorithm_trace(GridMap, start~ : Position, goal~ : Posit
 pub fn union_find_demo_trace() -> AlgorithmTrace raise
 
 // Errors
+pub(all) suberror TraceError {
+  JsonSyntax(String)
+  UnsupportedSchema(String)
+  DuplicateId(String)
+  DanglingReference(TargetRef)
+  InvalidGraph(String)
+  InvalidGrid(String)
+  InvalidStep(String)
+  DuplicateSummaryKey(String)
+  AlreadyCompleted
+  LimitExceeded(String)
+} derive(Eq, @debug.Debug)
+pub fn TraceError::message(Self) -> String
+pub impl Show for TraceError
 
 // Types and methods
 pub struct AlgorithmReport {
@@ -63,7 +78,10 @@ pub struct AlgorithmTrace {
   steps : Array[AlgorithmTraceStep]
   summary : Array[TraceAttribute]
 } derive(Eq, ToJson, @debug.Debug)
+pub fn AlgorithmTrace::decode_json(StringView) -> Self raise TraceError
+pub fn AlgorithmTrace::encode_json(Self) -> String
 pub fn AlgorithmTrace::to_json_string(Self) -> String
+pub fn AlgorithmTrace::validate(Self, options? : TraceOptions) -> Unit raise TraceError
 
 pub struct AlgorithmTraceStep {
   index : Int
@@ -110,7 +128,7 @@ pub struct GraphState {
   nodes : Array[GraphNode]
   edges : Array[GraphEdge]
 } derive(Eq, ToJson, @debug.Debug)
-pub fn GraphState::new(id~ : String, label~ : String, nodes~ : Array[GraphNode], edges~ : Array[GraphEdge]) -> Self raise
+pub fn GraphState::new(id~ : String, label~ : String, nodes~ : Array[GraphNode], edges~ : Array[GraphEdge]) -> Self raise TraceError
 
 pub struct GridCellState {
   id : String
@@ -143,7 +161,7 @@ pub struct GridState {
   height : Int
   cells : Array[GridCellState]
 } derive(Eq, ToJson, @debug.Debug)
-pub fn GridState::new(id~ : String, label~ : String, width~ : Int, height~ : Int, cells~ : Array[GridCellState]) -> Self raise
+pub fn GridState::new(id~ : String, label~ : String, width~ : Int, height~ : Int, cells~ : Array[GridCellState]) -> Self raise TraceError
 
 pub(all) enum Heuristic {
   Manhattan
@@ -152,10 +170,10 @@ pub(all) enum Heuristic {
 } derive(Eq, ToJson, @debug.Debug)
 
 pub struct Highlight {
-  target : String
+  target : TargetRef
   role : HighlightRole
 } derive(Eq, ToJson, @debug.Debug)
-pub fn Highlight::new(target~ : String, role~ : HighlightRole) -> Self
+pub fn Highlight::new(target~ : TargetRef, role~ : HighlightRole) -> Self
 
 pub(all) enum HighlightRole {
   Current
@@ -198,7 +216,7 @@ pub struct Scene {
   objects : Array[SceneObject]
   highlights : Array[Highlight]
 } derive(Eq, ToJson, @debug.Debug)
-pub fn Scene::new(objects~ : Array[SceneObject], highlights? : Array[Highlight]) -> Self raise
+pub fn Scene::new(objects~ : Array[SceneObject], highlights? : Array[Highlight]) -> Self raise TraceError
 
 pub(all) enum SceneObject {
   Sequence(SequenceState)
@@ -240,6 +258,13 @@ pub struct SetState {
 } derive(Eq, ToJson, @debug.Debug)
 pub fn SetState::new(id~ : String, label~ : String, groups~ : Array[SetGroup]) -> Self
 
+pub struct TargetRef {
+  object_id : String
+  entity_id : String?
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+pub fn TargetRef::entity(String, String) -> Self
+pub fn TargetRef::object(String) -> Self
+
 pub struct TraceAttribute {
   key : String
   value : String
@@ -252,22 +277,31 @@ pub struct TraceBuilder {
   description : String
   initial_scene : Scene
   steps : Array[AlgorithmTraceStep]
+  options : TraceOptions
+  mut completed : Bool
 } derive(@debug.Debug)
-pub fn TraceBuilder::finish(Self, summary? : Array[TraceAttribute]) -> AlgorithmTrace
-pub fn TraceBuilder::new(title~ : String, algorithm~ : String, description? : String, initial_scene~ : Scene) -> Self
-pub fn TraceBuilder::record(Self, event~ : TraceEvent, scene~ : Scene, annotation? : Annotation) -> Unit raise
+pub fn TraceBuilder::finish(Self, summary? : Array[TraceAttribute]) -> AlgorithmTrace raise TraceError
+pub fn TraceBuilder::new(title~ : String, algorithm~ : String, description? : String, initial_scene~ : Scene, options? : TraceOptions) -> Self raise TraceError
+pub fn TraceBuilder::record(Self, event~ : TraceEvent, scene~ : Scene, annotation? : Annotation) -> Unit raise TraceError
 
 pub(all) enum TraceEvent {
   Initialize
-  Compare(Array[String])
-  Swap(String, String)
-  Visit(String)
-  Update(String, String)
-  Union(String, String)
-  Relax(String, String, String)
+  Compare(Array[TargetRef])
+  Swap(TargetRef, TargetRef)
+  Visit(TargetRef)
+  Update(TargetRef, String)
+  Union(TargetRef, TargetRef)
+  Relax(TargetRef, TargetRef, String)
   Complete
   Custom(String, Array[TraceAttribute])
 } derive(Eq, ToJson, @debug.Debug)
+
+pub struct TraceOptions {
+  max_steps : Int
+  max_entities_per_scene : Int
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+pub fn TraceOptions::default() -> Self
+pub fn TraceOptions::new(max_steps? : Int, max_entities_per_scene? : Int) -> Self raise TraceError
 
 pub struct TraceStep {
   current : Position?

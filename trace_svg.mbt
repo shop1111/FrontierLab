@@ -77,7 +77,7 @@ fn scene_height(scene : Scene) -> Int {
     height += match object {
       Sequence(_) => 120
       Sets(value) => 86 + value.groups.length() * 46
-      Graph(_) => 190
+      Graph(value) => 130 + (value.nodes.length() + 3) / 4 * 90
       Grid(value) => 56 + value.height * 44
     }
   }
@@ -94,7 +94,7 @@ fn render_sequence_svg(
   svg_text(out, 28, y + 20, value.label, 16, "#e2e8f0")
   for i, item in value.items {
     let x = 28 + i * 72
-    svg_box(out, x, y + 34, 58, 48, highlight_color(scene, item.id))
+    svg_box(out, x, y + 34, 58, 48, highlight_color(scene, value.id, item.id))
     svg_text(out, x + 29, y + 64, item.value, 15, "#0f172a", anchor="middle")
     svg_text(out, x + 29, y + 100, item.id, 10, "#94a3b8", anchor="middle")
   }
@@ -112,7 +112,7 @@ fn render_sets_svg(
   let mut row = y + 36
   for group in value.groups {
     let members = group.members.join(", ")
-    svg_box(out, 28, row, 820, 34, highlight_color(scene, group.id))
+    svg_box(out, 28, row, 820, 34, highlight_color(scene, value.id, group.id))
     svg_text(out, 42, row + 22, "\{group.label}: \{members}", 13, "#0f172a")
     row += 46
   }
@@ -127,19 +127,32 @@ fn render_graph_svg(
   y : Int,
 ) -> Int {
   svg_text(out, 28, y + 20, value.label, 16, "#e2e8f0")
+  let points = layout_graph(value)
+  out.write_string(
+    "<defs><marker id=\"frontierlab-arrow\" markerWidth=\"8\" markerHeight=\"8\" refX=\"7\" refY=\"4\" orient=\"auto\"><path d=\"M0,0 L8,4 L0,8 z\" fill=\"#64748b\"/></marker></defs>\n",
+  )
   for edge in value.edges {
-    let from_index = graph_node_index(value.nodes, edge.from)
-    let to_index = graph_node_index(value.nodes, edge.to)
-    let x1 = 70 + from_index * 110
-    let x2 = 70 + to_index * 110
-    out.write_string(
-      "<line x1=\"\{x1}\" y1=\"\{y + 94}\" x2=\"\{x2}\" y2=\"\{y + 94}\" stroke=\"#64748b\" stroke-width=\"3\"/>\n",
-    )
+    let from = graph_point(points, edge.from)
+    let to = graph_point(points, edge.to)
+    let marker = if edge.directed {
+      " marker-end=\"url(#frontierlab-arrow)\""
+    } else {
+      ""
+    }
+    if edge.from == edge.to {
+      out.write_string(
+        "<path d=\"M \{from.x - 18} \{y + from.y - 18} C \{from.x - 52} \{y + from.y - 70}, \{from.x + 52} \{y + from.y - 70}, \{from.x + 18} \{y + from.y - 18}\" fill=\"none\" stroke=\"#64748b\" stroke-width=\"3\"\{marker}/>\n",
+      )
+    } else {
+      out.write_string(
+        "<line x1=\"\{from.x}\" y1=\"\{y + from.y}\" x2=\"\{to.x}\" y2=\"\{y + to.y}\" stroke=\"#64748b\" stroke-width=\"3\"\{marker}/>\n",
+      )
+    }
     if edge.label != "" {
       svg_text(
         out,
-        (x1 + x2) / 2,
-        y + 80,
+        (from.x + to.x) / 2,
+        y + (from.y + to.y) / 2 - 10,
         edge.label,
         11,
         "#cbd5e1",
@@ -147,14 +160,22 @@ fn render_graph_svg(
       )
     }
   }
-  for i, node in value.nodes {
-    let x = 70 + i * 110
+  for node in value.nodes {
+    let point = graph_point(points, node.id)
     out.write_string(
-      "<circle cx=\"\{x}\" cy=\"\{y + 94}\" r=\"27\" fill=\"\{highlight_color(scene, node.id)}\" stroke=\"#e2e8f0\" stroke-width=\"2\"/>\n",
+      "<circle cx=\"\{point.x}\" cy=\"\{y + point.y}\" r=\"27\" fill=\"\{highlight_color(scene, value.id, node.id)}\" stroke=\"#e2e8f0\" stroke-width=\"2\"/>\n",
     )
-    svg_text(out, x, y + 100, node.label, 13, "#0f172a", anchor="middle")
+    svg_text(
+      out,
+      point.x,
+      y + point.y + 6,
+      node.label,
+      13,
+      "#0f172a",
+      anchor="middle",
+    )
   }
-  y + 170
+  y + 110 + (value.nodes.length() + 3) / 4 * 90
 }
 
 ///|
@@ -171,7 +192,7 @@ fn render_grid_svg(
     let fill = if cell.blocked {
       "#1e293b"
     } else {
-      highlight_color(scene, cell.id)
+      highlight_color(scene, value.id, cell.id)
     }
     svg_box(out, x, cy, 40, 40, fill)
     if cell.label != "" {
@@ -194,15 +215,89 @@ fn render_grid_svg(
 }
 
 ///|
-fn graph_node_index(nodes : Array[GraphNode], id : String) -> Int {
-  match nodes.search_by(fn(node) { node.id == id }) {
-    Some(index) => index
-    None => 0
+priv struct GraphLayoutPoint {
+  id : String
+  x : Int
+  y : Int
+}
+
+///|
+fn graph_point(
+  points : Array[GraphLayoutPoint],
+  id : String,
+) -> GraphLayoutPoint {
+  points[points.search_by(fn(point) { point.id == id }).unwrap()]
+}
+
+///|
+fn layout_graph(graph : GraphState) -> Array[GraphLayoutPoint] {
+  let count = graph.nodes.length()
+  let indegree = Array::make(count, 0)
+  let level = Array::make(count, 0)
+  for edge in graph.edges {
+    if edge.from != edge.to {
+      let to = graph.nodes.search_by(fn(node) { node.id == edge.to }).unwrap()
+      indegree[to] += 1
+    }
+  }
+  let queue : Array[Int] = []
+  for i in 0..<count {
+    if indegree[i] == 0 {
+      queue.push(i)
+    }
+  }
+  let mut head = 0
+  while head < queue.length() {
+    let current = queue[head]
+    head += 1
+    for edge in graph.edges {
+      if edge.from == graph.nodes[current].id && edge.from != edge.to {
+        let next = graph.nodes
+          .search_by(fn(node) { node.id == edge.to })
+          .unwrap()
+        if level[next] < level[current] + 1 {
+          level[next] = level[current] + 1
+        }
+        indegree[next] -= 1
+        if indegree[next] == 0 {
+          queue.push(next)
+        }
+      }
+    }
+  }
+  if queue.length() == count {
+    let slots : Map[Int, Int] = {}
+    graph.nodes.mapi(fn(i, node) {
+      let slot = slots.get(level[i]).unwrap_or(0)
+      slots[level[i]] = slot + 1
+      { id: node.id, x: 75 + level[i] * 170, y: 70 + slot * 82 }
+    })
+  } else {
+    let offsets = [
+      (0, -80),
+      (70, -55),
+      (90, 0),
+      (70, 55),
+      (0, 80),
+      (-70, 55),
+      (-90, 0),
+      (-70, -55),
+    ]
+    graph.nodes.mapi(fn(i, node) {
+      let ring = i / 8
+      let (dx, dy) = offsets[i % 8]
+      { id: node.id, x: 180 + ring * 230 + dx, y: 120 + dy }
+    })
   }
 }
 
 ///|
-fn highlight_color(scene : Scene, target : String) -> String {
+fn highlight_color(
+  scene : Scene,
+  object_id : String,
+  entity_id : String,
+) -> String {
+  let target = TargetRef::entity(object_id, entity_id)
   match scene.highlights.search_by(fn(item) { item.target == target }) {
     None => "#f8fafc"
     Some(index) =>

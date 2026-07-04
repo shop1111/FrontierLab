@@ -11,15 +11,93 @@ pub fn TraceAttribute::new(key~ : String, value~ : String) -> TraceAttribute {
 }
 
 ///|
+/// A scoped reference to either a scene object or one entity inside it.
+pub struct TargetRef {
+  object_id : String
+  entity_id : String?
+} derive(Debug, Eq, ToJson, FromJson)
+
+///|
+pub fn TargetRef::object(object_id : String) -> TargetRef {
+  { object_id, entity_id: None }
+}
+
+///|
+pub fn TargetRef::entity(object_id : String, entity_id : String) -> TargetRef {
+  { object_id, entity_id: Some(entity_id) }
+}
+
+///|
+pub(all) suberror TraceError {
+  JsonSyntax(String)
+  UnsupportedSchema(String)
+  DuplicateId(String)
+  DanglingReference(TargetRef)
+  InvalidGraph(String)
+  InvalidGrid(String)
+  InvalidStep(String)
+  DuplicateSummaryKey(String)
+  AlreadyCompleted
+  LimitExceeded(String)
+} derive(Debug, Eq)
+
+///|
+pub fn TraceError::message(self : TraceError) -> String {
+  match self {
+    JsonSyntax(message) => "Invalid trace JSON: \{message}"
+    UnsupportedSchema(version) => "Unsupported trace schema version: \{version}"
+    DuplicateId(message) => message
+    DanglingReference(target) =>
+      match target.entity_id {
+        Some(id) => "Dangling reference: \{target.object_id}/\{id}"
+        None => "Dangling object reference: \{target.object_id}"
+      }
+    InvalidGraph(message) => "Invalid graph: \{message}"
+    InvalidGrid(message) => "Invalid grid: \{message}"
+    InvalidStep(message) => "Invalid trace step: \{message}"
+    DuplicateSummaryKey(key) => "Duplicate summary key: \{key}"
+    AlreadyCompleted => "Cannot record after Complete"
+    LimitExceeded(message) => message
+  }
+}
+
+///|
+pub impl Show for TraceError with fn output(self : TraceError, logger : &Logger) -> Unit {
+  logger.write_string(self.message())
+}
+
+///|
+pub struct TraceOptions {
+  max_steps : Int
+  max_entities_per_scene : Int
+} derive(Debug, Eq, ToJson, FromJson)
+
+///|
+pub fn TraceOptions::default() -> TraceOptions {
+  { max_steps: 10000, max_entities_per_scene: 10000 }
+}
+
+///|
+pub fn TraceOptions::new(
+  max_steps? : Int = 10000,
+  max_entities_per_scene? : Int = 10000,
+) -> TraceOptions raise TraceError {
+  if max_steps <= 0 || max_entities_per_scene <= 0 {
+    raise LimitExceeded("Trace limits must be positive")
+  }
+  { max_steps, max_entities_per_scene }
+}
+
+///|
 /// The semantic reason why an algorithm produced a new scene.
 pub(all) enum TraceEvent {
   Initialize
-  Compare(Array[String])
-  Swap(String, String)
-  Visit(String)
-  Update(String, String)
-  Union(String, String)
-  Relax(String, String, String)
+  Compare(Array[TargetRef])
+  Swap(TargetRef, TargetRef)
+  Visit(TargetRef)
+  Update(TargetRef, String)
+  Union(TargetRef, TargetRef)
+  Relax(TargetRef, TargetRef, String)
   Complete
   Custom(String, Array[TraceAttribute])
 } derive(Debug, Eq, ToJson)
@@ -38,12 +116,12 @@ pub(all) enum HighlightRole {
 
 ///|
 pub struct Highlight {
-  target : String
+  target : TargetRef
   role : HighlightRole
 } derive(Debug, Eq, ToJson)
 
 ///|
-pub fn Highlight::new(target~ : String, role~ : HighlightRole) -> Highlight {
+pub fn Highlight::new(target~ : TargetRef, role~ : HighlightRole) -> Highlight {
   { target, role }
 }
 
@@ -167,12 +245,14 @@ pub fn GraphState::new(
   label~ : String,
   nodes~ : Array[GraphNode],
   edges~ : Array[GraphEdge],
-) -> GraphState raise {
+) -> GraphState raise TraceError {
   ensure_unique_node_ids(nodes)
   for edge in edges {
     if !nodes.any(fn(node) { node.id == edge.from }) ||
       !nodes.any(fn(node) { node.id == edge.to }) {
-      fail("Graph edge endpoints must reference existing node ids")
+      raise InvalidGraph(
+        "Graph edge endpoints must reference existing node ids",
+      )
     }
   }
   { id, label, nodes: nodes.copy(), edges: edges.copy() }
@@ -214,14 +294,14 @@ pub fn GridState::new(
   width~ : Int,
   height~ : Int,
   cells~ : Array[GridCellState],
-) -> GridState raise {
+) -> GridState raise TraceError {
   if width <= 0 || height <= 0 {
-    fail("Grid scene dimensions must be positive")
+    raise InvalidGrid("Grid scene dimensions must be positive")
   }
   ensure_unique_cell_ids(cells)
   for cell in cells {
     if cell.x < 0 || cell.y < 0 || cell.x >= width || cell.y >= height {
-      fail("Grid scene cell is outside its dimensions")
+      raise InvalidGrid("Grid scene cell is outside its dimensions")
     }
   }
   { id, label, width, height, cells: cells.copy() }
@@ -245,7 +325,7 @@ pub struct Scene {
 pub fn Scene::new(
   objects~ : Array[SceneObject],
   highlights? : Array[Highlight] = [],
-) -> Scene raise {
+) -> Scene raise TraceError {
   ensure_unique_object_ids(objects)
   let scene = {
     objects: objects.map(fn(object) { object.deep_copy() }),
@@ -282,6 +362,8 @@ pub struct TraceBuilder {
   description : String
   initial_scene : Scene
   steps : Array[AlgorithmTraceStep]
+  options : TraceOptions
+  mut completed : Bool
 } derive(Debug)
 
 ///|
@@ -290,13 +372,17 @@ pub fn TraceBuilder::new(
   algorithm~ : String,
   description? : String = "",
   initial_scene~ : Scene,
-) -> TraceBuilder {
+  options? : TraceOptions = TraceOptions::default(),
+) -> TraceBuilder raise TraceError {
+  initial_scene.validate(options)
   {
     title,
     algorithm,
     description,
     initial_scene: initial_scene.deep_copy(),
     steps: [],
+    options,
+    completed: false,
   }
 }
 
@@ -306,22 +392,33 @@ pub fn TraceBuilder::record(
   event~ : TraceEvent,
   scene~ : Scene,
   annotation? : Annotation,
-) -> Unit raise {
-  scene.validate_highlights()
+) -> Unit raise TraceError {
+  if self.completed {
+    raise AlreadyCompleted
+  }
+  if self.steps.length() >= self.options.max_steps {
+    raise LimitExceeded("Trace step limit exceeded")
+  }
+  scene.validate(self.options)
+  validate_event(event, scene)
   self.steps.push({
     index: self.steps.length(),
     event: event.deep_copy(),
     scene: scene.deep_copy(),
     annotation,
   })
+  if event is Complete {
+    self.completed = true
+  }
 }
 
 ///|
 pub fn TraceBuilder::finish(
   self : TraceBuilder,
   summary? : Array[TraceAttribute] = [],
-) -> AlgorithmTrace {
-  {
+) -> AlgorithmTrace raise TraceError {
+  ensure_unique_summary_keys(summary)
+  let trace = {
     schema_version: "1.0",
     title: self.title,
     algorithm: self.algorithm,
@@ -330,11 +427,13 @@ pub fn TraceBuilder::finish(
     steps: self.steps.map(fn(step) { step.deep_copy() }),
     summary: summary.copy(),
   }
+  trace.validate(options=self.options)
+  trace
 }
 
 ///|
 pub fn AlgorithmTrace::to_json_string(self : AlgorithmTrace) -> String {
-  self.to_json().stringify(indent=2)
+  self.encode_json()
 }
 
 ///|
@@ -411,63 +510,204 @@ fn AlgorithmTraceStep::deep_copy(
 }
 
 ///|
-fn Scene::contains_target(self : Scene, target : String) -> Bool {
-  self.objects.any(fn(object) {
-    if object.id() == target {
-      true
-    } else {
-      match object {
-        Sequence(value) => value.items.any(fn(item) { item.id == target })
-        Sets(value) =>
-          value.groups.any(fn(group) {
-            group.id == target || group.members.contains(target)
-          })
-        Graph(value) =>
-          value.nodes.any(fn(node) { node.id == target }) ||
-          value.edges.any(fn(edge) { edge.id == target })
-        Grid(value) => value.cells.any(fn(cell) { cell.id == target })
+fn Scene::contains_target(self : Scene, target : TargetRef) -> Bool {
+  match self.objects.search_by(fn(object) { object.id() == target.object_id }) {
+    None => false
+    Some(index) =>
+      match target.entity_id {
+        None => true
+        Some(id) =>
+          match self.objects[index] {
+            Sequence(value) => value.items.any(fn(item) { item.id == id })
+            Sets(value) =>
+              value.groups.any(fn(group) {
+                group.id == id || group.members.contains(id)
+              })
+            Graph(value) =>
+              value.nodes.any(fn(node) { node.id == id }) ||
+              value.edges.any(fn(edge) { edge.id == id })
+            Grid(value) => value.cells.any(fn(cell) { cell.id == id })
+          }
       }
+  }
+}
+
+///|
+fn Scene::validate_highlights(self : Scene) -> Unit raise TraceError {
+  for highlight in self.highlights {
+    if !self.contains_target(highlight.target) {
+      raise DanglingReference(highlight.target)
     }
+  }
+}
+
+///|
+fn Scene::entity_count(self : Scene) -> Int {
+  self.objects.fold(init=0, fn(total, object) {
+    let count = match object {
+      Sequence(value) => value.items.length()
+      Sets(value) =>
+        value.groups.fold(init=0, fn(n, group) {
+          n + 1 + group.members.length()
+        })
+      Graph(value) => value.nodes.length() + value.edges.length()
+      Grid(value) => value.cells.length()
+    }
+    total + 1 + count
   })
 }
 
 ///|
-fn Scene::validate_highlights(self : Scene) -> Unit raise {
-  for highlight in self.highlights {
-    if !self.contains_target(highlight.target) {
-      fail("Highlight target must reference a scene object or entity id")
+fn Scene::validate(
+  self : Scene,
+  options : TraceOptions,
+) -> Unit raise TraceError {
+  ensure_unique_object_ids(self.objects)
+  for object in self.objects {
+    validate_object_entities(object)
+  }
+  self.validate_highlights()
+  if self.entity_count() > options.max_entities_per_scene {
+    raise LimitExceeded("Scene entity limit exceeded")
+  }
+}
+
+///|
+fn validate_event(event : TraceEvent, scene : Scene) -> Unit raise TraceError {
+  let targets = match event {
+    Compare(values) => values
+    Swap(left, right) => [left, right]
+    Visit(target) => [target]
+    Update(target, _) => [target]
+    Union(left, right) => [left, right]
+    Relax(from, to, _) => [from, to]
+    _ => []
+  }
+  for target in targets {
+    if !scene.contains_target(target) {
+      raise DanglingReference(target)
     }
   }
 }
 
 ///|
-fn ensure_unique_object_ids(objects : Array[SceneObject]) -> Unit raise {
+fn validate_object_entities(object : SceneObject) -> Unit raise TraceError {
+  match object {
+    Sequence(value) =>
+      ensure_unique_strings(
+        value.items.map(fn(item) { item.id }),
+        "sequence entity",
+      )
+    Sets(value) => {
+      ensure_unique_strings(
+        value.groups.map(fn(group) { group.id }),
+        "set group",
+      )
+      let members : Array[String] = []
+      for group in value.groups {
+        for value in group.members {
+          members.push(value)
+        }
+      }
+      ensure_unique_strings(members, "set member")
+    }
+    Graph(value) => {
+      ensure_unique_strings(value.nodes.map(fn(node) { node.id }), "graph node")
+      ensure_unique_strings(value.edges.map(fn(edge) { edge.id }), "graph edge")
+    }
+    Grid(value) =>
+      ensure_unique_strings(value.cells.map(fn(cell) { cell.id }), "grid cell")
+  }
+}
+
+///|
+fn ensure_unique_strings(
+  values : Array[String],
+  kind : String,
+) -> Unit raise TraceError {
+  for i in 0..<values.length() {
+    for j in (i + 1)..<values.length() {
+      if values[i] == values[j] {
+        raise DuplicateId("Duplicate \{kind} id: \{values[i]}")
+      }
+    }
+  }
+}
+
+///|
+fn ensure_unique_summary_keys(
+  values : Array[TraceAttribute],
+) -> Unit raise TraceError {
+  for i in 0..<values.length() {
+    for j in (i + 1)..<values.length() {
+      if values[i].key == values[j].key {
+        raise DuplicateSummaryKey(values[i].key)
+      }
+    }
+  }
+}
+
+///|
+pub fn AlgorithmTrace::validate(
+  self : AlgorithmTrace,
+  options? : TraceOptions = TraceOptions::default(),
+) -> Unit raise TraceError {
+  if self.schema_version != "1.0" {
+    raise UnsupportedSchema(self.schema_version)
+  }
+  self.initial_scene.validate(options)
+  if self.steps.length() > options.max_steps {
+    raise LimitExceeded("Trace step limit exceeded")
+  }
+  let mut completed = false
+  for index, step in self.steps {
+    if step.index != index {
+      raise InvalidStep("Step indices must be contiguous from zero")
+    }
+    if completed {
+      raise InvalidStep("Complete must be the final step")
+    }
+    step.scene.validate(options)
+    validate_event(step.event, step.scene)
+    if step.event is Complete {
+      completed = true
+    }
+  }
+  ensure_unique_summary_keys(self.summary)
+}
+
+///|
+fn ensure_unique_object_ids(
+  objects : Array[SceneObject],
+) -> Unit raise TraceError {
   for i in 0..<objects.length() {
     for j in (i + 1)..<objects.length() {
       if objects[i].id() == objects[j].id() {
-        fail("Scene object ids must be unique")
+        raise DuplicateId("Duplicate scene object id: \{objects[i].id()}")
       }
     }
   }
 }
 
 ///|
-fn ensure_unique_node_ids(nodes : Array[GraphNode]) -> Unit raise {
+fn ensure_unique_node_ids(nodes : Array[GraphNode]) -> Unit raise TraceError {
   for i in 0..<nodes.length() {
     for j in (i + 1)..<nodes.length() {
       if nodes[i].id == nodes[j].id {
-        fail("Graph node ids must be unique")
+        raise DuplicateId("Duplicate graph node id: \{nodes[i].id}")
       }
     }
   }
 }
 
 ///|
-fn ensure_unique_cell_ids(cells : Array[GridCellState]) -> Unit raise {
+fn ensure_unique_cell_ids(
+  cells : Array[GridCellState],
+) -> Unit raise TraceError {
   for i in 0..<cells.length() {
     for j in (i + 1)..<cells.length() {
       if cells[i].id == cells[j].id {
-        fail("Grid cell ids must be unique")
+        raise DuplicateId("Duplicate grid cell id: \{cells[i].id}")
       }
     }
   }

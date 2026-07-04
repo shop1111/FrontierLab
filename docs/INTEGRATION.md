@@ -1,10 +1,10 @@
 # Integrating an Algorithm
 
-1. Assign stable IDs to logical entities. Do not use the current array index as identity if elements move.
+1. Assign stable IDs to logical entities. Do not use the current array index as identity if elements move. Address them with `TargetRef::entity(object_id, entity_id)`; use `TargetRef::object(object_id)` for an entire scene object.
 2. Build an initial `Scene` from one or more `Sequence`, `Sets`, `Graph`, or `Grid` objects.
 3. Create a `TraceBuilder` with a title and stable algorithm key.
 4. At meaningful algorithm boundaries, call `record` with a semantic event, complete scene, and optional annotation.
-5. Finish the trace and pass it to the HTML, SVG, or JSON exporter.
+5. Finish and validate the trace, then pass it to the HTML/SVG renderer or `encode_json`. Use `AlgorithmTrace::decode_json` to consume an external schema-v1 document.
 
 Prefer meaningful steps over logging every assignment. A sorting trace normally records comparisons and moves; graph search records visits and relaxations; dynamic programming records cell updates and dependency choices.
 

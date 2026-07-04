@@ -2,7 +2,7 @@
 
 **A MoonBit Algorithm Trace & Visualization Kit — record why an algorithm changes, then replay what changed.**
 
-[中文](#中文) · [English](#english) · [Offline demo](docs/index.html) · [Trace schema](docs/TRACE_SCHEMA.md) · [Integration guide](docs/INTEGRATION.md)
+[中文](#中文) · [English](#english) · [Live demo](https://shop1111.github.io/FrontierLab/) · [Trace schema](docs/TRACE_SCHEMA.md) · [Integration guide](docs/INTEGRATION.md)
 
 | Insertion sort | Union-Find | A* frontier |
 |---|---|---|
@@ -27,13 +27,15 @@ moon check --target all
 moon test
 
 # 生成可交互的单文件 HTML
-moon run cmd/main -- insertion-sort html insertion-sort.html
-moon run cmd/main -- union-find html union-find.html
-moon run cmd/main -- pathfinding html pathfinding.html
+moon run cmd/main -- demo insertion-sort --format html --output insertion-sort.html
+moon run cmd/main -- demo union-find --format html --output union-find.html
+moon run cmd/main -- demo pathfinding --format html --output pathfinding.html
 
 # 也可以输出 SVG 或 JSON；使用 - 输出到标准输出
-moon run cmd/main -- pathfinding svg pathfinding.svg
-moon run cmd/main -- insertion-sort json -
+moon run cmd/main -- demo pathfinding --format svg --output pathfinding.svg
+moon run cmd/main -- demo insertion-sort --format json --output trace.json
+moon run cmd/main -- validate trace.json
+moon run cmd/main -- render trace.json --format html --output replay.html
 ```
 
 浏览器直接打开生成的 HTML，即可使用播放、暂停、时间轴、速度控制以及左右方向键。
@@ -58,7 +60,10 @@ test {
     initial_scene=initial,
   )
   recorder.record(
-    event=@frontierlab.Compare(["a", "b"]),
+    event=@frontierlab.Compare([
+      @frontierlab.TargetRef::entity("values", "a"),
+      @frontierlab.TargetRef::entity("values", "b"),
+    ]),
     scene=initial,
     annotation=@frontierlab.Annotation::new(
       title="Compare",
@@ -75,6 +80,8 @@ test {
 ### 内置能力
 
 - `AlgorithmTrace` / `AlgorithmTraceStep`：版本化 trace 文档与不可变步骤快照。
+- `TargetRef`：使用对象 ID + 可选实体 ID，消除跨对象同名实体歧义。
+- `encode_json` / `decode_json` / `validate`：稳定 schema-v1 双向协议与完整验证。
 - `TraceEvent`：初始化、比较、交换、访问、更新、合并、松弛、完成及自定义事件。
 - `SceneObject`：`Sequence`、`Sets`、`Graph`、`Grid`。
 - `Highlight` / `Annotation`：统一视觉角色、教学说明和伪代码行号。
@@ -126,13 +133,14 @@ moon info
 moon fmt
 ```
 
-The repository includes CI, generated interfaces, executable examples, an offline Pages demo, an MIT license, schema documentation, contribution guidance, and mooncakes publishing metadata.
+The repository includes CI, generated interfaces, executable examples, a Pages deployment workflow, schema fixtures, an MIT license, contribution guidance, and mooncakes publishing metadata.
 
 ## Documentation
 
 - [Trace schema and compatibility](docs/TRACE_SCHEMA.md)
 - [Integrating a third-party algorithm](docs/INTEGRATION.md)
 - [Rendering and security model](docs/RENDERING.md)
+- [Reproducible benchmarks](BENCHMARKS.md)
 - [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
 

@@ -19,13 +19,14 @@ pub fn search_trace_to_algorithm_trace(
     let event = if step.parent.length() > previous_parent_count {
       let link = step.parent[step.parent.length() - 1]
       Relax(
-        position_id(link.parent),
-        position_id(link.child),
+        TargetRef::entity("search-grid", position_id(link.parent)),
+        TargetRef::entity("search-grid", position_id(link.child)),
         search_cost_label(step.cost, link.child),
       )
     } else {
       match step.current {
-        Some(current) => Visit(position_id(current))
+        Some(current) =>
+          Visit(TargetRef::entity("search-grid", position_id(current)))
         None => Custom("frontier-empty", [])
       }
     }
@@ -122,18 +123,36 @@ fn search_scene(
   match current {
     Some(position) =>
       highlights.push(
-        Highlight::new(target=position_id(position), role=Current),
+        Highlight::new(
+          target=TargetRef::entity("search-grid", position_id(position)),
+          role=Current,
+        ),
       )
     None => ()
   }
   for position in path {
-    highlights.push(Highlight::new(target=position_id(position), role=Result))
+    highlights.push(
+      Highlight::new(
+        target=TargetRef::entity("search-grid", position_id(position)),
+        role=Result,
+      ),
+    )
   }
   for position in frontier {
-    highlights.push(Highlight::new(target=position_id(position), role=Frontier))
+    highlights.push(
+      Highlight::new(
+        target=TargetRef::entity("search-grid", position_id(position)),
+        role=Frontier,
+      ),
+    )
   }
   for position in visited {
-    highlights.push(Highlight::new(target=position_id(position), role=Visited))
+    highlights.push(
+      Highlight::new(
+        target=TargetRef::entity("search-grid", position_id(position)),
+        role=Visited,
+      ),
+    )
   }
   Scene::new(
     objects=[

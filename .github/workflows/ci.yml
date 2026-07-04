@@ -27,7 +27,7 @@ jobs:
         run: moon check --target all
 
       - name: Test
-        run: moon test
+        run: moon test --target all
 
       - name: Run examples
         run: |
@@ -40,7 +40,10 @@ jobs:
 
       - name: Verify exporters and CLI
         run: |
-          moon run cmd/main -- insertion-sort svg /tmp/insertion-sort.svg
-          moon run cmd/main -- union-find json /tmp/union-find.json
+          moon run cmd/main -- demo insertion-sort --format svg --output /tmp/insertion-sort.svg
+          moon run cmd/main -- demo union-find --format json --output /tmp/union-find.json
+          moon run cmd/main -- validate fixtures/schema-v1/all-events.json
+          moon run cmd/main -- render fixtures/schema-v1/all-events.json --format html --output /tmp/all-events.html
           test -s /tmp/insertion-sort.svg
           test -s /tmp/union-find.json
+          test -s /tmp/all-events.html

@@ -23,10 +23,19 @@ pub fn insertion_sort_demo_trace(values : Array[Int]) -> AlgorithmTrace raise {
       let left = items[j - 1]
       let right = items[j]
       builder.record(
-        event=Compare([left.id, right.id]),
+        event=Compare([
+          TargetRef::entity("values", left.id),
+          TargetRef::entity("values", right.id),
+        ]),
         scene=demo_sort_scene(items, [
-          Highlight::new(target=left.id, role=Compared),
-          Highlight::new(target=right.id, role=Current),
+          Highlight::new(
+            target=TargetRef::entity("values", left.id),
+            role=Compared,
+          ),
+          Highlight::new(
+            target=TargetRef::entity("values", right.id),
+            role=Current,
+          ),
         ]),
         annotation=Annotation::new(
           title="Compare",
@@ -37,10 +46,19 @@ pub fn insertion_sort_demo_trace(values : Array[Int]) -> AlgorithmTrace raise {
       items[j - 1] = right
       items[j] = left
       builder.record(
-        event=Swap(left.id, right.id),
+        event=Swap(
+          TargetRef::entity("values", left.id),
+          TargetRef::entity("values", right.id),
+        ),
         scene=demo_sort_scene(items, [
-          Highlight::new(target=left.id, role=Changed),
-          Highlight::new(target=right.id, role=Changed),
+          Highlight::new(
+            target=TargetRef::entity("values", left.id),
+            role=Changed,
+          ),
+          Highlight::new(
+            target=TargetRef::entity("values", right.id),
+            role=Changed,
+          ),
         ]),
         annotation=Annotation::new(
           title="Swap",
@@ -55,7 +73,9 @@ pub fn insertion_sort_demo_trace(values : Array[Int]) -> AlgorithmTrace raise {
     event=Complete,
     scene=demo_sort_scene(
       items,
-      items.map(fn(item) { Highlight::new(target=item.id, role=Result) }),
+      items.map(fn(item) {
+        Highlight::new(target=TargetRef::entity("values", item.id), role=Result)
+      }),
     ),
   )
   builder.finish(summary=[
@@ -100,10 +120,19 @@ pub fn union_find_demo_trace() -> AlgorithmTrace raise {
     let left_root = demo_find_root(parent, left)
     let right_root = demo_find_root(parent, right)
     builder.record(
-      event=Compare(["node-\{left}", "node-\{right}"]),
+      event=Compare([
+        TargetRef::entity("components", "node-\{left}"),
+        TargetRef::entity("components", "node-\{right}"),
+      ]),
       scene=demo_union_scene(parent, [
-        Highlight::new(target="node-\{left}", role=Compared),
-        Highlight::new(target="node-\{right}", role=Compared),
+        Highlight::new(
+          target=TargetRef::entity("components", "node-\{left}"),
+          role=Compared,
+        ),
+        Highlight::new(
+          target=TargetRef::entity("components", "node-\{right}"),
+          role=Compared,
+        ),
       ]),
       annotation=Annotation::new(
         title="Find roots",
@@ -113,9 +142,15 @@ pub fn union_find_demo_trace() -> AlgorithmTrace raise {
     if left_root != right_root {
       parent[right_root] = left_root
       builder.record(
-        event=Union("node-\{left_root}", "node-\{right_root}"),
+        event=Union(
+          TargetRef::entity("components", "node-\{left_root}"),
+          TargetRef::entity("components", "node-\{right_root}"),
+        ),
         scene=demo_union_scene(parent, [
-          Highlight::new(target="group-\{left_root}", role=Changed),
+          Highlight::new(
+            target=TargetRef::entity("components", "group-\{left_root}"),
+            role=Changed,
+          ),
         ]),
         annotation=Annotation::new(
           title="Union",
@@ -129,9 +164,15 @@ pub fn union_find_demo_trace() -> AlgorithmTrace raise {
     if parent[value] != root {
       parent[value] = root
       builder.record(
-        event=Update("node-\{value}", "path-compression"),
+        event=Update(
+          TargetRef::entity("components", "node-\{value}"),
+          "path-compression",
+        ),
         scene=demo_union_scene(parent, [
-          Highlight::new(target="node-\{value}", role=Changed),
+          Highlight::new(
+            target=TargetRef::entity("components", "node-\{value}"),
+            role=Changed,
+          ),
         ]),
         annotation=Annotation::new(
           title="Path compression",
