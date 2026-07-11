@@ -613,3 +613,156 @@ test "schema v1 reports malformed JSON fields and roles" {
     _ => fail("expected bad role failure")
   }
 }
+
+///|
+test "trace analysis summarizes empty and custom multi-object traces" {
+  let left = @frontierlab.Sequence(
+    @frontierlab.SequenceState::new(id="left", label="Left", items=[
+      @frontierlab.SequenceItem::new(id="same", value="1"),
+    ]),
+  )
+  let right = @frontierlab.Sequence(
+    @frontierlab.SequenceState::new(id="right", label="Right", items=[
+      @frontierlab.SequenceItem::new(id="same", value="2"),
+    ]),
+  )
+  let scene = @frontierlab.Scene::new(objects=[left, right], highlights=[
+    @frontierlab.Highlight::new(
+      target=@frontierlab.TargetRef::entity("left", "same"),
+      role=@frontierlab.Current,
+    ),
+  ])
+  let empty = @frontierlab.TraceBuilder::new(
+    title="Empty analysis",
+    algorithm="empty",
+    initial_scene=scene,
+  ).finish()
+  let empty_stats = empty.analyze()
+  assert_eq(empty_stats.step_count, 0)
+  assert_false(empty_stats.completed)
+  assert_eq(empty_stats.initial_object_count, 2)
+  assert_eq(empty_stats.max_entities_per_scene, 4)
+  assert_true(empty.summary_report().contains("Events:\n  none"))
+  let builder = @frontierlab.TraceBuilder::new(
+    title="Custom analysis",
+    algorithm="custom",
+    initial_scene=scene,
+  )
+  builder.record(
+    event=@frontierlab.Custom("domain-event", [
+      @frontierlab.TraceAttribute::new(key="phase", value="demo"),
+    ]),
+    scene~,
+    annotation=@frontierlab.Annotation::new(title="Domain", body="custom"),
+  )
+  builder.record(
+    event=@frontierlab.Compare([
+      @frontierlab.TargetRef::entity("left", "same"),
+      @frontierlab.TargetRef::entity("right", "same"),
+    ]),
+    scene~,
+  )
+  builder.record(event=@frontierlab.Complete, scene~)
+  let trace = builder.finish()
+  let stats = trace.analyze()
+  assert_true(stats.completed)
+  assert_eq(stats.event_count("domain-event"), 1)
+  assert_eq(stats.event_count("compare"), 1)
+  assert_eq(stats.custom_event_count, 1)
+  assert_eq(stats.annotation_count, 1)
+  assert_true(stats.object_count("left") > 0)
+  assert_true(stats.target_count("left", entity_id="same") > 0)
+  assert_true(stats.summary_report().contains("domain-event: 1"))
+  assert_true(stats.event_table().contains("| compare | 1 | 1 | 1 |"))
+  assert_true(stats.object_table().contains("| left | sequence |"))
+  assert_true(stats.target_table(limit=2).contains("left/same"))
+  assert_true(trace.analysis_markdown().contains("FrontierLab trace analysis"))
+  assert_true(trace.timeline().length() == trace.steps.length() + 1)
+  assert_true(trace.timeline_report().contains("step 1: compare"))
+  assert_true(trace.timeline_table().contains("| Step | Event |"))
+  assert_false(trace.has_lint_errors())
+  assert_true(trace.lint_count(@frontierlab.Info) >= 0)
+  assert_true(trace.lint_markdown().contains("| Severity | Code |"))
+}
+
+///|
+test "insertion sort adapter records reusable sorted traces" {
+  let trace = @frontierlab.insertion_sort_trace([3, 1, 2])
+  let stats = trace.analyze()
+  assert_true(trace.steps.last().unwrap().event is @frontierlab.Complete)
+  assert_eq(stats.event_count("compare"), 3)
+  assert_eq(stats.event_count("swap"), 2)
+  assert_eq(stats.event_count("complete"), 1)
+  assert_eq(trace.summary[0].value, "3")
+  assert_eq(trace.summary[3].value, "1,2,3")
+  assert_true(trace.summary_report().contains("swap: 2"))
+  assert_true(
+    @frontierlab.AlgorithmTrace::decode_json(trace.encode_json()) == trace,
+  )
+  let custom = @frontierlab.insertion_sort_items_trace([
+    @frontierlab.SortTraceItem::new(id="x", value=2, label="two"),
+    @frontierlab.SortTraceItem::new(id="y", value=1, label="one"),
+  ])
+  assert_eq(custom.summary[3].value, "one,two")
+  try
+    @frontierlab.insertion_sort_items_trace([
+      @frontierlab.SortTraceItem::new(id="same", value=2),
+      @frontierlab.SortTraceItem::new(id="same", value=1),
+    ])
+  catch {
+    @frontierlab.DuplicateId(_) => ()
+    _ => fail("expected duplicate sort item ids")
+  } noraise {
+    _ => fail("expected duplicate sort item failure")
+  }
+}
+
+///|
+test "union find adapter records merges compression and validation" {
+  let trace = @frontierlab.union_find_trace(4, [
+    @frontierlab.UnionOperation::new(left=0, right=1),
+    @frontierlab.UnionOperation::new(left=2, right=3),
+    @frontierlab.UnionOperation::new(left=1, right=3),
+  ])
+  let stats = trace.analyze()
+  assert_true(trace.steps.last().unwrap().event is @frontierlab.Complete)
+  assert_eq(stats.event_count("compare"), 3)
+  assert_eq(stats.event_count("union"), 3)
+  assert_eq(stats.event_count("update"), 1)
+  assert_eq(trace.summary[3].value, "3")
+  assert_eq(trace.summary[5].value, "1")
+  assert_true(trace.summary_report().contains("union: 3"))
+  assert_true(
+    @frontierlab.AlgorithmTrace::decode_json(trace.encode_json()) == trace,
+  )
+  try
+    @frontierlab.union_find_trace(2, [
+      @frontierlab.UnionOperation::new(left=0, right=3),
+    ])
+  catch {
+    @frontierlab.InvalidStep(_) => ()
+    _ => fail("expected invalid union operation")
+  } noraise {
+    _ => fail("expected invalid union operation failure")
+  }
+}
+
+///|
+test "offline playground embeds validation analysis export and safe examples" {
+  let html = @frontierlab.render_trace_playground()
+  assert_true(html.has_prefix("<!doctype html>"))
+  assert_true(html.contains("Trace Playground"))
+  assert_true(html.contains("Drop a JSON file"))
+  assert_true(html.contains("Valid example"))
+  assert_true(html.contains("Invalid example"))
+  assert_true(html.contains("function validate(d)"))
+  assert_true(html.contains("function analyze(d)"))
+  assert_true(html.contains("function lint(d)"))
+  assert_true(html.contains("Export current SVG"))
+  assert_true(html.contains("FileReader"))
+  assert_true(html.contains("URL.createObjectURL"))
+  assert_true(html.contains("frontierlab-trace"))
+  assert_true(html.contains("schema_version"))
+  assert_true(!html.contains("https://"))
+  assert_true(!html.contains("<script src="))
+}

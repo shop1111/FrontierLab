@@ -32,6 +32,13 @@ jobs:
           moon run cmd/main -- demo insertion-sort --format html --output docs/insertion-sort.html
           moon run cmd/main -- demo union-find --format html --output docs/union-find.html
           moon run cmd/main -- demo pathfinding --format html --output docs/pathfinding.html
+          moon run cmd/main -- playground --output docs/playground.html
+          test -s docs/index.html
+          test -s docs/insertion-sort.html
+          test -s docs/union-find.html
+          test -s docs/pathfinding.html
+          test -s docs/playground.html
+          grep -q "Trace Playground" docs/playground.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

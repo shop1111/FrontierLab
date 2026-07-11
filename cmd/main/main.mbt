@@ -1,10 +1,12 @@
 ///|
 fn usage() -> String {
   let text =
-    #|FrontierLab 0.3.0
+    #|FrontierLab 0.5.0
     #|  frontierlab demo <insertion-sort|union-find|pathfinding> --format <html|svg|json> --output <path|->
     #|  frontierlab render <trace.json> --format <html|svg> --output <path|-> [--step N]
+    #|  frontierlab analyze <trace.json>
     #|  frontierlab validate <trace.json>
+    #|  frontierlab playground --output <path|->
   text
 }
 
@@ -68,6 +70,9 @@ fn run(args : Array[String]) -> Unit raise {
         output,
         render_content(trace, format, trace.steps.length() - 1),
       )
+      if output != "-" {
+        println(trace.summary_report())
+      }
     }
     "render" => {
       if args.length() < 3 {
@@ -82,6 +87,16 @@ fn run(args : Array[String]) -> Unit raise {
       let step = @strconv.parse_int(raw_step)
       write_output(output, render_content(trace, format, step))
     }
+    "analyze" => {
+      if args.length() < 3 {
+        fail("analyze requires a trace file")
+      }
+      let trace = @frontierlab.AlgorithmTrace::decode_json(
+        @fs.read_file_to_string(args[2]),
+      )
+      trace.validate()
+      println(trace.summary_report())
+    }
     "validate" => {
       if args.length() < 3 {
         fail("validate requires a trace file")
@@ -91,6 +106,10 @@ fn run(args : Array[String]) -> Unit raise {
       )
       trace.validate()
       println("valid: \{args[2]}")
+    }
+    "playground" => {
+      let output = option(args, "--output", "-")
+      write_output(output, @frontierlab.render_trace_playground())
     }
     other => fail("Unknown command: \{other}\n\{usage()}")
   }

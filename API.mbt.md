@@ -30,3 +30,12 @@ test "build encode and decode a trace" {
   assert_true(decoded == trace)
 }
 ```
+
+```mbt check
+///|
+test "generate an offline trace playground" {
+  let html = @frontierlab.render_trace_playground()
+  assert_true(html.contains("Trace Playground"))
+  assert_true(!html.contains("<script src="))
+}
+```

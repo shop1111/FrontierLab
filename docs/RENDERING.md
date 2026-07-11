@@ -7,3 +7,5 @@ Trace JSON replaces `<` with its Unicode escape before embedding, preventing use
 The renderer uses no network resources, CDN scripts, dynamic imports, or remote fonts. Generated files can be reviewed, archived, taught from, and opened without a server.
 
 `render_trace_svg(trace, step=...)` selects the initial scene with `-1` or a recorded zero-based step. `render_trace_svg_frames` returns every recorded frame for downstream GIF or video tooling.
+
+`render_trace_playground()` creates an offline workbench that accepts schema-v1 JSON by paste, file picker, or drag-and-drop. It performs browser-side structural diagnostics, analysis, quality checks, timeline replay, and JSON/current-frame SVG export without uploading trace data or loading remote assets. Generate it with `moon run cmd/main -- playground --output playground.html`.

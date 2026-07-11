@@ -1,0 +1,14 @@
+* text=auto
+*.mbt text eol=lf
+*.mbti text eol=lf
+moon.mod text eol=lf
+moon.pkg text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.html text eol=lf
+*.svg text eol=lf
+*.ps1 text eol=crlf
+*.png binary
+*.zip binary

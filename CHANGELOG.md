@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0 - 2026-07-11
+
+- Added a self-contained offline Trace Playground with JSON paste/file import, drag-and-drop, schema-v1 diagnostics, analysis, quality checks, timeline replay, and SVG/JSON export.
+- Added `render_trace_playground` and the `frontierlab playground --output ...` CLI workflow.
+- Expanded CI with an explicit all-target build, package verification, acceptance artifacts, and Playground checks.
+- Added the Playground to the GitHub Pages showcase and aligned release-readiness documentation.
+
+## 0.4.0 - 2026-07-11
+
+- Added reusable trace statistics, Markdown reports, timeline inspection, and lint-style quality diagnostics.
+- Added reusable insertion-sort and Union-Find trace adapters and refactored bundled demos to use them.
+- Added CLI trace analysis and strengthened all-target CI validation.
+
 ## 0.3.0 - 2026-07-04
 
 - Stabilized the explicit `frontierlab-trace` schema-v1 JSON format with round-trip decoding.

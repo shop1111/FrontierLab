@@ -2,7 +2,10 @@
 
 **A MoonBit Algorithm Trace & Visualization Kit — record why an algorithm changes, then replay what changed.**
 
-[中文](#中文) · [English](#english) · [Live demo](https://shop1111.github.io/FrontierLab/) · [Trace schema](docs/TRACE_SCHEMA.md) · [Integration guide](docs/INTEGRATION.md)
+[![CI](https://github.com/shop1111/FrontierLab/actions/workflows/ci.yml/badge.svg)](https://github.com/shop1111/FrontierLab/actions/workflows/ci.yml)
+[![Mooncakes](https://img.shields.io/badge/mooncakes-shop1111%2Ffrontierlab-7c3aed)](https://mooncakes.io/docs/shop1111/frontierlab)
+
+[中文](#中文) · [English](#english) · [Live demo](https://shop1111.github.io/FrontierLab/) · [Playground](https://shop1111.github.io/FrontierLab/playground.html) · [GitHub](https://github.com/shop1111/FrontierLab) · [Gitlink](https://gitlink.org.cn/zhengpx/FrontierLab) · [Trace schema](docs/TRACE_SCHEMA.md)
 
 | Insertion sort | Union-Find | A* frontier |
 |---|---|---|
@@ -18,9 +21,12 @@ FrontierLab 不是另一个算法合集，也不是通用绘图库。它为 Moon
 - 事件保留“为什么变化”，场景保留“应该画什么”。
 - 生成的 HTML 不依赖 CDN、Node.js、服务器或浏览器插件。
 - 稳定实体 ID 让元素在交换、合并和寻路过程中仍可追踪。
+- `analyze()` 可在渲染前统计事件、目标引用、对象规模和完成状态。
 - 原有 BFS、Dijkstra、A*、ASCII/SVG API 完整保留。
 
 ### 五分钟体验
+
+无需安装即可打开[在线 Playground](https://shop1111.github.io/FrontierLab/playground.html)，拖入或粘贴 schema-v1 JSON，完成校验、质量诊断、分析、回放和 SVG 导出。所有处理均在浏览器本地完成。
 
 ```bash
 moon check --target all
@@ -34,8 +40,12 @@ moon run cmd/main -- demo pathfinding --format html --output pathfinding.html
 # 也可以输出 SVG 或 JSON；使用 - 输出到标准输出
 moon run cmd/main -- demo pathfinding --format svg --output pathfinding.svg
 moon run cmd/main -- demo insertion-sort --format json --output trace.json
+moon run cmd/main -- analyze trace.json
 moon run cmd/main -- validate trace.json
 moon run cmd/main -- render trace.json --format html --output replay.html
+
+# 生成完全离线的 Trace Playground
+moon run cmd/main -- playground --output playground.html
 ```
 
 浏览器直接打开生成的 HTML，即可使用播放、暂停、时间轴、速度控制以及左右方向键。
@@ -77,6 +87,19 @@ test {
 
 完整接入方式见 [docs/INTEGRATION.md](docs/INTEGRATION.md)。
 
+### 渲染前分析 trace
+
+```mbt check
+test {
+  let trace = @frontierlab.insertion_sort_trace([3, 1, 2])
+  let stats = trace.analyze()
+  assert_eq(stats.event_count("compare"), 3)
+  assert_eq(stats.event_count("swap"), 2)
+  assert_true(stats.completed)
+  assert_true(trace.summary_report().contains("Insertion Sort"))
+}
+```
+
 ### 内置能力
 
 - `AlgorithmTrace` / `AlgorithmTraceStep`：版本化 trace 文档与不可变步骤快照。
@@ -86,7 +109,10 @@ test {
 - `SceneObject`：`Sequence`、`Sets`、`Graph`、`Grid`。
 - `Highlight` / `Annotation`：统一视觉角色、教学说明和伪代码行号。
 - `render_trace_html`：自包含、响应式、支持深浅主题的交互播放器。
+- `render_trace_playground`：自包含的 trace 导入、校验、分析、回放与 SVG 导出工作台。
 - `render_trace_svg` / `render_trace_svg_frames`：单帧与批量确定性 SVG。
+- `TraceStats` / `EventCount` / `ObjectUsage` / `TargetUsage`：事件统计、对象规模和目标引用分析。
+- `insertion_sort_trace` / `union_find_trace`：可复用算法适配器，不只是内置 demo。
 - `search_trace_to_algorithm_trace`：原有路径搜索 trace 的兼容适配器。
 
 ### 旗舰示例
@@ -122,18 +148,24 @@ The original pathfinding APIs remain compatible. BFS, Dijkstra, and A* now serve
 - Visual state: `SequenceState`, `SetState`, `GraphState`, `GridState`
 - Explain: `Highlight`, `HighlightRole`, `Annotation`
 - Export: `render_trace_html`, `render_trace_svg`, `render_trace_svg_frames`
-- Adapt: `search_trace_to_algorithm_trace`
+- Playground: `render_trace_playground`
+- Analyze: `AlgorithmTrace::analyze`, `summary_report`, `event_counts`, `target_usage`
+- Adapt: `insertion_sort_trace`, `union_find_trace`, `search_trace_to_algorithm_trace`
 
 ### Development and release readiness
 
 ```bash
-moon check --target all
-moon test
+moon check --target all --deny-warn
+moon build --target all --deny-warn
+moon fmt --check
 moon info
-moon fmt
+git diff --exit-code
+moon test --target all --deny-warn
 ```
 
-The repository includes CI, generated interfaces, executable examples, a Pages deployment workflow, schema fixtures, an MIT license, contribution guidance, and mooncakes publishing metadata.
+`moon fmt --deny-warn` and `moon info --deny-warn` are not valid MoonBit commands in the current documented toolchain. CI therefore uses `moon fmt --check` and `moon info && git diff --exit-code` as the reviewable equivalents.
+
+The repository includes CI, generated interfaces, executable examples, an offline trace playground, a Pages deployment workflow, schema fixtures, an MIT license, contribution guidance, and mooncakes publishing metadata.
 
 ## Documentation
 
@@ -141,6 +173,7 @@ The repository includes CI, generated interfaces, executable examples, a Pages d
 - [Integrating a third-party algorithm](docs/INTEGRATION.md)
 - [Rendering and security model](docs/RENDERING.md)
 - [Reproducible benchmarks](BENCHMARKS.md)
+- [Three-minute acceptance guide](ACCEPTANCE.md)
 - [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
 
