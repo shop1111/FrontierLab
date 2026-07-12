@@ -1,0 +1,81 @@
+run-name: FrontierLab MoonBit CI
+name: FrontierLab CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  actions:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check, build, test and package
+        run: |
+          set -euxo pipefail
+
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          export PATH="$HOME/.moon/bin:$PATH"
+
+          moon version --all
+          moon update
+
+          moon check --target all --deny-warn
+          moon build --target all --deny-warn
+          moon fmt --check
+
+          moon info
+          git diff --exit-code
+
+          moon test --target all --deny-warn
+
+          mkdir -p _build/acceptance
+
+          moon run cmd/main -- playground \
+            --output _build/acceptance/playground.html
+
+          moon run cmd/main -- demo insertion-sort \
+            --format svg \
+            --output _build/acceptance/insertion-sort.svg
+
+          moon run cmd/main -- demo union-find \
+            --format json \
+            --output _build/acceptance/union-find.json
+
+          moon run cmd/main -- analyze \
+            _build/acceptance/union-find.json
+
+          moon run cmd/main -- validate \
+            _build/acceptance/union-find.json
+
+          moon run cmd/main -- render \
+            _build/acceptance/union-find.json \
+            --format html \
+            --output _build/acceptance/union-find.html
+
+          test -s _build/acceptance/playground.html
+          test -s _build/acceptance/insertion-sort.svg
+          test -s _build/acceptance/union-find.json
+          test -s _build/acceptance/union-find.html
+
+          grep -q "Trace Playground" \
+            _build/acceptance/playground.html
+
+          if grep -q '<script src=' \
+            _build/acceptance/playground.html; then
+            echo "Playground must not load external scripts"
+            exit 1
+          fi
+
+          moon package
+
+          test -s \
+            _build/publish/shop1111-frontierlab-0.5.0.zip
