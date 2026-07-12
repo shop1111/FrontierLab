@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 - 2026-07-12
+
+- Upgraded FrontierLab into a semantic time-travel debugger with frame diffs, event/entity breakpoints, trace slicing, and first-divergence detection.
+- Added extensible trace contracts plus sequence-transition, integer insertion-sort, and grid-path contract implementations.
+- Added deterministic JSON CLI workflows for AI agents with semantic-failure exit code 2 and portable counterexample export.
+- Expanded the offline Playground with debugger controls, a faulty AI-generated trace, contract navigation, and expected/actual comparison.
+- Extended CI and benchmarks to cover debugger reports, semantic failures, contract verification, and divergence detection.
+
 ## 0.5.0 - 2026-07-11
 
 - Added a self-contained offline Trace Playground with JSON paste/file import, drag-and-drop, schema-v1 diagnostics, analysis, quality checks, timeline replay, and SVG/JSON export.

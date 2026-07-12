@@ -65,18 +65,31 @@ jobs:
           moon run cmd/main -- validate fixtures/schema-v1/all-events.json
           moon run cmd/main -- render fixtures/schema-v1/all-events.json --format html --output _build/acceptance/all-events.html
           moon run cmd/main -- playground --output _build/acceptance/playground.html
+          moon run cmd/main -- demo insertion-sort --format json --output _build/acceptance/insertion-sort.json
+          moon run cmd/main -- demo faulty-insertion-sort --format json --output _build/acceptance/faulty-sort.json
+          moon run cmd/main -- diff _build/acceptance/union-find.json --from 0 --to 1 --format json > _build/acceptance/diff-report.json
+          moon run cmd/main -- breakpoints _build/acceptance/union-find.json --event union --changed-only --format json > _build/acceptance/breakpoint-report.json
+          moon run cmd/main -- verify _build/acceptance/insertion-sort.json --contract insertion-sort-int --object values --format json > _build/acceptance/verify-report.json
+          set +e
+          moon run cmd/main -- verify _build/acceptance/faulty-sort.json --contract sequence-transition --object values --format json --counterexample _build/acceptance/counterexample.json > _build/acceptance/failure-report.json
+          verify_exit=$?
+          moon run cmd/main -- diverge _build/acceptance/union-find.json _build/acceptance/faulty-sort.json --format json > _build/acceptance/divergence-report.json
+          diverge_exit=$?
+          set -e
+          test "$verify_exit" -eq 2
+          test "$diverge_exit" -eq 2
           test -s _build/acceptance/insertion-sort.svg
           test -s _build/acceptance/union-find.json
           test -s _build/acceptance/union-find-analysis.txt
           test -s _build/acceptance/all-events.html
           test -s _build/acceptance/playground.html
-          grep -q "Trace Playground" _build/acceptance/playground.html
+          grep -q "Semantic Time-Travel Debugger" _build/acceptance/playground.html
           if grep -q '<script src=' _build/acceptance/playground.html; then exit 1; fi
 
       - name: Package module
         run: |
           moon package
-          test -s _build/publish/shop1111-frontierlab-0.5.0.zip
+          test -s _build/publish/shop1111-frontierlab-0.6.0.zip
 
       - name: Upload acceptance artifacts
         uses: actions/upload-artifact@v4
@@ -86,4 +99,4 @@ jobs:
           if-no-files-found: error
           path: |
             _build/acceptance/
-            _build/publish/shop1111-frontierlab-0.5.0.zip
+            _build/publish/shop1111-frontierlab-0.6.0.zip

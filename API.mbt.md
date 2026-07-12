@@ -35,7 +35,24 @@ test "build encode and decode a trace" {
 ///|
 test "generate an offline trace playground" {
   let html = @frontierlab.render_trace_playground()
-  assert_true(html.contains("Trace Playground"))
+  assert_true(html.contains("Semantic Time-Travel Debugger"))
   assert_true(!html.contains("<script src="))
+}
+```
+
+```mbt check
+///|
+test "debug and verify an algorithm trace" {
+  let trace = @frontierlab.insertion_sort_trace([3, 1, 2])
+  let diff = trace.diff(from_step=0, to_step=1)
+  assert_true(!diff.is_empty())
+  let hits = trace.breakpoint_hits(
+    @frontierlab.TraceBreakpoint::new(event_kind="swap", changed_only=true),
+  )
+  assert_true(!hits.is_empty())
+  let report = @frontierlab.insertion_sort_int_contract(object_id="values").check(
+    trace,
+  )
+  assert_true(report.passed)
 }
 ```

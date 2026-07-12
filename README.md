@@ -1,6 +1,6 @@
 # FrontierLab
 
-**A MoonBit Algorithm Trace & Visualization Kit — record why an algorithm changes, then replay what changed.**
+**A semantic time-travel debugger for MoonBit algorithms and AI-generated traces.**
 
 [![CI](https://github.com/shop1111/FrontierLab/actions/workflows/ci.yml/badge.svg)](https://github.com/shop1111/FrontierLab/actions/workflows/ci.yml)
 [![Mooncakes](https://img.shields.io/badge/mooncakes-shop1111%2Ffrontierlab-7c3aed)](https://mooncakes.io/docs/shop1111/frontierlab)
@@ -13,7 +13,7 @@
 
 ## 中文
 
-FrontierLab 不是另一个算法合集，也不是通用绘图库。它为 MoonBit 算法提供统一的**语义事件 + 场景快照**协议：算法记录 `Compare`、`Swap`、`Visit`、`Union`、`Relax` 等事件，同时提交这一刻的序列、集合、图或网格状态；渲染器再把记录导出为可离线播放的 HTML、确定性 SVG 或 JSON。
+FrontierLab 不是另一个算法合集，也不是通用绘图库。它为 MoonBit 算法提供统一的**语义事件 + 场景快照**协议，并在其上提供时间旅行调试：算法记录 `Compare`、`Swap`、`Visit`、`Union`、`Relax` 等事件；开发者或 AI Agent 可以设置语义断点、比较相邻场景、执行过程 contract、定位第一次分歧并导出最小反例。
 
 ### 为什么值得用
 
@@ -22,6 +22,8 @@ FrontierLab 不是另一个算法合集，也不是通用绘图库。它为 Moon
 - 生成的 HTML 不依赖 CDN、Node.js、服务器或浏览器插件。
 - 稳定实体 ID 让元素在交换、合并和寻路过程中仍可追踪。
 - `analyze()` 可在渲染前统计事件、目标引用、对象规模和完成状态。
+- `diff()`、语义断点和 trace slice 可定位某个逻辑实体第一次发生异常的步骤。
+- Trace Contract 检查算法过程而不只检查最终答案，JSON CLI 可直接接入 AI Agent 和 CI。
 - 原有 BFS、Dijkstra、A*、ASCII/SVG API 完整保留。
 
 ### 五分钟体验
@@ -46,6 +48,12 @@ moon run cmd/main -- render trace.json --format html --output replay.html
 
 # 生成完全离线的 Trace Playground
 moon run cmd/main -- playground --output playground.html
+
+# 时间旅行调试与 Agent JSON 接口
+moon run cmd/main -- diff trace.json --from 10 --to 11 --format json
+moon run cmd/main -- breakpoints trace.json --event swap --target values/item-0 --changed-only --format json
+moon run cmd/main -- verify trace.json --contract insertion-sort-int --object values --format json
+moon run cmd/main -- diverge expected.json actual.json --format json
 ```
 
 浏览器直接打开生成的 HTML，即可使用播放、暂停、时间轴、速度控制以及左右方向键。
@@ -100,6 +108,22 @@ test {
 }
 ```
 
+### 验证 AI 生成的算法过程
+
+```mbt check
+test {
+  let trace = @frontierlab.insertion_sort_trace([3, 1, 2])
+  let report = @frontierlab.insertion_sort_int_contract(
+    object_id="values",
+  ).check(trace)
+  assert_true(report.passed)
+  let swaps = trace.breakpoint_hits(
+    @frontierlab.TraceBreakpoint::new(event_kind="swap", changed_only=true),
+  )
+  assert_true(!swaps.is_empty())
+}
+```
+
 ### 内置能力
 
 - `AlgorithmTrace` / `AlgorithmTraceStep`：版本化 trace 文档与不可变步骤快照。
@@ -110,6 +134,9 @@ test {
 - `Highlight` / `Annotation`：统一视觉角色、教学说明和伪代码行号。
 - `render_trace_html`：自包含、响应式、支持深浅主题的交互播放器。
 - `render_trace_playground`：自包含的 trace 导入、校验、分析、回放与 SVG 导出工作台。
+- `TraceFrameDiff` / `TraceBreakpoint` / `TraceCounterexample`：场景差异、语义断点和最小反例。
+- `TraceContract` / `ContractReport`：可扩展过程验证与机器可读诊断。
+- `first_divergence`：定位参考 trace 与实际 trace 第一次事件或场景分歧。
 - `render_trace_svg` / `render_trace_svg_frames`：单帧与批量确定性 SVG。
 - `TraceStats` / `EventCount` / `ObjectUsage` / `TargetUsage`：事件统计、对象规模和目标引用分析。
 - `insertion_sort_trace` / `union_find_trace`：可复用算法适配器，不只是内置 demo。
@@ -149,6 +176,8 @@ The original pathfinding APIs remain compatible. BFS, Dijkstra, and A* now serve
 - Explain: `Highlight`, `HighlightRole`, `Annotation`
 - Export: `render_trace_html`, `render_trace_svg`, `render_trace_svg_frames`
 - Playground: `render_trace_playground`
+- Debug: `AlgorithmTrace::diff`, `breakpoint_hits`, `slice`, `first_divergence`
+- Verify: `TraceContract::check`, `sequence_transition_contract`, `insertion_sort_int_contract`, `grid_path_contract`
 - Analyze: `AlgorithmTrace::analyze`, `summary_report`, `event_counts`, `target_usage`
 - Adapt: `insertion_sort_trace`, `union_find_trace`, `search_trace_to_algorithm_trace`
 

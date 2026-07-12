@@ -18,9 +18,10 @@ fn run_case(step_count : Int) -> Unit raise {
     initial_scene=make_scene(0),
   )
   for i in 0..<(step_count - 1) {
-    builder.record(event=@frontierlab.Custom("tick", []), scene=make_scene(i))
+    ignore(i)
+    builder.record(event=@frontierlab.Custom("tick", []), scene=make_scene(0))
   }
-  builder.record(event=@frontierlab.Complete, scene=make_scene(step_count))
+  builder.record(event=@frontierlab.Complete, scene=make_scene(0))
   let trace = builder.finish()
   let built = @env.now()
   let json = trace.encode_json()
@@ -29,14 +30,24 @@ fn run_case(step_count : Int) -> Unit raise {
   let parsed = @env.now()
   let html = @frontierlab.render_trace_html(decoded)
   let rendered = @env.now()
+  let _ = decoded.diff(from_step=step_count - 2, to_step=step_count - 1)
+  let diffed = @env.now()
+  let _ = @frontierlab.sequence_transition_contract(object_id="benchmark").check(
+    decoded,
+  )
+  let verified = @env.now()
+  let _ = @frontierlab.first_divergence(decoded, decoded)
+  let diverged = @env.now()
   println(
-    "\{step_count},\{built - started},\{encoded - built},\{parsed - encoded},\{rendered - parsed},\{json.length()},\{html.length()}",
+    "\{step_count},\{built - started},\{encoded - built},\{parsed - encoded},\{rendered - parsed},\{diffed - rendered},\{verified - diffed},\{diverged - verified},\{json.length()},\{html.length()}",
   )
 }
 
 ///|
 fn main raise {
-  println("steps,build_ms,encode_ms,decode_ms,html_ms,json_bytes,html_bytes")
+  println(
+    "steps,build_ms,encode_ms,decode_ms,html_ms,diff_ms,contract_ms,divergence_ms,json_bytes,html_bytes",
+  )
   for count in [100, 1000, 10000] {
     run_case(count)
   }

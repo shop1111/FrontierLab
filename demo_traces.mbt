@@ -5,6 +5,47 @@ pub fn insertion_sort_demo_trace(values : Array[Int]) -> AlgorithmTrace raise {
 }
 
 ///|
+/// Build an intentionally faulty trace for debugger and contract demos.
+pub fn faulty_insertion_sort_demo_trace() -> AlgorithmTrace raise {
+  let initial = Scene::new(objects=[
+    Sequence(
+      SequenceState::new(id="values", label="Faulty insertion sort", items=[
+        SequenceItem::new(id="a", value="2"),
+        SequenceItem::new(id="b", value="1"),
+        SequenceItem::new(id="c", value="3"),
+      ]),
+    ),
+  ])
+  let changed = Scene::new(objects=[
+    Sequence(
+      SequenceState::new(id="values", label="Faulty insertion sort", items=[
+        SequenceItem::new(id="b", value="1"),
+        SequenceItem::new(id="a", value="2"),
+        SequenceItem::new(id="c", value="3"),
+      ]),
+    ),
+  ])
+  let builder = TraceBuilder::new(
+    title="Faulty AI-generated insertion sort",
+    algorithm="faulty-insertion-sort",
+    description="Compare illegally mutates order; contracts must stop at step 0.",
+    initial_scene=initial,
+  )
+  builder.record(
+    event=Compare([
+      TargetRef::entity("values", "a"),
+      TargetRef::entity("values", "b"),
+    ]),
+    scene=changed,
+    annotation=Annotation::new(
+      title="Fault injected",
+      body="This compare incorrectly changes the sequence order.",
+    ),
+  )
+  builder.finish()
+}
+
+///|
 /// Build the Union-Find trace used by the bundled demo and CLI.
 pub fn union_find_demo_trace() -> AlgorithmTrace raise {
   union_find_trace(6, [

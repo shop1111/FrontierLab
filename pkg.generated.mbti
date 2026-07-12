@@ -17,6 +17,8 @@ pub fn bfs_trace(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule)
 
 pub fn compare_algorithms(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule, heuristic? : Heuristic) -> CompareReport raise
 
+pub let debug_report_version : String
+
 pub fn dijkstra(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule) -> PathResult raise
 
 pub fn dijkstra_trace(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule) -> SearchTrace raise
@@ -25,9 +27,17 @@ pub fn export_ascii(GridMap, start~ : Position, goal~ : Position, trace? : Searc
 
 pub fn export_svg(GridMap, start~ : Position, goal~ : Position, trace? : SearchTrace, cell_size? : Int) -> String
 
+pub fn faulty_insertion_sort_demo_trace() -> AlgorithmTrace raise
+
+pub fn first_divergence(AlgorithmTrace, AlgorithmTrace) -> TraceDivergence?
+
+pub fn grid_path_contract(object_id~ : String) -> TraceContract
+
 pub fn heuristic_distance(Heuristic, Position, Position) -> Int
 
 pub fn insertion_sort_demo_trace(Array[Int]) -> AlgorithmTrace raise
+
+pub fn insertion_sort_int_contract(object_id~ : String) -> TraceContract
 
 pub fn insertion_sort_items_trace(Array[SortTraceItem], title? : String, object_id? : String, label? : String) -> AlgorithmTrace raise TraceError
 
@@ -46,6 +56,8 @@ pub fn render_trace_svg(AlgorithmTrace, step? : Int, width? : Int) -> String rai
 pub fn render_trace_svg_frames(AlgorithmTrace, width? : Int) -> Array[String] raise
 
 pub fn search_trace_to_algorithm_trace(GridMap, start~ : Position, goal~ : Position, algorithm~ : String, trace~ : SearchTrace) -> AlgorithmTrace raise
+
+pub fn sequence_transition_contract(object_id~ : String) -> TraceContract
 
 pub fn union_find_demo_trace() -> AlgorithmTrace raise
 
@@ -88,7 +100,9 @@ pub struct AlgorithmTrace {
 } derive(Eq, ToJson, @debug.Debug)
 pub fn AlgorithmTrace::analysis_markdown(Self, target_limit? : Int) -> String
 pub fn AlgorithmTrace::analyze(Self) -> TraceStats
+pub fn AlgorithmTrace::breakpoint_hits(Self, TraceBreakpoint) -> Array[TraceBreakpointHit]
 pub fn AlgorithmTrace::decode_json(StringView) -> Self raise TraceError
+pub fn AlgorithmTrace::diff(Self, from_step~ : Int, to_step~ : Int) -> TraceFrameDiff raise TraceError
 pub fn AlgorithmTrace::encode_json(Self) -> String
 pub fn AlgorithmTrace::event_counts(Self) -> Array[EventCount]
 pub fn AlgorithmTrace::has_lint_errors(Self) -> Bool
@@ -98,6 +112,7 @@ pub fn AlgorithmTrace::lint_count(Self, TraceLintSeverity) -> Int
 pub fn AlgorithmTrace::lint_markdown(Self) -> String
 pub fn AlgorithmTrace::lint_report(Self) -> String
 pub fn AlgorithmTrace::object_usage(Self) -> Array[ObjectUsage]
+pub fn AlgorithmTrace::slice(Self, center~ : Int, before? : Int, after? : Int) -> TraceCounterexample raise TraceError
 pub fn AlgorithmTrace::summary_report(Self) -> String
 pub fn AlgorithmTrace::target_usage(Self) -> Array[TargetUsage]
 pub fn AlgorithmTrace::timeline(Self) -> Array[TraceTimelineEntry]
@@ -124,11 +139,25 @@ pub struct CompareReport {
   entries : Array[AlgorithmReport]
 } derive(Eq, ToJson, @debug.Debug)
 
+pub struct ContractReport {
+  report_version : String
+  contract_name : String
+  passed : Bool
+  violations : Array[TraceViolation]
+  first_failure : TraceViolation?
+  counterexample : TraceCounterexample?
+} derive(Eq, ToJson, @debug.Debug)
+pub fn ContractReport::report(Self) -> String
+pub fn ContractReport::to_json_string(Self) -> String
+pub fn ContractReport::to_markdown(Self) -> String
+
 pub struct CostEntry {
   position : Position
   cost : Int
 } derive(Eq, ToJson, @debug.Debug)
 pub fn CostEntry::new(position~ : Position, cost~ : Int) -> Self
+
+type DebugEntity derive(Eq, @debug.Debug)
 
 pub struct EventCount {
   name : String
@@ -332,6 +361,22 @@ pub struct TraceAttribute {
 } derive(Eq, ToJson, @debug.Debug)
 pub fn TraceAttribute::new(key~ : String, value~ : String) -> Self
 
+pub struct TraceBreakpoint {
+  event_kind : String
+  target : TargetRef?
+  role : String
+  changed_only : Bool
+} derive(Eq, ToJson, @debug.Debug)
+pub fn TraceBreakpoint::new(event_kind? : String, target? : TargetRef, role? : String, changed_only? : Bool) -> Self
+
+pub struct TraceBreakpointHit {
+  step : Int
+  event_kind : String
+  targets : Array[TargetRef]
+  changes : Array[TraceChange]
+  reason : String
+} derive(Eq, ToJson, @debug.Debug)
+
 pub struct TraceBuilder {
   title : String
   algorithm : String
@@ -345,6 +390,60 @@ pub fn TraceBuilder::finish(Self, summary? : Array[TraceAttribute]) -> Algorithm
 pub fn TraceBuilder::new(title~ : String, algorithm~ : String, description? : String, initial_scene~ : Scene, options? : TraceOptions) -> Self raise TraceError
 pub fn TraceBuilder::record(Self, event~ : TraceEvent, scene~ : Scene, annotation? : Annotation) -> Unit raise TraceError
 
+pub struct TraceChange {
+  kind : TraceChangeKind
+  target : TargetRef
+  before_value : String
+  after_value : String
+  before_index : Int
+  after_index : Int
+} derive(Eq, ToJson, @debug.Debug)
+pub fn TraceChange::new(kind~ : TraceChangeKind, target~ : TargetRef, before_value? : String, after_value? : String, before_index? : Int, after_index? : Int) -> Self
+
+pub(all) enum TraceChangeKind {
+  Added
+  Removed
+  Updated
+  Moved
+  HighlightAdded
+  HighlightRemoved
+} derive(Eq, ToJson, @debug.Debug)
+
+pub struct TraceContract {
+  name : String
+  description : String
+  checker : (AlgorithmTrace) -> Array[TraceViolation]
+}
+pub fn TraceContract::check(Self, AlgorithmTrace) -> ContractReport
+pub fn TraceContract::new(name~ : String, description~ : String, checker~ : (AlgorithmTrace) -> Array[TraceViolation]) -> Self
+
+pub struct TraceCounterexample {
+  original_title : String
+  original_start : Int
+  original_focus : Int
+  original_end : Int
+  focus_step : Int
+  trace : AlgorithmTrace
+} derive(Eq, ToJson, @debug.Debug)
+pub fn TraceCounterexample::to_json_string(Self) -> String
+
+pub struct TraceDivergence {
+  step : Int
+  kind : TraceDivergenceKind
+  message : String
+  expected_event : String
+  actual_event : String
+  scene_diff : TraceFrameDiff?
+} derive(Eq, ToJson, @debug.Debug)
+pub fn TraceDivergence::to_json_string(Self) -> String
+
+pub(all) enum TraceDivergenceKind {
+  EventMismatch
+  SceneMismatch
+  ExpectedEnded
+  ActualEnded
+} derive(Eq, ToJson, @debug.Debug)
+
 pub(all) enum TraceEvent {
   Initialize
   Compare(Array[TargetRef])
@@ -356,6 +455,15 @@ pub(all) enum TraceEvent {
   Complete
   Custom(String, Array[TraceAttribute])
 } derive(Eq, ToJson, @debug.Debug)
+
+pub struct TraceFrameDiff {
+  from_step : Int
+  to_step : Int
+  changes : Array[TraceChange]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn TraceFrameDiff::is_empty(Self) -> Bool
+pub fn TraceFrameDiff::report(Self) -> String
+pub fn TraceFrameDiff::to_json_string(Self) -> String
 
 pub struct TraceLintIssue {
   severity : TraceLintSeverity
@@ -432,6 +540,22 @@ pub struct TraceTimelineEntry {
 pub fn TraceTimelineEntry::label(Self) -> String
 pub fn TraceTimelineEntry::markdown_row(Self) -> String
 pub fn TraceTimelineEntry::new(step~ : Int, event_name~ : String, target_count~ : Int, object_count~ : Int, entity_count~ : Int, highlight_count~ : Int, annotation_title? : String, completed? : Bool) -> Self
+
+pub struct TraceViolation {
+  contract : String
+  code : String
+  severity : TraceViolationSeverity
+  step : Int
+  targets : Array[TargetRef]
+  message : String
+  evidence : Array[TraceAttribute]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn TraceViolation::new(contract~ : String, code~ : String, severity? : TraceViolationSeverity, step? : Int, targets? : Array[TargetRef], message~ : String, evidence? : Array[TraceAttribute]) -> Self
+
+pub(all) enum TraceViolationSeverity {
+  Warning
+  Error
+} derive(Eq, ToJson, @debug.Debug)
 
 pub struct UnionOperation {
   left : Int
