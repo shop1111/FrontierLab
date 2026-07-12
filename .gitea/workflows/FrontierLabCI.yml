@@ -66,7 +66,7 @@ jobs:
           test -s _build/acceptance/union-find.json
           test -s _build/acceptance/union-find.html
 
-          grep -q "Trace Playground" \
+          grep -q "Semantic Time-Travel Debugger" \
             _build/acceptance/playground.html
 
           if grep -q '<script src=' \
@@ -78,4 +78,4 @@ jobs:
           moon package
 
           test -s \
-            _build/publish/shop1111-frontierlab-0.5.0.zip
+            _build/publish/shop1111-frontierlab-0.6.0.zip
