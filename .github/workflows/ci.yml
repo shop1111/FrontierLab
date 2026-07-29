@@ -17,7 +17,7 @@ jobs:
 
       - name: Set up MoonBit
         run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "0.10.4+2cc641edf"
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
 
       - name: Check toolchain
@@ -89,7 +89,7 @@ jobs:
       - name: Package module
         run: |
           moon package
-          test -s _build/publish/shop1111-frontierlab-0.6.0.zip
+          test -s _build/publish/shop1111-frontierlab-0.6.1.zip
 
       - name: Upload acceptance artifacts
         uses: actions/upload-artifact@v4
@@ -99,4 +99,23 @@ jobs:
           if-no-files-found: error
           path: |
             _build/acceptance/
-            _build/publish/shop1111-frontierlab-0.6.0.zip
+            _build/publish/shop1111-frontierlab-0.6.1.zip
+
+  latest-compatibility:
+    name: Latest MoonBit compatibility (non-blocking)
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Set up latest MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Probe strict gates
+        run: |
+          moon version --all
+          moon update
+          moon check --target all --deny-warn
+          moon build --target all --deny-warn
+          moon test --target all --deny-warn

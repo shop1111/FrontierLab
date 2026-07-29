@@ -22,7 +22,7 @@ jobs:
         run: |
           set -euxo pipefail
 
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "0.10.4+2cc641edf"
           export PATH="$HOME/.moon/bin:$PATH"
 
           moon version --all
@@ -78,4 +78,30 @@ jobs:
           moon package
 
           test -s \
-            _build/publish/shop1111-frontierlab-0.6.0.zip
+            _build/publish/shop1111-frontierlab-0.6.1.zip
+
+  latest-compatibility:
+    name: Latest MoonBit compatibility probe
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Probe without blocking the pinned gate
+        run: |
+          set +e
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          install_exit=$?
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon version --all
+          version_exit=$?
+          moon update
+          update_exit=$?
+          moon check --target all --deny-warn
+          check_exit=$?
+          moon build --target all --deny-warn
+          build_exit=$?
+          moon test --target all --deny-warn
+          test_exit=$?
+          printf 'latest compatibility: install=%s version=%s update=%s check=%s build=%s test=%s\n' \
+            "$install_exit" "$version_exit" "$update_exit" "$check_exit" "$build_exit" "$test_exit"
+          exit 0

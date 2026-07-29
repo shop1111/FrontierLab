@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.1 - Unreleased candidate
+
+- Fixed the ambiguous empty `Map` literal that blocked strict all-target builds
+  on `moonc 0.10.4+2cc641edf`.
+- Pinned release, Pages, Copilot, and Gitlink automation to the reproducible
+  compiler version while retaining non-blocking latest-toolchain probes.
+- Added an explicit toolchain policy and updated candidate package artifacts.
+
 ## 0.6.0 - 2026-07-12
 
 - Upgraded FrontierLab into a semantic time-travel debugger with frame diffs, event/entity breakpoints, trace slicing, and first-divergence detection.

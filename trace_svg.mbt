@@ -266,7 +266,7 @@ fn layout_graph(graph : GraphState) -> Array[GraphLayoutPoint] {
     }
   }
   if queue.length() == count {
-    let slots : Map[Int, Int] = {}
+    let slots : Map[Int, Int] = Map([])
     graph.nodes.mapi(fn(i, node) {
       let slot = slots.get(level[i]).unwrap_or(0)
       slots[level[i]] = slot + 1

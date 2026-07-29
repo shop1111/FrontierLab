@@ -1,6 +1,8 @@
 # FrontierLab acceptance guide
 
-This is the shortest reproducible path for reviewers of FrontierLab 0.6.0.
+This is the shortest reproducible path for reviewers of the local FrontierLab
+0.6.1 candidate. The public Mooncakes and hosted Playground release remains
+0.6.0 until a later publication step.
 
 ## 1. Try it without installing anything
 
@@ -39,7 +41,7 @@ moon run cmd/main -- demo faulty-insertion-sort --format json --output _build/ac
 moon run cmd/main -- verify _build/acceptance/faulty.json --contract sequence-transition --object values --format json --counterexample _build/acceptance/counterexample.json
 ```
 
-Expected results: quality gates and valid examples exit successfully; the faulty contract command exits 2 and writes a counterexample; the debugger works without a server or network connection; and `_build/publish/shop1111-frontierlab-0.6.0.zip` exists after packaging.
+Expected results: quality gates and valid examples exit successfully; the faulty contract command exits 2 and writes a counterexample; the debugger works without a server or network connection; and `_build/publish/shop1111-frontierlab-0.6.1.zip` exists after packaging.
 
 ## 4. Public project locations
 
