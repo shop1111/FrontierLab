@@ -6,6 +6,7 @@ package "shop1111/frontierlab/cmd/main"
 // Errors
 
 // Types and methods
+type Diagnosis
 
 // Type aliases
 
