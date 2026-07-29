@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.7.0 - Unreleased candidate
+
+- Added the unified `diagnose` CLI path that combines schema validation,
+  contracts, first divergence, state changes, focus step, counterexample
+  slicing, stable JSON, and offline HTML reports.
+- Added a nested, independently resolved Mooncakes v0.6.0 consumer and frozen
+  selection-sort evidence whose first divergence is deterministically step 10.
+- Reframed the offline Playground as AI Trace Clinic with a one-click default
+  case, correct/no-reference modes, visible diagnostics, downloads, and repair
+  prompt copying.
+- Added schema edge fixtures, white-box debugger/contract/codec/report/quality
+  coverage, and a portable reasoned coverage gate.
+- Extended the benchmark through 50,000 steps with explicit `TraceOptions`;
+  `decode_json` now accepts backward-compatible optional limits.
+- Reworked reviewer documentation, acceptance, demo, validation, and future
+  release handoff around the complete diagnosis loop.
+
 ## 0.6.1 - Unreleased candidate
 
 - Fixed the ambiguous empty `Map` literal that blocked strict all-target builds

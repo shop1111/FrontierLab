@@ -10,4 +10,14 @@ The renderer uses no network resources, CDN scripts, dynamic imports, or remote 
 
 `render_trace_playground()` creates an offline workbench that accepts schema-v1 JSON by paste, file picker, or drag-and-drop. It performs browser-side structural diagnostics, analysis, quality checks, timeline replay, and JSON/current-frame SVG export without uploading trace data or loading remote assets. Generate it with `moon run cmd/main -- playground --output playground.html`.
 
-In 0.6.0 the Playground also exposes semantic breakpoints, previous-frame diffs, built-in contracts, first-divergence comparison, a deliberately faulty AI-generated trace, and counterexample export. Browser checks mirror the portable debugger concepts; authoritative automation should use the MoonBit library or JSON CLI.
+The local v0.7.0 candidate presents this workbench as **AI Trace Clinic**. Its
+default frozen selection-sort case runs schema/contract checks, jumps to the
+first divergence at step 10, explains stable-entity changes, and prepares a
+minimal counterexample plus repair prompt in one click. A correct case proves
+the no-false-positive path; custom input without an expected trace explicitly
+skips divergence. Existing raw JSON, playback, filters, breakpoints, and speed
+controls remain under Advanced details.
+
+The hosted page remains v0.6.0 until a future Pages deployment. Browser checks
+mirror the portable debugger concepts; authoritative automation should use the
+MoonBit library or JSON CLI.

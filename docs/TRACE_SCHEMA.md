@@ -27,3 +27,10 @@ The stable built-in vocabulary is `initialize`, `compare`, `swap`, `visit`, `upd
 - A breaking wire-format change increments the major schema version.
 - Version 1 stores full scenes; a future compressed transport must decode to the same logical document.
 - Complete machine-readable examples live in `fixtures/schema-v1/`.
+
+The fixture set includes a minimal valid document, an empty timeline, an
+invalid object reference, an unknown custom event, and the all-events golden
+document. Tests assert semantic `decode -> encode -> decode` equality for legal
+inputs and stable typed failures for invalid references. Large trusted inputs
+may pass explicit `TraceOptions` to `decode_json`; the default safety limits
+remain unchanged.
