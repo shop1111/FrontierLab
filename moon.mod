@@ -15,7 +15,7 @@ import {
 
 name = "shop1111/frontierlab"
 
-version = "0.6.1"
+version = "0.7.0"
 
 readme = "README.md"
 
@@ -26,3 +26,7 @@ license = "MIT"
 keywords = [ "algorithm", "trace", "visualization", "education", "svg", "html" ]
 
 description = "A MoonBit algorithm trace protocol and offline HTML/SVG visualization kit."
+
+options(
+  exclude: [ "consumer/frontierlab_consumer_demo", "PROJECT_APPLICATION.md" ],
+)

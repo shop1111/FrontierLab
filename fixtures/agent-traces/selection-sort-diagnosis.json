@@ -1,0 +1,837 @@
+{"report_version":"frontierlab-debug-report/1.0","ok":false,"command":"diagnose","result":{"contract":{
+  "report_version": "frontierlab-debug-report/1.0",
+  "contract_name": "insertion-sort-int",
+  "passed": false,
+  "violations": [
+    {
+      "contract": "insertion-sort-int",
+      "code": "result-not-sorted",
+      "severity": "Error",
+      "step": 13,
+      "targets": [
+        {
+          "object_id": "values",
+          "entity_id": "item-0"
+        },
+        {
+          "object_id": "values",
+          "entity_id": "item-4"
+        }
+      ],
+      "message": "Final sequence contains inversion 5 > 3.",
+      "evidence": []
+    }
+  ],
+  "first_failure": {
+    "contract": "insertion-sort-int",
+    "code": "result-not-sorted",
+    "severity": "Error",
+    "step": 13,
+    "targets": [
+      {
+        "object_id": "values",
+        "entity_id": "item-0"
+      },
+      {
+        "object_id": "values",
+        "entity_id": "item-4"
+      }
+    ],
+    "message": "Final sequence contains inversion 5 > 3.",
+    "evidence": []
+  },
+  "counterexample": {
+    "original_title": "Faulty selection sort - stale index",
+    "original_start": 11,
+    "original_focus": 13,
+    "original_end": 13,
+    "focus_step": 2,
+    "trace": {
+      "schema_version": "1.0",
+      "title": "Faulty selection sort - stale index counterexample",
+      "algorithm": "selection-sort",
+      "description": "Steps 11..13 from Faulty selection sort - stale index.",
+      "initial_scene": {
+        "objects": [
+          [
+            "Sequence",
+            {
+              "id": "values",
+              "label": "Selection sort",
+              "items": [
+                {
+                  "id": "item-3",
+                  "value": "1"
+                },
+                {
+                  "id": "item-1",
+                  "value": "2"
+                },
+                {
+                  "id": "item-0",
+                  "value": "5"
+                },
+                {
+                  "id": "item-2",
+                  "value": "4"
+                },
+                {
+                  "id": "item-4",
+                  "value": "3"
+                }
+              ]
+            }
+          ]
+        ],
+        "highlights": [
+          {
+            "target": {
+              "object_id": "values",
+              "entity_id": "item-2"
+            },
+            "role": "Error"
+          },
+          {
+            "target": {
+              "object_id": "values",
+              "entity_id": "item-0"
+            },
+            "role": "Result"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "index": 0,
+          "event": [
+            "Compare",
+            [
+              {
+                "object_id": "values",
+                "entity_id": "item-2"
+              },
+              {
+                "object_id": "values",
+                "entity_id": "item-4"
+              }
+            ]
+          ],
+          "scene": {
+            "objects": [
+              [
+                "Sequence",
+                {
+                  "id": "values",
+                  "label": "Selection sort",
+                  "items": [
+                    {
+                      "id": "item-3",
+                      "value": "1"
+                    },
+                    {
+                      "id": "item-1",
+                      "value": "2"
+                    },
+                    {
+                      "id": "item-0",
+                      "value": "5"
+                    },
+                    {
+                      "id": "item-2",
+                      "value": "4"
+                    },
+                    {
+                      "id": "item-4",
+                      "value": "3"
+                    }
+                  ]
+                }
+              ]
+            ],
+            "highlights": [
+              {
+                "target": {
+                  "object_id": "values",
+                  "entity_id": "item-2"
+                },
+                "role": "Compared"
+              },
+              {
+                "target": {
+                  "object_id": "values",
+                  "entity_id": "item-4"
+                },
+                "role": "Current"
+              }
+            ]
+          },
+          "annotation": {
+            "title": "Compare candidate",
+            "body": "Pass 3: compare 4 with 3.",
+            "pseudocode_line": 3
+          }
+        },
+        {
+          "index": 1,
+          "event": [
+            "Swap",
+            {
+              "object_id": "values",
+              "entity_id": "item-2"
+            },
+            {
+              "object_id": "values",
+              "entity_id": "item-4"
+            }
+          ],
+          "scene": {
+            "objects": [
+              [
+                "Sequence",
+                {
+                  "id": "values",
+                  "label": "Selection sort",
+                  "items": [
+                    {
+                      "id": "item-3",
+                      "value": "1"
+                    },
+                    {
+                      "id": "item-1",
+                      "value": "2"
+                    },
+                    {
+                      "id": "item-0",
+                      "value": "5"
+                    },
+                    {
+                      "id": "item-4",
+                      "value": "3"
+                    },
+                    {
+                      "id": "item-2",
+                      "value": "4"
+                    }
+                  ]
+                }
+              ]
+            ],
+            "highlights": [
+              {
+                "target": {
+                  "object_id": "values",
+                  "entity_id": "item-2"
+                },
+                "role": "Changed"
+              },
+              {
+                "target": {
+                  "object_id": "values",
+                  "entity_id": "item-4"
+                },
+                "role": "Result"
+              }
+            ]
+          },
+          "annotation": {
+            "title": "Place minimum",
+            "body": "Place 3 at sorted position 3.",
+            "pseudocode_line": 5
+          }
+        },
+        {
+          "index": 2,
+          "event": "Complete",
+          "scene": {
+            "objects": [
+              [
+                "Sequence",
+                {
+                  "id": "values",
+                  "label": "Selection sort",
+                  "items": [
+                    {
+                      "id": "item-3",
+                      "value": "1"
+                    },
+                    {
+                      "id": "item-1",
+                      "value": "2"
+                    },
+                    {
+                      "id": "item-0",
+                      "value": "5"
+                    },
+                    {
+                      "id": "item-4",
+                      "value": "3"
+                    },
+                    {
+                      "id": "item-2",
+                      "value": "4"
+                    }
+                  ]
+                }
+              ]
+            ],
+            "highlights": [
+              {
+                "target": {
+                  "object_id": "values",
+                  "entity_id": "item-3"
+                },
+                "role": "Error"
+              },
+              {
+                "target": {
+                  "object_id": "values",
+                  "entity_id": "item-1"
+                },
+                "role": "Error"
+              },
+              {
+                "target": {
+                  "object_id": "values",
+                  "entity_id": "item-0"
+                },
+                "role": "Error"
+              },
+              {
+                "target": {
+                  "object_id": "values",
+                  "entity_id": "item-4"
+                },
+                "role": "Error"
+              },
+              {
+                "target": {
+                  "object_id": "values",
+                  "entity_id": "item-2"
+                },
+                "role": "Error"
+              }
+            ]
+          },
+          "annotation": {
+            "title": "Incorrect result",
+            "body": "Final values: 1,2,5,3,4."
+          }
+        }
+      ],
+      "summary": [
+        {
+          "key": "original_start",
+          "value": "11"
+        },
+        {
+          "key": "original_focus",
+          "value": "13"
+        },
+        {
+          "key": "original_end",
+          "value": "13"
+        }
+      ]
+    }
+  }
+},"divergence":{
+  "step": 10,
+  "kind": "EventMismatch",
+  "message": "Events first diverge at step 10.",
+  "expected_event": "swap",
+  "actual_event": "swap"
+},"focus_step":10,"state_changes":{
+  "from_step": 9,
+  "to_step": 10,
+  "changes": [
+    {
+      "kind": "Moved",
+      "target": {
+        "object_id": "values",
+        "entity_id": "item-2"
+      },
+      "before_value": "4",
+      "after_value": "4",
+      "before_index": 2,
+      "after_index": 3
+    },
+    {
+      "kind": "Moved",
+      "target": {
+        "object_id": "values",
+        "entity_id": "item-0"
+      },
+      "before_value": "5",
+      "after_value": "5",
+      "before_index": 3,
+      "after_index": 2
+    },
+    {
+      "kind": "HighlightRemoved",
+      "target": {
+        "object_id": "values",
+        "entity_id": "item-2"
+      },
+      "before_value": "compared",
+      "after_value": "",
+      "before_index": -1,
+      "after_index": -1
+    },
+    {
+      "kind": "HighlightRemoved",
+      "target": {
+        "object_id": "values",
+        "entity_id": "item-4"
+      },
+      "before_value": "current",
+      "after_value": "",
+      "before_index": -1,
+      "after_index": -1
+    },
+    {
+      "kind": "HighlightAdded",
+      "target": {
+        "object_id": "values",
+        "entity_id": "item-2"
+      },
+      "before_value": "",
+      "after_value": "error",
+      "before_index": -1,
+      "after_index": -1
+    },
+    {
+      "kind": "HighlightAdded",
+      "target": {
+        "object_id": "values",
+        "entity_id": "item-0"
+      },
+      "before_value": "",
+      "after_value": "result",
+      "before_index": -1,
+      "after_index": -1
+    }
+  ]
+},"counterexample":{
+  "original_title": "Faulty selection sort - stale index",
+  "original_start": 8,
+  "original_focus": 10,
+  "original_end": 12,
+  "focus_step": 2,
+  "trace": {
+    "schema_version": "1.0",
+    "title": "Faulty selection sort - stale index counterexample",
+    "algorithm": "selection-sort",
+    "description": "Steps 8..12 from Faulty selection sort - stale index.",
+    "initial_scene": {
+      "objects": [
+        [
+          "Sequence",
+          {
+            "id": "values",
+            "label": "Selection sort",
+            "items": [
+              {
+                "id": "item-3",
+                "value": "1"
+              },
+              {
+                "id": "item-1",
+                "value": "2"
+              },
+              {
+                "id": "item-2",
+                "value": "4"
+              },
+              {
+                "id": "item-0",
+                "value": "5"
+              },
+              {
+                "id": "item-4",
+                "value": "3"
+              }
+            ]
+          }
+        ]
+      ],
+      "highlights": [
+        {
+          "target": {
+            "object_id": "values",
+            "entity_id": "item-1"
+          },
+          "role": "Compared"
+        },
+        {
+          "target": {
+            "object_id": "values",
+            "entity_id": "item-4"
+          },
+          "role": "Current"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "index": 0,
+        "event": [
+          "Compare",
+          [
+            {
+              "object_id": "values",
+              "entity_id": "item-2"
+            },
+            {
+              "object_id": "values",
+              "entity_id": "item-0"
+            }
+          ]
+        ],
+        "scene": {
+          "objects": [
+            [
+              "Sequence",
+              {
+                "id": "values",
+                "label": "Selection sort",
+                "items": [
+                  {
+                    "id": "item-3",
+                    "value": "1"
+                  },
+                  {
+                    "id": "item-1",
+                    "value": "2"
+                  },
+                  {
+                    "id": "item-2",
+                    "value": "4"
+                  },
+                  {
+                    "id": "item-0",
+                    "value": "5"
+                  },
+                  {
+                    "id": "item-4",
+                    "value": "3"
+                  }
+                ]
+              }
+            ]
+          ],
+          "highlights": [
+            {
+              "target": {
+                "object_id": "values",
+                "entity_id": "item-2"
+              },
+              "role": "Compared"
+            },
+            {
+              "target": {
+                "object_id": "values",
+                "entity_id": "item-0"
+              },
+              "role": "Current"
+            }
+          ]
+        },
+        "annotation": {
+          "title": "Compare candidate",
+          "body": "Pass 2: compare 4 with 5.",
+          "pseudocode_line": 3
+        }
+      },
+      {
+        "index": 1,
+        "event": [
+          "Compare",
+          [
+            {
+              "object_id": "values",
+              "entity_id": "item-2"
+            },
+            {
+              "object_id": "values",
+              "entity_id": "item-4"
+            }
+          ]
+        ],
+        "scene": {
+          "objects": [
+            [
+              "Sequence",
+              {
+                "id": "values",
+                "label": "Selection sort",
+                "items": [
+                  {
+                    "id": "item-3",
+                    "value": "1"
+                  },
+                  {
+                    "id": "item-1",
+                    "value": "2"
+                  },
+                  {
+                    "id": "item-2",
+                    "value": "4"
+                  },
+                  {
+                    "id": "item-0",
+                    "value": "5"
+                  },
+                  {
+                    "id": "item-4",
+                    "value": "3"
+                  }
+                ]
+              }
+            ]
+          ],
+          "highlights": [
+            {
+              "target": {
+                "object_id": "values",
+                "entity_id": "item-2"
+              },
+              "role": "Compared"
+            },
+            {
+              "target": {
+                "object_id": "values",
+                "entity_id": "item-4"
+              },
+              "role": "Current"
+            }
+          ]
+        },
+        "annotation": {
+          "title": "Compare candidate",
+          "body": "Pass 2: compare 4 with 3.",
+          "pseudocode_line": 3
+        }
+      },
+      {
+        "index": 2,
+        "event": [
+          "Swap",
+          {
+            "object_id": "values",
+            "entity_id": "item-2"
+          },
+          {
+            "object_id": "values",
+            "entity_id": "item-0"
+          }
+        ],
+        "scene": {
+          "objects": [
+            [
+              "Sequence",
+              {
+                "id": "values",
+                "label": "Selection sort",
+                "items": [
+                  {
+                    "id": "item-3",
+                    "value": "1"
+                  },
+                  {
+                    "id": "item-1",
+                    "value": "2"
+                  },
+                  {
+                    "id": "item-0",
+                    "value": "5"
+                  },
+                  {
+                    "id": "item-2",
+                    "value": "4"
+                  },
+                  {
+                    "id": "item-4",
+                    "value": "3"
+                  }
+                ]
+              }
+            ]
+          ],
+          "highlights": [
+            {
+              "target": {
+                "object_id": "values",
+                "entity_id": "item-2"
+              },
+              "role": "Error"
+            },
+            {
+              "target": {
+                "object_id": "values",
+                "entity_id": "item-0"
+              },
+              "role": "Result"
+            }
+          ]
+        },
+        "annotation": {
+          "title": "Stale-index fault",
+          "body": "Expected item-4 (3), but stale index 3 selected item-0 (5).",
+          "pseudocode_line": 5
+        }
+      },
+      {
+        "index": 3,
+        "event": [
+          "Compare",
+          [
+            {
+              "object_id": "values",
+              "entity_id": "item-2"
+            },
+            {
+              "object_id": "values",
+              "entity_id": "item-4"
+            }
+          ]
+        ],
+        "scene": {
+          "objects": [
+            [
+              "Sequence",
+              {
+                "id": "values",
+                "label": "Selection sort",
+                "items": [
+                  {
+                    "id": "item-3",
+                    "value": "1"
+                  },
+                  {
+                    "id": "item-1",
+                    "value": "2"
+                  },
+                  {
+                    "id": "item-0",
+                    "value": "5"
+                  },
+                  {
+                    "id": "item-2",
+                    "value": "4"
+                  },
+                  {
+                    "id": "item-4",
+                    "value": "3"
+                  }
+                ]
+              }
+            ]
+          ],
+          "highlights": [
+            {
+              "target": {
+                "object_id": "values",
+                "entity_id": "item-2"
+              },
+              "role": "Compared"
+            },
+            {
+              "target": {
+                "object_id": "values",
+                "entity_id": "item-4"
+              },
+              "role": "Current"
+            }
+          ]
+        },
+        "annotation": {
+          "title": "Compare candidate",
+          "body": "Pass 3: compare 4 with 3.",
+          "pseudocode_line": 3
+        }
+      },
+      {
+        "index": 4,
+        "event": [
+          "Swap",
+          {
+            "object_id": "values",
+            "entity_id": "item-2"
+          },
+          {
+            "object_id": "values",
+            "entity_id": "item-4"
+          }
+        ],
+        "scene": {
+          "objects": [
+            [
+              "Sequence",
+              {
+                "id": "values",
+                "label": "Selection sort",
+                "items": [
+                  {
+                    "id": "item-3",
+                    "value": "1"
+                  },
+                  {
+                    "id": "item-1",
+                    "value": "2"
+                  },
+                  {
+                    "id": "item-0",
+                    "value": "5"
+                  },
+                  {
+                    "id": "item-4",
+                    "value": "3"
+                  },
+                  {
+                    "id": "item-2",
+                    "value": "4"
+                  }
+                ]
+              }
+            ]
+          ],
+          "highlights": [
+            {
+              "target": {
+                "object_id": "values",
+                "entity_id": "item-2"
+              },
+              "role": "Changed"
+            },
+            {
+              "target": {
+                "object_id": "values",
+                "entity_id": "item-4"
+              },
+              "role": "Result"
+            }
+          ]
+        },
+        "annotation": {
+          "title": "Place minimum",
+          "body": "Place 3 at sorted position 3.",
+          "pseudocode_line": 5
+        }
+      }
+    ],
+    "summary": [
+      {
+        "key": "original_start",
+        "value": "8"
+      },
+      {
+        "key": "original_focus",
+        "value": "10"
+      },
+      {
+        "key": "original_end",
+        "value": "12"
+      }
+    ]
+  }
+}}}
