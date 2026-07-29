@@ -47,6 +47,12 @@ jobs:
       - name: moon test
         run: moon test --target all --deny-warn
 
+      - name: Coverage gate
+        run: python scripts/check_coverage.py
+
+      - name: CLI exit matrix
+        run: python scripts/validate_cli.py
+
       - name: Run executable examples
         run: |
           moon run examples/maze_bfs
@@ -55,6 +61,12 @@ jobs:
           moon run examples/insertion_sort > /tmp/insertion-sort.html
           moon run examples/union_find > /tmp/union-find.html
           moon run examples/pathfinding_trace > /tmp/pathfinding.html
+
+      - name: Benchmark correctness smoke
+        run: |
+          moon run bench --target native -- 100 1000 | tee /tmp/benchmark-smoke.csv
+          grep -q '^100,' /tmp/benchmark-smoke.csv
+          grep -q '^1000,' /tmp/benchmark-smoke.csv
 
       - name: Verify CLI render/validate flow
         run: |
@@ -65,6 +77,12 @@ jobs:
           moon run cmd/main -- validate fixtures/schema-v1/all-events.json
           moon run cmd/main -- render fixtures/schema-v1/all-events.json --format html --output _build/acceptance/all-events.html
           moon run cmd/main -- playground --output _build/acceptance/playground.html
+          set +e
+          moon run cmd/main -- diagnose fixtures/agent-traces/selection-sort-expected.json fixtures/agent-traces/selection-sort-actual.json --contract insertion-sort-int --object values --format json --counterexample _build/acceptance/selection-counterexample.json --report _build/acceptance/selection-diagnosis.html > _build/acceptance/selection-diagnosis.json
+          diagnosis_exit=$?
+          set -e
+          test "$diagnosis_exit" -eq 2
+          python -c 'import json; p=json.load(open("_build/acceptance/selection-diagnosis.json", encoding="utf-8")); assert p["result"]["focus_step"] == 10'
           moon run cmd/main -- demo insertion-sort --format json --output _build/acceptance/insertion-sort.json
           moon run cmd/main -- demo faulty-insertion-sort --format json --output _build/acceptance/faulty-sort.json
           moon run cmd/main -- diff _build/acceptance/union-find.json --from 0 --to 1 --format json > _build/acceptance/diff-report.json
@@ -83,13 +101,13 @@ jobs:
           test -s _build/acceptance/union-find-analysis.txt
           test -s _build/acceptance/all-events.html
           test -s _build/acceptance/playground.html
-          grep -q "Semantic Time-Travel Debugger" _build/acceptance/playground.html
+          grep -q "AI Trace Clinic" _build/acceptance/playground.html
           if grep -q '<script src=' _build/acceptance/playground.html; then exit 1; fi
 
       - name: Package module
         run: |
           moon package
-          test -s _build/publish/shop1111-frontierlab-0.6.1.zip
+          test -s _build/publish/shop1111-frontierlab-0.7.0.zip
 
       - name: Upload acceptance artifacts
         uses: actions/upload-artifact@v4
@@ -99,7 +117,7 @@ jobs:
           if-no-files-found: error
           path: |
             _build/acceptance/
-            _build/publish/shop1111-frontierlab-0.6.1.zip
+            _build/publish/shop1111-frontierlab-0.7.0.zip
 
   latest-compatibility:
     name: Latest MoonBit compatibility (non-blocking)

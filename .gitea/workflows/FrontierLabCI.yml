@@ -36,6 +36,8 @@ jobs:
           git diff --exit-code
 
           moon test --target all --deny-warn
+          python scripts/check_coverage.py
+          python scripts/validate_cli.py
 
           mkdir -p _build/acceptance
 
@@ -61,12 +63,27 @@ jobs:
             --format html \
             --output _build/acceptance/union-find.html
 
+          set +e
+          moon run cmd/main -- diagnose \
+            fixtures/agent-traces/selection-sort-expected.json \
+            fixtures/agent-traces/selection-sort-actual.json \
+            --contract insertion-sort-int \
+            --object values \
+            --format json \
+            --counterexample _build/acceptance/selection-counterexample.json \
+            --report _build/acceptance/selection-diagnosis.html \
+            > _build/acceptance/selection-diagnosis.json
+          diagnosis_exit=$?
+          set -e
+          test "$diagnosis_exit" -eq 2
+          python -c 'import json; p=json.load(open("_build/acceptance/selection-diagnosis.json", encoding="utf-8")); assert p["result"]["focus_step"] == 10'
+
           test -s _build/acceptance/playground.html
           test -s _build/acceptance/insertion-sort.svg
           test -s _build/acceptance/union-find.json
           test -s _build/acceptance/union-find.html
 
-          grep -q "Semantic Time-Travel Debugger" \
+          grep -q "AI Trace Clinic" \
             _build/acceptance/playground.html
 
           if grep -q '<script src=' \
@@ -78,7 +95,7 @@ jobs:
           moon package
 
           test -s \
-            _build/publish/shop1111-frontierlab-0.6.1.zip
+            _build/publish/shop1111-frontierlab-0.7.0.zip
 
   latest-compatibility:
     name: Latest MoonBit compatibility probe

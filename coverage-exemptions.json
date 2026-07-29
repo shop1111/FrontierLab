@@ -1,0 +1,32 @@
+{
+  "maximum_uncovered_lines": 20,
+  "protected_files": [
+    "trace_debugger.mbt",
+    "trace_contracts.mbt",
+    "trace_codec.mbt",
+    "trace_reports.mbt",
+    "trace_quality.mbt"
+  ],
+  "exemptions": [
+    {
+      "pattern": "bench/main.mbt",
+      "reason": "Benchmark-only process entry; correctness is covered by CI smoke runs."
+    },
+    {
+      "pattern": "examples/*/main.mbt",
+      "reason": "Thin executable examples; the called library paths are tested in the root package."
+    },
+    {
+      "pattern": "cmd/main/main.mbt",
+      "reason": "Thin operating-system boundary for argv, stdout and process exit."
+    },
+    {
+      "pattern": "cmd/main/cli_output.mbt",
+      "reason": "Thin stdout and filesystem output boundary; pure serialization helpers are white-box tested."
+    },
+    {
+      "pattern": "cmd/main/cli_run.mbt",
+      "reason": "Command dispatch and filesystem orchestration; parsing and diagnostic calculation live in tested files."
+    }
+  ]
+}

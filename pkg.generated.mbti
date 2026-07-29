@@ -101,7 +101,7 @@ pub struct AlgorithmTrace {
 pub fn AlgorithmTrace::analysis_markdown(Self, target_limit? : Int) -> String
 pub fn AlgorithmTrace::analyze(Self) -> TraceStats
 pub fn AlgorithmTrace::breakpoint_hits(Self, TraceBreakpoint) -> Array[TraceBreakpointHit]
-pub fn AlgorithmTrace::decode_json(StringView) -> Self raise TraceError
+pub fn AlgorithmTrace::decode_json(StringView, options? : TraceOptions) -> Self raise TraceError
 pub fn AlgorithmTrace::diff(Self, from_step~ : Int, to_step~ : Int) -> TraceFrameDiff raise TraceError
 pub fn AlgorithmTrace::encode_json(Self) -> String
 pub fn AlgorithmTrace::event_counts(Self) -> Array[EventCount]

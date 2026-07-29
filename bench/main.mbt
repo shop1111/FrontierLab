@@ -12,10 +12,15 @@ fn make_scene(value : Int) -> @frontierlab.Scene raise {
 ///|
 fn run_case(step_count : Int) -> Unit raise {
   let started = @env.now()
+  let options = @frontierlab.TraceOptions::new(
+    max_steps=step_count,
+    max_entities_per_scene=10,
+  )
   let builder = @frontierlab.TraceBuilder::new(
     title="Benchmark",
     algorithm="benchmark",
     initial_scene=make_scene(0),
+    options~,
   )
   for i in 0..<(step_count - 1) {
     ignore(i)
@@ -26,7 +31,7 @@ fn run_case(step_count : Int) -> Unit raise {
   let built = @env.now()
   let json = trace.encode_json()
   let encoded = @env.now()
-  let decoded = @frontierlab.AlgorithmTrace::decode_json(json)
+  let decoded = @frontierlab.AlgorithmTrace::decode_json(json, options~)
   let parsed = @env.now()
   let html = @frontierlab.render_trace_html(decoded)
   let rendered = @env.now()
@@ -48,7 +53,16 @@ fn main raise {
   println(
     "steps,build_ms,encode_ms,decode_ms,html_ms,diff_ms,contract_ms,divergence_ms,json_bytes,html_bytes",
   )
-  for count in [100, 1000, 10000] {
+  let args = @sys.get_cli_args()
+  let counts : Array[Int] = if args.length() > 1 {
+    args[1:].map(value => @strconv.parse_int(value))
+  } else {
+    [100, 1000, 10000]
+  }
+  for count in counts {
+    if count <= 0 {
+      fail("benchmark step count must be positive")
+    }
     run_case(count)
   }
 }
