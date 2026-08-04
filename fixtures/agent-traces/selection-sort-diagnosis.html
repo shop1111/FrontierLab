@@ -1,12 +1,13 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FrontierLab diagnostic report</title>
 <style>body{max-width:960px;margin:40px auto;padding:0 20px;font:16px/1.55 system-ui;color:#172033}h1{color:#5b21b6}pre{white-space:pre-wrap;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:18px}</style></head>
 <body><h1>FrontierLab diagnostic report</h1><pre>Diagnosis: FAIL
-Contract insertion-sort-int: FAIL
+Contract sorted-int-sequence: FAIL
 - [error] result-not-sorted at step 13: Final sequence contains inversion 5 &gt; 3.
 First divergence: step 10 - Events first diverge at step 10.
 Focus step: 10
+Actual transition:
 Diff frame 9 -&gt; 10
 - moved values/item-2: 4 -&gt; 4 [2 -&gt; 3]
 - moved values/item-0: 5 -&gt; 5 [3 -&gt; 2]
@@ -14,15 +15,24 @@ Diff frame 9 -&gt; 10
 - highlight-removed values/item-4: current -&gt; 
 - highlight-added values/item-2:  -&gt; error
 - highlight-added values/item-0:  -&gt; result
-Counterexample: original steps 8..12, focus 10
+Reference difference:
+Diff frame 10 -&gt; 10
+- moved values/item-4: 3 -&gt; 3 [2 -&gt; 4]
+- moved values/item-0: 5 -&gt; 5 [3 -&gt; 2]
+- moved values/item-2: 4 -&gt; 4 [4 -&gt; 3]
+- highlight-removed values/item-2: changed -&gt;
+- highlight-removed values/item-4: result -&gt;
+- highlight-added values/item-2:  -&gt; error
+- highlight-added values/item-0:  -&gt; result
+Focused counterexample slice: original steps 8..12, focus 10
 </pre>
 <script type="application/json" id="frontierlab-diagnosis">{"contract":{
   "report_version": "frontierlab-debug-report/1.0",
-  "contract_name": "insertion-sort-int",
+  "contract_name": "sorted-int-sequence",
   "passed": false,
   "violations": [
     {
-      "contract": "insertion-sort-int",
+      "contract": "sorted-int-sequence",
       "code": "result-not-sorted",
       "severity": "Error",
       "step": 13,
@@ -41,7 +51,7 @@ Counterexample: original steps 8..12, focus 10
     }
   ],
   "first_failure": {
-    "contract": "insertion-sort-int",
+    "contract": "sorted-int-sequence",
     "code": "result-not-sorted",
     "severity": "Error",
     "step": 13,
@@ -402,6 +412,88 @@ Counterexample: original steps 8..12, focus 10
         "entity_id": "item-4"
       },
       "before_value": "current",
+      "after_value": "",
+      "before_index": -1,
+      "after_index": -1
+    },
+    {
+      "kind": "HighlightAdded",
+      "target": {
+        "object_id": "values",
+        "entity_id": "item-2"
+      },
+      "before_value": "",
+      "after_value": "error",
+      "before_index": -1,
+      "after_index": -1
+    },
+    {
+      "kind": "HighlightAdded",
+      "target": {
+        "object_id": "values",
+        "entity_id": "item-0"
+      },
+      "before_value": "",
+      "after_value": "result",
+      "before_index": -1,
+      "after_index": -1
+    }
+  ]
+},"reference_changes":{
+  "from_step": 10,
+  "to_step": 10,
+  "changes": [
+    {
+      "kind": "Moved",
+      "target": {
+        "object_id": "values",
+        "entity_id": "item-4"
+      },
+      "before_value": "3",
+      "after_value": "3",
+      "before_index": 2,
+      "after_index": 4
+    },
+    {
+      "kind": "Moved",
+      "target": {
+        "object_id": "values",
+        "entity_id": "item-0"
+      },
+      "before_value": "5",
+      "after_value": "5",
+      "before_index": 3,
+      "after_index": 2
+    },
+    {
+      "kind": "Moved",
+      "target": {
+        "object_id": "values",
+        "entity_id": "item-2"
+      },
+      "before_value": "4",
+      "after_value": "4",
+      "before_index": 4,
+      "after_index": 3
+    },
+    {
+      "kind": "HighlightRemoved",
+      "target": {
+        "object_id": "values",
+        "entity_id": "item-2"
+      },
+      "before_value": "changed",
+      "after_value": "",
+      "before_index": -1,
+      "after_index": -1
+    },
+    {
+      "kind": "HighlightRemoved",
+      "target": {
+        "object_id": "values",
+        "entity_id": "item-4"
+      },
+      "before_value": "result",
       "after_value": "",
       "before_index": -1,
       "after_index": -1
@@ -852,4 +944,4 @@ Counterexample: original steps 8..12, focus 10
       }
     ]
   }
-}}</script></body></html>
+},"counterexample_kind":"focused-window"}</script></body></html>

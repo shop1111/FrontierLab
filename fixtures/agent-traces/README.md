@@ -16,8 +16,8 @@ moon run . -- ../../fixtures/agent-traces
 Then, from the repository root, generate the combined diagnostic reports:
 
 ```sh
-moon run cmd/main -- diagnose fixtures/agent-traces/selection-sort-expected.json fixtures/agent-traces/selection-sort-actual.json --contract insertion-sort-int --object values --format json --counterexample fixtures/agent-traces/selection-sort-counterexample.json --report fixtures/agent-traces/selection-sort-diagnosis.json
-moon run cmd/main -- diagnose fixtures/agent-traces/selection-sort-expected.json fixtures/agent-traces/selection-sort-actual.json --contract insertion-sort-int --object values --format text --report fixtures/agent-traces/selection-sort-diagnosis.html
+moon run cmd/main -- diagnose fixtures/agent-traces/selection-sort-expected.json fixtures/agent-traces/selection-sort-actual.json --contract sorted-int-sequence --object values --format json --counterexample fixtures/agent-traces/selection-sort-counterexample.json --report fixtures/agent-traces/selection-sort-diagnosis.json
+moon run cmd/main -- diagnose fixtures/agent-traces/selection-sort-expected.json fixtures/agent-traces/selection-sort-actual.json --contract sorted-int-sequence --object values --format text --report fixtures/agent-traces/selection-sort-diagnosis.html
 ```
 
 Both diagnose commands intentionally exit 2 because the inputs are valid but
@@ -28,7 +28,8 @@ Frozen expectations:
 - Input values: `[5, 2, 4, 1, 3]`.
 - First divergence: step 10, expected `Swap(item-2,item-4)`, actual
   `Swap(item-2,item-0)`.
-- Contract: `insertion-sort-int`, final failure at step 13.
+- Contract: `sorted-int-sequence`, final failure at step 13. The published
+  consumer evidence retains the legacy `insertion-sort-int` report separately.
 - Combined diagnosis focus: step 10.
-- Counterexample: original steps 8 through 12, with local focus step 2.
+- Focused counterexample slice: original steps 8 through 12, with local focus step 2.
 - The expected trace passes the same contract and diagnoses with exit 0.
