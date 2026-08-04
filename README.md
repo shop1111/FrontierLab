@@ -3,15 +3,15 @@
 **把 AI 或算法生成的错误轨迹，收敛成可定位、可复现、可修复的证据。**
 
 [![CI](https://github.com/shop1111/FrontierLab/actions/workflows/ci.yml/badge.svg)](https://github.com/shop1111/FrontierLab/actions/workflows/ci.yml)
-[![Mooncakes](https://img.shields.io/badge/Mooncakes-live%20v0.6.0-7c3aed)](https://mooncakes.io/docs/shop1111/frontierlab)
+[![Mooncakes](https://img.shields.io/badge/Mooncakes-live%20v0.7.0-7c3aed)](https://mooncakes.io/docs/shop1111/frontierlab)
 
 [Open AI Trace Clinic](https://shop1111.github.io/FrontierLab/playground.html) ·
 [GitHub](https://github.com/shop1111/FrontierLab) ·
 [Gitlink](https://gitlink.org.cn/zhengpx/FrontierLab) ·
 [Schema v1](docs/TRACE_SCHEMA.md)
 
-> 当前工作树是 **v0.7.0 未发布候选**；Mooncakes、Pages 与远程仓库仍是
-> **v0.6.0**。本轮没有推送、打标签或发布。
+> 当前正式版本是 **v0.7.0**，发布于 GitHub 与 Mooncakes；GitHub Pages
+> 提供同版本的离线 AI Trace Clinic。Gitlink 镜像单独维护，不由此状态推断。
 
 ## 三条命令体验完整闭环
 
@@ -89,7 +89,7 @@ FrontierLab 不是算法合集，也不是通用绘图库。算法或 Agent 记�
 
 ![AI Trace Clinic 在 step 10 对照预期与实际事件](docs/assets/clinic-step10.png)
 
-## 从源码、可执行文件与未来发布包运行
+## 从源码、可执行文件与发布包运行
 
 当前候选最直接的查看方式是本地打开已生成页面：
 
@@ -106,8 +106,8 @@ python scripts\build_cli.py
 ```
 
 脚本会在已忽略的 `_dist/` 中生成 `frontierlab.exe` 和 SHA256，不会把二进制
-加入包或提交。未来 GitHub/Gitlink release 下载包发布后，才可把文档中的
-`frontierlab diagnose ...` 视为已安装命令；当前公开发布仍是 v0.6.0。
+加入 Mooncakes 包或源码提交。GitHub v0.7.0 Release 同时提供已校验的 Windows
+可执行文件、SHA256、Mooncakes 源码包和冻结诊断证据。
 
 ## 开发与验收
 
@@ -136,7 +136,7 @@ moon package
 - [三种集成路径](docs/INTEGRATION.md)
 - [渲染与安全模型](docs/RENDERING.md)
 - [可复现性能记录](BENCHMARKS.md)
-- [未来发布指引](RELEASE_GUIDE.md)
+- [发布与逐平台核验](RELEASE_GUIDE.md)
 - [变更记录](CHANGELOG.md)
 
 ## License

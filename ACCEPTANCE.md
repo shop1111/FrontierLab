@@ -1,7 +1,7 @@
-# FrontierLab v0.7.0 候选验收
+# FrontierLab v0.7.0 发布验收
 
-本指南只验收本地候选。公开 Mooncakes、Pages、GitHub `main` 和 Gitlink
-`master` 仍是 v0.6.0，本轮不执行推送、tag 或发布。
+本指南既用于发布前本地门禁，也用于发布后复核 GitHub、Mooncakes 与 Pages。
+Gitlink 是独立镜像，必须单独核验，不由 GitHub 发布状态推断。
 
 ## 1. 三条命令看到闭环
 
@@ -60,11 +60,11 @@ moon run . -- evidence
 5. 验证反例 JSON、诊断 HTML 和修复提示三个操作均有页面内反馈。
 6. 在窄屏验证无横向溢出；断网后重新打开，功能仍可用。
 
-## 5. 公开位置（仍为 v0.6.0）
+## 5. 公开位置
 
 - GitHub: <https://github.com/shop1111/FrontierLab>
 - Gitlink: <https://gitlink.org.cn/zhengpx/FrontierLab>
 - Mooncakes: <https://mooncakes.io/docs/shop1111/frontierlab>
 - Pages: <https://shop1111.github.io/FrontierLab/>
 
-未来发布顺序和逐平台核验见 [RELEASE_GUIDE.md](RELEASE_GUIDE.md)。
+逐平台发布和核验见 [RELEASE_GUIDE.md](RELEASE_GUIDE.md)。

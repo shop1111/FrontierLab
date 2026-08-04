@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.7.0 - Unreleased candidate
+## 0.7.0 - 2026-08-05
 
 - Added the unified `diagnose` CLI path that combines schema validation,
   contracts, first divergence, state changes, focus step, counterexample
