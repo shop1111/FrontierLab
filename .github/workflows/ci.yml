@@ -78,7 +78,7 @@ jobs:
           moon run cmd/main -- render fixtures/schema-v1/all-events.json --format html --output _build/acceptance/all-events.html
           moon run cmd/main -- playground --output _build/acceptance/playground.html
           set +e
-          moon run cmd/main -- diagnose fixtures/agent-traces/selection-sort-expected.json fixtures/agent-traces/selection-sort-actual.json --contract insertion-sort-int --object values --format json --counterexample _build/acceptance/selection-counterexample.json --report _build/acceptance/selection-diagnosis.html > _build/acceptance/selection-diagnosis.json
+          moon run cmd/main -- diagnose fixtures/agent-traces/selection-sort-expected.json fixtures/agent-traces/selection-sort-actual.json --contract sorted-int-sequence --object values --format json --counterexample _build/acceptance/selection-counterexample.json --report _build/acceptance/selection-diagnosis.html > _build/acceptance/selection-diagnosis.json
           diagnosis_exit=$?
           set -e
           test "$diagnosis_exit" -eq 2
@@ -103,6 +103,9 @@ jobs:
           test -s _build/acceptance/playground.html
           grep -q "AI Trace Clinic" _build/acceptance/playground.html
           if grep -q '<script src=' _build/acceptance/playground.html; then exit 1; fi
+
+      - name: Clinic conformance
+        run: node scripts/check_playground.mjs _build/acceptance/playground.html
 
       - name: Package module
         run: |

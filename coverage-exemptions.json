@@ -1,11 +1,14 @@
 {
-  "maximum_uncovered_lines": 20,
+  "maximum_uncovered_lines": 10,
   "protected_files": [
     "trace_debugger.mbt",
     "trace_contracts.mbt",
     "trace_codec.mbt",
     "trace_reports.mbt",
-    "trace_quality.mbt"
+    "trace_quality.mbt",
+    "trace_diagnosis.mbt",
+    "cmd/main/cli_run.mbt",
+    "cmd/main/cli_execution.mbt"
   ],
   "exemptions": [
     {
@@ -19,14 +22,6 @@
     {
       "pattern": "cmd/main/main.mbt",
       "reason": "Thin operating-system boundary for argv, stdout and process exit."
-    },
-    {
-      "pattern": "cmd/main/cli_output.mbt",
-      "reason": "Thin stdout and filesystem output boundary; pure serialization helpers are white-box tested."
-    },
-    {
-      "pattern": "cmd/main/cli_run.mbt",
-      "reason": "Command dispatch and filesystem orchestration; parsing and diagnostic calculation live in tested files."
     }
   ]
 }

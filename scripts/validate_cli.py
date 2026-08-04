@@ -44,6 +44,7 @@ def main() -> int:
     document["schema_version"] = "2.0"
     unsupported.write_text(json.dumps(document), encoding="utf-8")
 
+    run_case("version", ["--version"], 0)
     run_case("missing diagnose arguments", ["diagnose"], 1)
     run_case("unknown command", ["unknown"], 1)
     run_case(
@@ -95,7 +96,7 @@ def main() -> int:
             "verify",
             str(ACTUAL),
             "--contract",
-            "insertion-sort-int",
+            "sorted-int-sequence",
             "--object",
             "values",
             "--format",
@@ -118,7 +119,7 @@ def main() -> int:
         ],
         2,
     )
-    print("CLI process matrix: PASS (11/11)")
+    print("CLI process matrix: PASS (12/12)")
     return 0
 
 
