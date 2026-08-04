@@ -10,8 +10,9 @@ fn usage() -> String {
     #|  frontierlab playground --output <path|->
     #|  frontierlab diff <trace.json> --from N --to N --format <text|json>
     #|  frontierlab breakpoints <trace.json> [--event KIND] [--target OBJECT[/ENTITY]] [--role ROLE] [--changed-only] --format <text|json>
-    #|  frontierlab verify <trace.json> --contract <sequence-transition|insertion-sort-int|grid-path> --object ID --format <text|json> [--counterexample PATH]
+    #|  frontierlab verify <trace.json> --contract <sequence-transition|sorted-int-sequence|insertion-sort-int|grid-path> --object ID --format <text|json> [--counterexample PATH]
     #|  frontierlab diverge <expected.json> <actual.json> --format <text|json> [--counterexample PATH]
+    #|  frontierlab --version
   )
 }
 

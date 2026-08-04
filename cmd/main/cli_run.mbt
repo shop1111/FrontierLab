@@ -13,12 +13,58 @@ fn render_content(
 }
 
 ///|
-fn read_trace(path : String) -> @frontierlab.AlgorithmTrace raise {
-  let trace = @frontierlab.AlgorithmTrace::decode_json(
-    @fs.read_file_to_string(path),
-  )
-  trace.validate()
+fn decode_trace(
+  content : String,
+  validate? : Bool = true,
+) -> @frontierlab.AlgorithmTrace raise {
+  let trace = @frontierlab.AlgorithmTrace::decode_json(content)
+  if validate {
+    trace.validate()
+  }
   trace
+}
+
+///|
+fn input_trace(
+  inputs : Map[String, String],
+  path : String,
+  validate? : Bool = true,
+) -> @frontierlab.AlgorithmTrace raise {
+  match inputs.get(path) {
+    Some(content) => decode_trace(content, validate~)
+    None => fail("Missing CLI input: \{path}")
+  }
+}
+
+///|
+fn cli_input_paths(args : Array[String]) -> Array[String] {
+  if args.length() < 2 {
+    return []
+  }
+  match args[1] {
+    "diagnose" | "diverge" =>
+      if args.length() >= 4 {
+        [args[2], args[3]]
+      } else {
+        []
+      }
+    "render" | "analyze" | "validate" | "diff" | "breakpoints" | "verify" =>
+      if args.length() >= 3 {
+        [args[2]]
+      } else {
+        []
+      }
+    _ => []
+  }
+}
+
+///|
+fn read_cli_inputs(args : Array[String]) -> Map[String, String] raise {
+  let inputs : Map[String, String] = Map([])
+  for path in cli_input_paths(args) {
+    inputs[path] = @fs.read_file_to_string(path)
+  }
+  inputs
 }
 
 ///|
@@ -33,6 +79,8 @@ fn contract_by_name(
     "sequence-transition" =>
       @frontierlab.sequence_transition_contract(object_id~)
     "insertion-sort-int" => @frontierlab.insertion_sort_int_contract(object_id~)
+    "sorted-int-sequence" =>
+      @frontierlab.sorted_int_sequence_contract(object_id~)
     "grid-path" => @frontierlab.grid_path_contract(object_id~)
     _ => fail("Unknown contract: \{name}")
   }
@@ -50,109 +98,121 @@ fn demo(name : String) -> @frontierlab.AlgorithmTrace raise {
 }
 
 ///|
-fn run_cli(args : Array[String]) -> Int raise {
+fn execute_cli(
+  args : Array[String],
+  inputs : Map[String, String],
+) -> Diagnosis raise {
+  if args.contains("--version") {
+    return Diagnosis::new(stdout="FrontierLab 0.7.0 candidate")
+  }
   if args.length() < 2 || args.contains("--help") {
-    println(usage())
-    return 0
+    return Diagnosis::new(stdout=usage())
   }
   match args[1] {
     "diagnose" => {
       if args.length() < 4 {
         fail("diagnose requires expected and actual trace files")
       }
-      let expected = read_trace(args[2])
-      let actual = read_trace(args[3])
+      let expected = input_trace(inputs, args[2])
+      let actual = input_trace(inputs, args[3])
       let contract = contract_by_name(
         required_option(args, "--contract"),
         required_option(args, "--object"),
       )
       let format = debug_format(args)
-      let diagnosis = calculate_diagnosis(expected, actual, contract)
-      write_counterexample(
-        option(args, "--counterexample", ""),
-        diagnosis.counterexample,
+      let diagnosis = @frontierlab.diagnose_trace(actual, contract~, expected~)
+      let artifacts : Array[(String, String)] = []
+      collect_artifact(
+        artifacts,
+        counterexample_artifact(
+          option(args, "--counterexample", ""),
+          diagnosis.focused_slice,
+        ),
       )
-      write_diagnosis_report(option(args, "--report", ""), diagnosis)
-      output_diagnosis(format, diagnosis)
-      if diagnosis.passed() {
-        0
-      } else {
-        2
-      }
+      collect_artifact(
+        artifacts,
+        diagnosis_report_artifact(option(args, "--report", ""), diagnosis),
+      )
+      Diagnosis::new(
+        exit_code=if diagnosis.passed() { 0 } else { 2 },
+        stdout=debug_result(
+          "diagnose",
+          format,
+          diagnosis_text(diagnosis),
+          diagnosis_json(diagnosis),
+        ),
+        artifacts~,
+      )
     }
     "demo" => {
       if args.length() < 3 {
         fail("demo requires a name")
       }
       let trace = demo(args[2])
-      let format = option(args, "--format", "html")
-      let output = option(args, "--output", "-")
-      write_output(
-        output,
-        render_content(trace, format, trace.steps.length() - 1),
+      output_execution(
+        option(args, "--output", "-"),
+        render_content(
+          trace,
+          option(args, "--format", "html"),
+          trace.steps.length() - 1,
+        ),
+        summary=trace.summary_report(),
       )
-      if output != "-" {
-        println(trace.summary_report())
-      }
-      0
     }
     "render" => {
       if args.length() < 3 {
         fail("render requires a trace file")
       }
-      let trace = @frontierlab.AlgorithmTrace::decode_json(
-        @fs.read_file_to_string(args[2]),
+      let trace = input_trace(inputs, args[2], validate=false)
+      output_execution(
+        option(args, "--output", "-"),
+        render_content(
+          trace,
+          option(args, "--format", "html"),
+          @strconv.parse_int(option(args, "--step", "-1")),
+        ),
       )
-      let format = option(args, "--format", "html")
-      let output = option(args, "--output", "-")
-      let step = @strconv.parse_int(option(args, "--step", "-1"))
-      write_output(output, render_content(trace, format, step))
-      0
     }
     "analyze" => {
       if args.length() < 3 {
         fail("analyze requires a trace file")
       }
-      println(read_trace(args[2]).summary_report())
-      0
+      Diagnosis::new(stdout=input_trace(inputs, args[2]).summary_report())
     }
     "validate" => {
       if args.length() < 3 {
         fail("validate requires a trace file")
       }
-      ignore(read_trace(args[2]))
-      println("valid: \{args[2]}")
-      0
+      ignore(input_trace(inputs, args[2]))
+      Diagnosis::new(stdout="valid: \{args[2]}")
     }
-    "playground" => {
-      write_output(
+    "playground" =>
+      output_execution(
         option(args, "--output", "-"),
         @frontierlab.render_trace_playground(),
       )
-      0
-    }
     "diff" => {
       if args.length() < 3 {
         fail("diff requires a trace file")
       }
-      let trace = read_trace(args[2])
-      let diff = trace.diff(
+      let diff = input_trace(inputs, args[2]).diff(
         from_step=@strconv.parse_int(option(args, "--from", "-1")),
         to_step=@strconv.parse_int(option(args, "--to", "0")),
       )
-      output_debug(
-        "diff",
-        debug_format(args),
-        diff.report(),
-        diff.to_json_string(),
+      Diagnosis::new(
+        stdout=debug_result(
+          "diff",
+          debug_format(args),
+          diff.report(),
+          diff.to_json_string(),
+        ),
       )
-      0
     }
     "breakpoints" => {
       if args.length() < 3 {
         fail("breakpoints requires a trace file")
       }
-      let trace = read_trace(args[2])
+      let trace = input_trace(inputs, args[2])
       let target = parse_target(option(args, "--target", ""))
       let breakpoint = match target {
         Some(value) =>
@@ -177,46 +237,50 @@ fn run_cli(args : Array[String]) -> Int raise {
           "- step \{hit.step}: \{hit.event_kind} (\{hit.reason})\n",
         )
       }
-      output_debug(
-        "breakpoints",
-        debug_format(args),
-        out.to_string(),
-        hits.to_json().stringify(indent=2),
+      Diagnosis::new(
+        stdout=debug_result(
+          "breakpoints",
+          debug_format(args),
+          out.to_string(),
+          hits.to_json().stringify(indent=2),
+        ),
       )
-      0
     }
     "verify" => {
       if args.length() < 3 {
         fail("verify requires a trace file")
       }
-      let trace = read_trace(args[2])
+      let trace = input_trace(inputs, args[2])
       let contract = contract_by_name(
         required_option(args, "--contract"),
         required_option(args, "--object"),
       )
       let report = contract.check(trace)
-      write_counterexample(
-        option(args, "--counterexample", ""),
-        report.counterexample,
+      let artifacts : Array[(String, String)] = []
+      collect_artifact(
+        artifacts,
+        counterexample_artifact(
+          option(args, "--counterexample", ""),
+          report.counterexample,
+        ),
       )
-      output_debug(
-        "verify",
-        debug_format(args),
-        report.report(),
-        report.to_json_string(),
+      Diagnosis::new(
+        exit_code=if report.passed { 0 } else { 2 },
+        stdout=debug_result(
+          "verify",
+          debug_format(args),
+          report.report(),
+          report.to_json_string(),
+        ),
+        artifacts~,
       )
-      if report.passed {
-        0
-      } else {
-        2
-      }
     }
     "diverge" => {
       if args.length() < 4 {
         fail("diverge requires expected and actual trace files")
       }
-      let expected = read_trace(args[2])
-      let actual = read_trace(args[3])
+      let expected = input_trace(inputs, args[2])
+      let actual = input_trace(inputs, args[3])
       match @frontierlab.first_divergence(expected, actual) {
         Some(divergence) => {
           let counterexample = if divergence.step < actual.steps.length() {
@@ -224,24 +288,41 @@ fn run_cli(args : Array[String]) -> Int raise {
           } else {
             None
           }
-          write_counterexample(
-            option(args, "--counterexample", ""),
-            counterexample,
+          let artifacts : Array[(String, String)] = []
+          collect_artifact(
+            artifacts,
+            counterexample_artifact(
+              option(args, "--counterexample", ""),
+              counterexample,
+            ),
           )
-          output_debug(
-            "diverge",
-            debug_format(args),
-            divergence.message,
-            divergence.to_json_string(),
+          Diagnosis::new(
+            exit_code=2,
+            stdout=debug_result(
+              "diverge",
+              debug_format(args),
+              divergence.message,
+              divergence.to_json_string(),
+            ),
+            artifacts~,
           )
-          2
         }
-        None => {
-          output_debug("diverge", debug_format(args), "No divergence.", "null")
-          0
-        }
+        None =>
+          Diagnosis::new(
+            stdout=debug_result(
+              "diverge",
+              debug_format(args),
+              "No divergence.",
+              "null",
+            ),
+          )
       }
     }
     other => fail("Unknown command: \{other}\n\{usage()}")
   }
+}
+
+///|
+fn run_cli(args : Array[String]) -> Int raise {
+  apply_execution(execute_cli(args, read_cli_inputs(args)))
 }

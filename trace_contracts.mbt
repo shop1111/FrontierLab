@@ -138,7 +138,29 @@ pub fn insertion_sort_int_contract(object_id~ : String) -> TraceContract {
     description="Sequence transitions plus a nondecreasing integer result.",
     checker=fn(trace) {
       let violations = check_sequence_transitions(trace, object_id)
-      check_integer_sort_result(trace, object_id, violations)
+      check_integer_sort_result(
+        trace, object_id, "insertion-sort-int", violations,
+      )
+      violations
+    },
+  )
+}
+
+///|
+/// Check stable sequence transitions and a nondecreasing integer result.
+///
+/// Unlike `insertion_sort_int_contract`, this name is algorithm-neutral and
+/// is suitable for selection sort, merge sort, agent-generated traces, and
+/// other sorting implementations.
+pub fn sorted_int_sequence_contract(object_id~ : String) -> TraceContract {
+  TraceContract::new(
+    name="sorted-int-sequence",
+    description="Stable sequence transitions plus a nondecreasing integer result.",
+    checker=fn(trace) {
+      let violations = check_sequence_transitions(trace, object_id)
+      check_integer_sort_result(
+        trace, object_id, "sorted-int-sequence", violations,
+      )
       violations
     },
   )
@@ -330,6 +352,7 @@ fn check_swap_transition(
 fn check_integer_sort_result(
   trace : AlgorithmTrace,
   object_id : String,
+  contract_name : String,
   violations : Array[TraceViolation],
 ) -> Unit {
   let final_scene = if trace.steps.is_empty() {
@@ -344,7 +367,7 @@ fn check_integer_sort_result(
           _ => {
             violations.push(
               TraceViolation::new(
-                contract="insertion-sort-int",
+                contract=contract_name,
                 code="non-integer-value",
                 step=trace.steps.length() - 1,
                 targets=[
@@ -360,7 +383,7 @@ fn check_integer_sort_result(
           _ => {
             violations.push(
               TraceViolation::new(
-                contract="insertion-sort-int",
+                contract=contract_name,
                 code="non-integer-value",
                 step=trace.steps.length() - 1,
                 targets=[TargetRef::entity(object_id, sequence.items[index].id)],
@@ -373,7 +396,7 @@ fn check_integer_sort_result(
         if left > right {
           violations.push(
             TraceViolation::new(
-              contract="insertion-sort-int",
+              contract=contract_name,
               code="result-not-sorted",
               step=trace.steps.length() - 1,
               targets=[

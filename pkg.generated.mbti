@@ -19,6 +19,8 @@ pub fn compare_algorithms(GridMap, start~ : Position, goal~ : Position, rule? : 
 
 pub let debug_report_version : String
 
+pub fn diagnose_trace(AlgorithmTrace, contract~ : TraceContract, expected? : AlgorithmTrace) -> TraceDiagnosis
+
 pub fn dijkstra(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule) -> PathResult raise
 
 pub fn dijkstra_trace(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule) -> SearchTrace raise
@@ -58,6 +60,8 @@ pub fn render_trace_svg_frames(AlgorithmTrace, width? : Int) -> Array[String] ra
 pub fn search_trace_to_algorithm_trace(GridMap, start~ : Position, goal~ : Position, algorithm~ : String, trace~ : SearchTrace) -> AlgorithmTrace raise
 
 pub fn sequence_transition_contract(object_id~ : String) -> TraceContract
+
+pub fn sorted_int_sequence_contract(object_id~ : String) -> TraceContract
 
 pub fn union_find_demo_trace() -> AlgorithmTrace raise
 
@@ -426,6 +430,16 @@ pub struct TraceCounterexample {
   trace : AlgorithmTrace
 } derive(Eq, ToJson, @debug.Debug)
 pub fn TraceCounterexample::to_json_string(Self) -> String
+
+pub struct TraceDiagnosis {
+  contract_report : ContractReport
+  divergence : TraceDivergence?
+  focus_step : Int
+  transition_diff : TraceFrameDiff?
+  reference_diff : TraceFrameDiff?
+  focused_slice : TraceCounterexample?
+} derive(Eq, ToJson, @debug.Debug)
+pub fn TraceDiagnosis::passed(Self) -> Bool
 
 pub struct TraceDivergence {
   step : Int
