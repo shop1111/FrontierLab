@@ -1,0 +1,7 @@
+{
+  "step": 10,
+  "kind": "EventMismatch",
+  "message": "Events first diverge at step 10.",
+  "expected_event": "swap",
+  "actual_event": "swap"
+}

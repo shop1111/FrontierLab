@@ -16,6 +16,43 @@ For existing FrontierLab searches, call `search_trace_to_algorithm_trace` rather
 
 ## Semantic debugging and AI-agent verification
 
-After building a trace, use `trace.diff(from_step=..., to_step=...)` to inspect stable-entity changes, or `trace.breakpoint_hits(...)` to search by event, target, role, and actual scene mutation. `trace.slice(center=...)` produces a portable minimal counterexample around a failing step.
+After building a trace, prefer `diagnose_trace(actual, contract=..., expected=...)` for a single authoritative result. It returns the contract report, optional first divergence, focus step, actual transition diff, reference diff, and a portable focused window around the failure. Use `trace.diff(from_step=..., to_step=...)`, `trace.breakpoint_hits(...)`, and `trace.slice(center=...)` when assembling a custom workflow.
 
-Use `sequence_transition_contract`, `insertion_sort_int_contract`, or `grid_path_contract` for the bundled semantics. Library authors can create a `TraceContract::new` with a pure MoonBit checker callback that returns stable `TraceViolation` values. Agents and CI should call the CLI with `--format json`; exit code 2 means the trace parsed correctly but failed a semantic contract or diverged from its reference.
+Use `sequence_transition_contract`, `sorted_int_sequence_contract`, the backward-compatible `insertion_sort_int_contract`, or `grid_path_contract` for bundled semantics. Library authors can create a `TraceContract::new` with a pure MoonBit checker callback that returns stable `TraceViolation` values. Agents and CI should call the CLI with `--format json`; exit code 2 means the trace parsed correctly but failed a semantic contract or diverged from its reference.
+
+## Three supported integration paths
+
+### 1. MoonBit library
+
+Depend on the published package, construct a `TraceBuilder`, and call the
+debugging/contract APIs directly. The nested
+`consumer/frontierlab_consumer_demo` is an auditable example: it has its own
+`moon.mod`, resolves `shop1111/frontierlab@0.6.0` from Mooncakes, and has no
+local override.
+
+### 2. CLI or AI Agent
+
+Use the unified command:
+
+```bash
+moon run cmd/main -- diagnose expected.json actual.json \
+  --contract sorted-int-sequence --object values --format json \
+  --counterexample counterexample.json --report diagnosis.html
+```
+
+The outer `frontierlab-debug-report/1.0` envelope remains stable. The result
+keeps `state_changes` for the actual transition and adds `reference_changes`
+plus `counterexample_kind: "focused-window"`. Exit 0 means pass, 2 means
+semantic failure, and 1 means invocation/input failure.
+
+### 3. Offline browser
+
+Generate AI Trace Clinic with:
+
+```bash
+moon run cmd/main -- playground --output playground.html
+```
+
+Open the resulting file directly. It contains no external scripts or network
+requirements, and uses the same frozen selection-sort semantics as the CLI
+fixtures.

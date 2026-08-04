@@ -118,6 +118,11 @@ test "contracts locate first semantic failure and valid builtins pass" {
     object_id="values",
   ).check(valid)
   assert_true(valid_report.passed)
+  let generic_report = @frontierlab.sorted_int_sequence_contract(
+    object_id="values",
+  ).check(valid)
+  assert_true(generic_report.passed)
+  assert_eq(generic_report.contract_name, "sorted-int-sequence")
   assert_true(
     valid_report.to_json_string().contains("frontierlab-debug-report/1.0"),
   )
@@ -150,6 +155,34 @@ test "contracts locate first semantic failure and valid builtins pass" {
   assert_eq(report.first_failure.unwrap().step, 0)
   assert_true(report.counterexample is Some(_))
   assert_true(report.to_markdown().contains("compare-mutated-order"))
+}
+
+///|
+test "unified diagnosis separates transition and reference evidence" {
+  let expected = @frontierlab.insertion_sort_demo_trace([5, 2, 4, 1, 3])
+  let actual = @frontierlab.faulty_insertion_sort_demo_trace()
+  let diagnosis = @frontierlab.diagnose_trace(
+    actual,
+    contract=@frontierlab.sorted_int_sequence_contract(object_id="values"),
+    expected~,
+  )
+  assert_false(diagnosis.passed())
+  assert_true(diagnosis.divergence is Some(_))
+  assert_true(diagnosis.transition_diff is Some(_))
+  assert_true(diagnosis.reference_diff is Some(_))
+  assert_true(diagnosis.focused_slice is Some(_))
+  let focus = diagnosis.focus_step
+  let slice = diagnosis.focused_slice.unwrap()
+  assert_eq(focus, 0)
+  assert_eq(slice.original_start, 0)
+  assert_eq(slice.original_end, 0)
+  let no_reference = @frontierlab.diagnose_trace(
+    actual,
+    contract=@frontierlab.sorted_int_sequence_contract(object_id="values"),
+  )
+  assert_true(no_reference.divergence is None)
+  assert_true(no_reference.reference_diff is None)
+  assert_false(no_reference.passed())
 }
 
 ///|

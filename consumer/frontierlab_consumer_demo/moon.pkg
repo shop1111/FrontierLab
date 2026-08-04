@@ -1,0 +1,7 @@
+import {
+  "moonbitlang/x/fs",
+  "moonbitlang/x/sys",
+  "shop1111/frontierlab",
+}
+
+pkgtype(kind: "executable")

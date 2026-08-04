@@ -576,6 +576,7 @@ fn decode_scene(value : Json, context : String) -> Scene raise TraceError {
 /// Decode and validate the stable FrontierLab schema-v1 wire format.
 pub fn AlgorithmTrace::decode_json(
   input : StringView,
+  options? : TraceOptions = TraceOptions::default(),
 ) -> AlgorithmTrace raise TraceError {
   let json = @json.parse(input) catch {
     error => raise JsonSyntax(error.to_string())
@@ -635,6 +636,6 @@ pub fn AlgorithmTrace::decode_json(
     steps,
     summary,
   }
-  trace.validate()
+  trace.validate(options~)
   trace
 }

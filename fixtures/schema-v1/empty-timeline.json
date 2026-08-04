@@ -1,0 +1,1 @@
+{"format":"frontierlab-trace","schema_version":"1.0","metadata":{"title":"Empty timeline","algorithm":"fixture","description":"A legal trace with initial state and no events."},"initial_scene":{"objects":[{"type":"sequence","id":"values","label":"Values","items":[]}],"highlights":[]},"steps":[],"summary":[{"key":"purpose","value":"empty-timeline"}]}

@@ -22,7 +22,7 @@ jobs:
         run: |
           set -euxo pipefail
 
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "0.10.4+2cc641edf"
           export PATH="$HOME/.moon/bin:$PATH"
 
           moon version --all
@@ -36,6 +36,8 @@ jobs:
           git diff --exit-code
 
           moon test --target all --deny-warn
+          python scripts/check_coverage.py
+          python scripts/validate_cli.py
 
           mkdir -p _build/acceptance
 
@@ -61,12 +63,27 @@ jobs:
             --format html \
             --output _build/acceptance/union-find.html
 
+          set +e
+          moon run cmd/main -- diagnose \
+            fixtures/agent-traces/selection-sort-expected.json \
+            fixtures/agent-traces/selection-sort-actual.json \
+            --contract insertion-sort-int \
+            --object values \
+            --format json \
+            --counterexample _build/acceptance/selection-counterexample.json \
+            --report _build/acceptance/selection-diagnosis.html \
+            > _build/acceptance/selection-diagnosis.json
+          diagnosis_exit=$?
+          set -e
+          test "$diagnosis_exit" -eq 2
+          python -c 'import json; p=json.load(open("_build/acceptance/selection-diagnosis.json", encoding="utf-8")); assert p["result"]["focus_step"] == 10'
+
           test -s _build/acceptance/playground.html
           test -s _build/acceptance/insertion-sort.svg
           test -s _build/acceptance/union-find.json
           test -s _build/acceptance/union-find.html
 
-          grep -q "Semantic Time-Travel Debugger" \
+          grep -q "AI Trace Clinic" \
             _build/acceptance/playground.html
 
           if grep -q '<script src=' \
@@ -78,4 +95,30 @@ jobs:
           moon package
 
           test -s \
-            _build/publish/shop1111-frontierlab-0.6.0.zip
+            _build/publish/shop1111-frontierlab-0.7.0.zip
+
+  latest-compatibility:
+    name: Latest MoonBit compatibility probe
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Probe without blocking the pinned gate
+        run: |
+          set +e
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          install_exit=$?
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon version --all
+          version_exit=$?
+          moon update
+          update_exit=$?
+          moon check --target all --deny-warn
+          check_exit=$?
+          moon build --target all --deny-warn
+          build_exit=$?
+          moon test --target all --deny-warn
+          test_exit=$?
+          printf 'latest compatibility: install=%s version=%s update=%s check=%s build=%s test=%s\n' \
+            "$install_exit" "$version_exit" "$update_exit" "$check_exit" "$build_exit" "$test_exit"
+          exit 0
