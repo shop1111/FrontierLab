@@ -35,8 +35,25 @@ test "build encode and decode a trace" {
 ///|
 test "generate an offline trace playground" {
   let html = @frontierlab.render_trace_playground()
-  assert_true(html.contains("Semantic Time-Travel Debugger"))
+  assert_true(html.contains("AI Trace Clinic"))
   assert_true(!html.contains("<script src="))
+}
+```
+
+```mbt check
+///|
+test "diagnose a trace through the unified facade" {
+  let expected = @frontierlab.insertion_sort_trace([3, 1, 2])
+  let diagnosis = @frontierlab.diagnose_trace(
+    expected,
+    contract=@frontierlab.sorted_int_sequence_contract(object_id="values"),
+    expected~,
+  )
+  assert_true(diagnosis.passed())
+  assert_eq(diagnosis.focus_step, -1)
+  assert_true(diagnosis.transition_diff is None)
+  assert_true(diagnosis.reference_diff is None)
+  assert_true(diagnosis.focused_slice is None)
 }
 ```
 
