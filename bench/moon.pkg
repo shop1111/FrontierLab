@@ -1,7 +1,6 @@
 import {
   "moonbitlang/core/env",
   "moonbitlang/core/string" @strconv,
-  "moonbitlang/x/sys",
   "shop1111/frontierlab",
 }
 

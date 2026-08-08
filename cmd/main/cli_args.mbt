@@ -1,7 +1,7 @@
 ///|
 fn usage() -> String {
   (
-    #|FrontierLab 0.7.0 candidate - AI Trace Clinic
+    #|FrontierLab 0.7.1 - AI Trace Clinic
     #|  frontierlab diagnose <expected.json> <actual.json> --contract <name> --object <id> --format <text|json> [--counterexample <path>] [--report <path>]
     #|  frontierlab demo <insertion-sort|faulty-insertion-sort|union-find|pathfinding> --format <html|svg|json> --output <path|->
     #|  frontierlab render <trace.json> --format <html|svg> --output <path|-> [--step N]

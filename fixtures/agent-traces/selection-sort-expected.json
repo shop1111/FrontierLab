@@ -998,8 +998,8 @@
   ],
   "summary": [
     {
-      "key": "consumer_dependency",
-      "value": "shop1111/frontierlab@0.6.0"
+      "key": "example_source",
+      "value": "selection-sort-fixture"
     },
     {
       "key": "fault_injected",

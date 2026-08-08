@@ -1,6 +1,6 @@
 ///|
 fn main {
-  let args = @sys.get_cli_args()
+  let args = @env.args()
   let exit_code = try run_cli(args) catch {
     error => {
       let format = try option(args, "--format", "text") catch {

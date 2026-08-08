@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.1 - 2026-08-09
+
+- Migrated executable argument handling from the legacy `@sys.get_cli_args()`
+  API to `@env.args()` for current native-toolchain compatibility.
+- Replaced the floating compatibility probe with blocking checks on the fixed
+  minimum and current stable MoonBit toolchains.
+- Rewrote the public README around installation, library use, CLI behavior,
+  the browser tool, and a clear explanation of the standalone consumer.
+- Removed non-library release material and generated diagnostic outputs from the
+  public repository and release package while retaining reproducible sources.
+
 ## 0.7.0 - 2026-08-05
 
 - Added the unified `diagnose` CLI path that combines schema validation,
@@ -7,8 +18,8 @@
   slicing, stable JSON, and offline HTML reports.
 - Added the public `TraceDiagnosis`/`diagnose_trace` facade and generic
   `sorted_int_sequence_contract` while retaining every v0.6.0 API.
-- Added a nested, independently resolved Mooncakes v0.6.0 consumer and frozen
-  selection-sort evidence whose first divergence is deterministically step 10.
+- Added a nested, independently resolved Mooncakes consumer and stable
+  selection-sort inputs whose first divergence is deterministically step 10.
 - Reframed the offline Playground as AI Trace Clinic with a one-click default
   case, correct/no-reference modes, visible diagnostics, downloads, and repair
   prompt copying.
@@ -19,18 +30,10 @@
   coverage, and a portable reasoned coverage gate.
 - Extended the benchmark through 50,000 steps with explicit `TraceOptions`;
   `decode_json` now accepts backward-compatible optional limits.
-- Reworked reviewer documentation, acceptance, demo, validation, and future
-  release handoff around the complete diagnosis loop.
+- Expanded integration, validation, and release documentation around the
+  complete diagnosis loop.
 - Added a structured CLI execution layer, `--version`, a local release build
   script, and removed the CLI dispatch coverage exemption.
-
-## 0.6.1 - Unreleased candidate
-
-- Fixed the ambiguous empty `Map` literal that blocked strict all-target builds
-  on `moonc 0.10.4+2cc641edf`.
-- Pinned release, Pages, Copilot, and Gitlink automation to the reproducible
-  compiler version while retaining non-blocking latest-toolchain probes.
-- Added an explicit toolchain policy and updated candidate package artifacts.
 
 ## 0.6.0 - 2026-07-12
 
@@ -44,7 +47,7 @@
 
 - Added a self-contained offline Trace Playground with JSON paste/file import, drag-and-drop, schema-v1 diagnostics, analysis, quality checks, timeline replay, and SVG/JSON export.
 - Added `render_trace_playground` and the `frontierlab playground --output ...` CLI workflow.
-- Expanded CI with an explicit all-target build, package verification, acceptance artifacts, and Playground checks.
+- Expanded CI with an explicit all-target build, package verification, CI artifacts, and Playground checks.
 - Added the Playground to the GitHub Pages showcase and aligned release-readiness documentation.
 
 ## 0.4.0 - 2026-07-11

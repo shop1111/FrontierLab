@@ -54,7 +54,7 @@ def main() -> int:
         capture_output=True,
         text=True,
     )
-    if "FrontierLab 0.7.0 candidate" not in probe.stdout:
+    if "FrontierLab 0.7.1" not in probe.stdout:
         raise RuntimeError(f"Unexpected version output: {probe.stdout!r}")
     print(f"Built {target}")
     print(f"SHA256 {digest}")
