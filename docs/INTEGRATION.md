@@ -14,21 +14,21 @@ Use `Custom` when no built-in event describes the transition. Keep the custom `k
 
 For existing FrontierLab searches, call `search_trace_to_algorithm_trace` rather than rebuilding grid scenes manually.
 
-## Semantic debugging and AI-agent verification
+## Checking and comparing traces
 
 After building a trace, prefer `diagnose_trace(actual, contract=..., expected=...)` for a single authoritative result. It returns the contract report, optional first divergence, focus step, actual transition diff, reference diff, and a portable focused window around the failure. Use `trace.diff(from_step=..., to_step=...)`, `trace.breakpoint_hits(...)`, and `trace.slice(center=...)` when assembling a custom workflow.
 
-Use `sequence_transition_contract`, `sorted_int_sequence_contract`, the backward-compatible `insertion_sort_int_contract`, or `grid_path_contract` for bundled semantics. Library authors can create a `TraceContract::new` with a pure MoonBit checker callback that returns stable `TraceViolation` values. Agents and CI should call the CLI with `--format json`; exit code 2 means the trace parsed correctly but failed a semantic contract or diverged from its reference.
+`TraceContract` is a rule checker: it reports whether individual steps or the final result violate predefined requirements. Use `sequence_transition_contract`, `sorted_int_sequence_contract`, the backward-compatible `insertion_sort_int_contract`, or `grid_path_contract` for bundled rules. Library authors can create a `TraceContract::new` with a pure MoonBit checker callback that returns stable `TraceViolation` values. Agents and CI should call the CLI with `--format json`; exit code 2 means the trace parsed correctly but violated a rule or differed from its reference.
 
 ## Three supported integration paths
 
 ### 1. MoonBit library
 
 Depend on the published package, construct a `TraceBuilder`, and call the
-debugging/contract APIs directly. The nested
-`consumer/frontierlab_consumer_demo` is an auditable example: it has its own
-`moon.mod`, resolves `shop1111/frontierlab@0.6.0` from Mooncakes, and has no
-local override.
+checking and debugging APIs directly. `consumer/frontierlab_consumer_demo` is
+a standalone example project that resolves `shop1111/frontierlab@0.7.1` from
+Mooncakes and has no local override. It simulates an external user and verifies
+that the release is installable; ordinary users do not need to run it.
 
 ### 2. CLI or AI Agent
 
@@ -54,5 +54,5 @@ moon run cmd/main -- playground --output playground.html
 ```
 
 Open the resulting file directly. It contains no external scripts or network
-requirements, and uses the same frozen selection-sort semantics as the CLI
-fixtures.
+requirements, and includes the same intentionally incorrect selection-sort
+example as the CLI fixtures.

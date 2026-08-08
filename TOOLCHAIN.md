@@ -1,28 +1,24 @@
 # Toolchain policy
 
-FrontierLab's required CI baseline is:
+FrontierLab validates two fixed MoonBit compiler versions:
 
 ```text
-moonc v0.10.4+2cc641edf
+Minimum supported: moonc v0.10.4+2cc641edf
+Current stable:    moonc v0.10.6+80dc50f24
 ```
 
-Every workflow that installs MoonBit passes this complete compiler version to
-the official installer. The normal check, build, test, Pages, packaging, and
-Copilot setup paths therefore use the same compiler.
+The minimum version runs the complete CI, packaging, examples, CLI, coverage,
+and generated-interface checks. The current stable version runs strict
+all-target check, build, and test gates. Both jobs are blocking.
 
-GitHub also runs a `continue-on-error` latest-toolchain compatibility job.
-Gitlink performs the equivalent probe by collecting every command's exit code,
-printing a compatibility summary, and deliberately returning success. These
-probes expose upcoming compiler changes without weakening the required pinned
-gate.
+Using fixed versions keeps release status reproducible and prevents a future
+floating toolchain update from changing the status of an otherwise unchanged
+release.
 
-To reproduce the required compiler on Unix:
+To install either compiler on Unix, pass its complete version to the official
+installer, for example:
 
 ```sh
 curl -fsSL https://cli.moonbitlang.com/install/unix.sh |
-  bash -s -- "0.10.4+2cc641edf"
+  bash -s -- "0.10.6+80dc50f24"
 ```
-
-The checked-in module version is a local release candidate until its commit is
-tagged, published to Mooncakes, and deployed. Do not infer the live release
-version from `moon.mod`.

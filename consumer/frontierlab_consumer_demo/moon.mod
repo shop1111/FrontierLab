@@ -1,6 +1,6 @@
 import {
   "moonbitlang/x@0.4.45",
-  "shop1111/frontierlab@0.6.0",
+  "shop1111/frontierlab@0.7.1",
 }
 
 name = "frontierlab_consumer_demo"

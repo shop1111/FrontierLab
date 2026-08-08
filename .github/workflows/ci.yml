@@ -70,70 +70,69 @@ jobs:
 
       - name: Verify CLI render/validate flow
         run: |
-          mkdir -p _build/acceptance
-          moon run cmd/main -- demo insertion-sort --format svg --output _build/acceptance/insertion-sort.svg
-          moon run cmd/main -- demo union-find --format json --output _build/acceptance/union-find.json
-          moon run cmd/main -- analyze _build/acceptance/union-find.json | tee _build/acceptance/union-find-analysis.txt
+          mkdir -p _build/ci
+          moon run cmd/main -- demo insertion-sort --format svg --output _build/ci/insertion-sort.svg
+          moon run cmd/main -- demo union-find --format json --output _build/ci/union-find.json
+          moon run cmd/main -- analyze _build/ci/union-find.json | tee _build/ci/union-find-analysis.txt
           moon run cmd/main -- validate fixtures/schema-v1/all-events.json
-          moon run cmd/main -- render fixtures/schema-v1/all-events.json --format html --output _build/acceptance/all-events.html
-          moon run cmd/main -- playground --output _build/acceptance/playground.html
+          moon run cmd/main -- render fixtures/schema-v1/all-events.json --format html --output _build/ci/all-events.html
+          moon run cmd/main -- playground --output _build/ci/playground.html
           set +e
-          moon run cmd/main -- diagnose fixtures/agent-traces/selection-sort-expected.json fixtures/agent-traces/selection-sort-actual.json --contract sorted-int-sequence --object values --format json --counterexample _build/acceptance/selection-counterexample.json --report _build/acceptance/selection-diagnosis.html > _build/acceptance/selection-diagnosis.json
+          moon run cmd/main -- diagnose fixtures/agent-traces/selection-sort-expected.json fixtures/agent-traces/selection-sort-actual.json --contract sorted-int-sequence --object values --format json --counterexample _build/ci/selection-counterexample.json --report _build/ci/selection-diagnosis.html > _build/ci/selection-diagnosis.json
           diagnosis_exit=$?
           set -e
           test "$diagnosis_exit" -eq 2
-          python -c 'import json; p=json.load(open("_build/acceptance/selection-diagnosis.json", encoding="utf-8")); assert p["result"]["focus_step"] == 10'
-          moon run cmd/main -- demo insertion-sort --format json --output _build/acceptance/insertion-sort.json
-          moon run cmd/main -- demo faulty-insertion-sort --format json --output _build/acceptance/faulty-sort.json
-          moon run cmd/main -- diff _build/acceptance/union-find.json --from 0 --to 1 --format json > _build/acceptance/diff-report.json
-          moon run cmd/main -- breakpoints _build/acceptance/union-find.json --event union --changed-only --format json > _build/acceptance/breakpoint-report.json
-          moon run cmd/main -- verify _build/acceptance/insertion-sort.json --contract insertion-sort-int --object values --format json > _build/acceptance/verify-report.json
+          python -c 'import json; p=json.load(open("_build/ci/selection-diagnosis.json", encoding="utf-8")); assert p["result"]["focus_step"] == 10'
+          moon run cmd/main -- demo insertion-sort --format json --output _build/ci/insertion-sort.json
+          moon run cmd/main -- demo faulty-insertion-sort --format json --output _build/ci/faulty-sort.json
+          moon run cmd/main -- diff _build/ci/union-find.json --from 0 --to 1 --format json > _build/ci/diff-report.json
+          moon run cmd/main -- breakpoints _build/ci/union-find.json --event union --changed-only --format json > _build/ci/breakpoint-report.json
+          moon run cmd/main -- verify _build/ci/insertion-sort.json --contract insertion-sort-int --object values --format json > _build/ci/verify-report.json
           set +e
-          moon run cmd/main -- verify _build/acceptance/faulty-sort.json --contract sequence-transition --object values --format json --counterexample _build/acceptance/counterexample.json > _build/acceptance/failure-report.json
+          moon run cmd/main -- verify _build/ci/faulty-sort.json --contract sequence-transition --object values --format json --counterexample _build/ci/counterexample.json > _build/ci/failure-report.json
           verify_exit=$?
-          moon run cmd/main -- diverge _build/acceptance/union-find.json _build/acceptance/faulty-sort.json --format json > _build/acceptance/divergence-report.json
+          moon run cmd/main -- diverge _build/ci/union-find.json _build/ci/faulty-sort.json --format json > _build/ci/divergence-report.json
           diverge_exit=$?
           set -e
           test "$verify_exit" -eq 2
           test "$diverge_exit" -eq 2
-          test -s _build/acceptance/insertion-sort.svg
-          test -s _build/acceptance/union-find.json
-          test -s _build/acceptance/union-find-analysis.txt
-          test -s _build/acceptance/all-events.html
-          test -s _build/acceptance/playground.html
-          grep -q "AI Trace Clinic" _build/acceptance/playground.html
-          if grep -q '<script src=' _build/acceptance/playground.html; then exit 1; fi
+          test -s _build/ci/insertion-sort.svg
+          test -s _build/ci/union-find.json
+          test -s _build/ci/union-find-analysis.txt
+          test -s _build/ci/all-events.html
+          test -s _build/ci/playground.html
+          grep -q "AI Trace Clinic" _build/ci/playground.html
+          if grep -q '<script src=' _build/ci/playground.html; then exit 1; fi
 
       - name: Clinic conformance
-        run: node scripts/check_playground.mjs _build/acceptance/playground.html
+        run: node scripts/check_playground.mjs _build/ci/playground.html
 
       - name: Package module
         run: |
           moon package
-          test -s _build/publish/shop1111-frontierlab-0.7.0.zip
+          test -s _build/publish/shop1111-frontierlab-0.7.1.zip
 
-      - name: Upload acceptance artifacts
+      - name: Upload CI artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: frontierlab-acceptance-${{ github.sha }}
+          name: frontierlab-ci-${{ github.sha }}
           retention-days: 14
           if-no-files-found: error
           path: |
-            _build/acceptance/
-            _build/publish/shop1111-frontierlab-0.7.0.zip
+            _build/ci/
+            _build/publish/shop1111-frontierlab-0.7.1.zip
 
-  latest-compatibility:
-    name: Latest MoonBit compatibility (non-blocking)
-    continue-on-error: true
+  current-compatibility:
+    name: Current MoonBit compatibility
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-      - name: Set up latest MoonBit
+      - name: Set up MoonBit
         run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "0.10.6+80dc50f24"
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
-      - name: Probe strict gates
+      - name: Run strict compatibility gates
         run: |
           moon version --all
           moon update

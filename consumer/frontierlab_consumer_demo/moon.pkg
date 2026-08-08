@@ -1,6 +1,6 @@
 import {
+  "moonbitlang/core/env",
   "moonbitlang/x/fs",
-  "moonbitlang/x/sys",
   "shop1111/frontierlab",
 }
 

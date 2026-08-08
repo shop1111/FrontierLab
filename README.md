@@ -1,115 +1,130 @@
 # FrontierLab
 
-**把 AI 或算法生成的错误轨迹，收敛成可定位、可复现、可修复的证据。**
+FrontierLab 是一个 MoonBit 算法轨迹库。它把算法执行过程记录为带稳定实体 ID
+的语义事件和场景快照，并提供检查、对比、调试、JSON 编解码和离线 HTML/SVG
+渲染能力。
 
 [![CI](https://github.com/shop1111/FrontierLab/actions/workflows/ci.yml/badge.svg)](https://github.com/shop1111/FrontierLab/actions/workflows/ci.yml)
-[![Mooncakes](https://img.shields.io/badge/Mooncakes-live%20v0.7.0-7c3aed)](https://mooncakes.io/docs/shop1111/frontierlab)
+[![Mooncakes](https://img.shields.io/badge/Mooncakes-v0.7.1-7c3aed)](https://mooncakes.io/docs/shop1111/frontierlab)
 
-[Open AI Trace Clinic](https://shop1111.github.io/FrontierLab/playground.html) ·
-[GitHub](https://github.com/shop1111/FrontierLab) ·
-[Gitlink](https://gitlink.org.cn/zhengpx/FrontierLab) ·
-[Schema v1](docs/TRACE_SCHEMA.md)
+[在线打开 AI Trace Clinic](https://shop1111.github.io/FrontierLab/playground.html) ·
+[Mooncakes](https://mooncakes.io/docs/shop1111/frontierlab) ·
+[Trace Schema v1](docs/TRACE_SCHEMA.md)
 
-> 当前正式版本是 **v0.7.0**，发布于 GitHub 与 Mooncakes；GitHub Pages
-> 提供同版本的离线 AI Trace Clinic。Gitlink 镜像单独维护，不由此状态推断。
+## 安装
 
-## 三条命令体验完整闭环
+在 MoonBit 项目中添加依赖：
 
 ```bash
-# 1. 对冻结的正确/错误轨迹执行契约、首次分歧与反例切片
-moon run cmd/main -- diagnose fixtures/agent-traces/selection-sort-expected.json fixtures/agent-traces/selection-sort-actual.json --contract sorted-int-sequence --object values --format text --counterexample _build/counterexample.json --report _build/diagnosis.html
-
-# 2. 生成完全离线、单文件的 AI Trace Clinic
-moon run cmd/main -- playground --output _build/playground.html
-
-# 3. 独立消费者只从 Mooncakes v0.6.0 解析依赖并复现实例
-cd consumer/frontierlab_consumer_demo && moon test --target all --deny-warn
+moon add shop1111/frontierlab@0.7.1
 ```
 
-第一条命令预期返回退出码 `2`，自动定位到 **step 10**：正确轨迹交换
-`item-2/item-4`（值 4 与 3），错误轨迹却使用过期下标交换
-`item-2/item-0`（值 4 与 5）。这是有效输入上的语义失败，不是 CLI 错误。
+然后在需要使用 FrontierLab 的包中导入 `shop1111/frontierlab`。
 
-```mermaid
-flowchart LR
-  A["导入错误轨迹"] --> B["Schema / 契约检查"]
-  B --> C["首次分歧 step 10"]
-  C --> D["实际变化 vs 参考差异"]
-  D --> E["聚焦反例切片 JSON"]
-  E --> F["可复制修复提示"]
+## 最小示例
+
+下面的例子生成一条插入排序轨迹，再检查最终序列是否有序：
+
+```mbt nocheck
+let trace = @frontierlab.insertion_sort_trace([3, 1, 2])
+let result = @frontierlab.diagnose_trace(
+  trace,
+  contract=@frontierlab.sorted_int_sequence_contract(object_id="values"),
+  expected=trace,
+)
+assert_true(result.passed())
 ```
 
-## 产品闭环
+这里的“轨迹规则”（代码类型为 `TraceContract`）是一个检查器：它检查轨迹中的
+步骤或最终结果是否违反预先定义的要求，并返回具体的失败步骤和原因。
+`sorted_int_sequence_contract` 检查最终整数序列是否有序；
+`sequence_transition_contract` 检查事件描述的变化是否与场景快照一致。
 
-FrontierLab 不是算法合集，也不是通用绘图库。算法或 Agent 记录
-`Compare`、`Swap`、`Visit`、`Union`、`Relax` 等语义事件和完整场景快照；
-同一份 schema-v1 轨迹随后可被：
+自定义算法通常按以下顺序接入：
 
-- 契约检查，区分“格式正确”和“过程正确”；
-- 与参考轨迹比较，定位第一次事件或状态分歧；
-- 按稳定实体 ID 展示字段变化，而不是只比较数组下标；
-- 切成前后各两步的便携聚焦反例切片，并生成离线 HTML 与修复提示；
-- 通过 JSON CLI 接入 Agent/CI，或在浏览器本地一键诊断。
+1. 用稳定 ID 表示元素、节点或网格单元；元素移动后 ID 不变。
+2. 用 `TraceBuilder` 记录 `Compare`、`Swap`、`Visit`、`Union`、`Relax`
+   等有意义的事件和对应场景。
+3. 调用 `finish` 得到 `AlgorithmTrace`。
+4. 将轨迹交给规则检查、差异分析、JSON 编解码或渲染 API。
 
-`diagnose` 的退出语义固定为：
+可直接运行的完整代码见 [API 示例](API.mbt.md) 和[集成说明](docs/INTEGRATION.md)。
 
-- `0`：轨迹一致且契约通过；
-- `2`：输入有效，但存在契约失败或首次分歧；
-- `1`：参数、文件、JSON 或 Schema 错误。
+## CLI
 
-旧有 `verify`、`diverge`、`diff`、`breakpoints`、`render` 等命令和
-`frontierlab-debug-report/1.0` 外层报告保持兼容。
+从源码运行统一诊断命令：
 
-## 三种集成路径
-
-1. **MoonBit 库**：用 `TraceBuilder` 记录过程，再优先调用
-   `diagnose_trace`；需要自定义时再组合 contract、debugger 与 renderer。
-2. **CLI / AI Agent**：使用稳定 JSON 报告与退出码，在流水线中直接运行
-   `diagnose`。
-3. **离线浏览器**：生成 `playground.html`，无需服务器、CDN、框架或联网；
-   默认错误案例一次点击即跳到 step 10。
-
-完整示例见 [集成说明](docs/INTEGRATION.md)、[Schema 说明](docs/TRACE_SCHEMA.md)
-和[独立消费者证明](consumer/frontierlab_consumer_demo/README.md)。
-
-## 核心 API
-
-- 统一诊断：`diagnose_trace`、`TraceDiagnosis::passed`
-- 构建：`TraceBuilder::new`、`record`、`finish`
-- 模型：`AlgorithmTrace`、`TraceEvent`、`Scene`、`TargetRef`
-- 调试：`diff`、`breakpoint_hits`、`slice`、`first_divergence`
-- 契约：`sequence_transition_contract`、`sorted_int_sequence_contract`、
-  `insertion_sort_int_contract`、`grid_path_contract`
-- 协议：`encode_json`、`decode_json`、`validate`
-- 输出：`render_trace_html`、`render_trace_svg`、`render_trace_playground`
-- 兼容算法：BFS、Dijkstra、A*、插入排序、Union-Find
-
-`AlgorithmTrace::decode_json` 接受可选 `TraceOptions`，因此大规模但明确授权
-的 50,000 步基准可以突破默认 10,000 步安全上限，同时普通调用保持原行为。
-
-![AI Trace Clinic 在 step 10 对照预期与实际事件](docs/assets/clinic-step10.png)
-
-## 从源码、可执行文件与发布包运行
-
-当前候选最直接的查看方式是本地打开已生成页面：
-
-```powershell
-Set-Location D:\Code\Moonbit\frontierlab
-Start-Process .\docs\playground.html
+```bash
+moon run cmd/main -- diagnose \
+  fixtures/agent-traces/selection-sort-expected.json \
+  fixtures/agent-traces/selection-sort-actual.json \
+  --contract sorted-int-sequence \
+  --object values \
+  --format text \
+  --counterexample _build/counterexample.json \
+  --report _build/diagnosis.html
 ```
 
-从源码运行 CLI 使用本页前三条命令。若希望得到可直接调用的本机程序：
+这组示例输入故意包含错误，所以命令返回退出码 `2`，并报告第一次差异在
+step 10。CLI 的退出码含义为：
+
+- `0`：输入有效，并且轨迹通过检查且与参考轨迹一致；
+- `2`：输入有效，但轨迹违反规则或与参考轨迹不同；
+- `1`：参数、文件、JSON 或 Schema 无效。
+
+GitHub Release 同时提供 Windows 可执行文件和 SHA256。也可以在本地构建：
 
 ```powershell
 python scripts\build_cli.py
 .\_dist\frontierlab.exe --version
 ```
 
-脚本会在已忽略的 `_dist/` 中生成 `frontierlab.exe` 和 SHA256，不会把二进制
-加入 Mooncakes 包或源码提交。GitHub v0.7.0 Release 同时提供已校验的 Windows
-可执行文件、SHA256、Mooncakes 源码包和冻结诊断证据。
+## 离线浏览器工具
 
-## 开发与验收
+AI Trace Clinic 是一个单文件离线页面，可导入、回放和比较轨迹，不依赖服务器、
+CDN 或外部脚本：
+
+```bash
+moon run cmd/main -- playground --output _build/playground.html
+```
+
+生成后直接用浏览器打开 `_build/playground.html`。页面自带一个错误示例，用于
+展示规则失败、第一次差异、状态变化和聚焦切片。
+
+## 核心 API
+
+| 用途 | 主要 API | 说明 |
+|---|---|---|
+| 记录轨迹 | `TraceBuilder::new`、`record`、`finish` | 把算法执行过程记录为语义事件和完整场景快照 |
+| 统一诊断 | `diagnose_trace`、`TraceDiagnosis::passed` | 同时执行规则检查、参考轨迹比较和聚焦切片 |
+| 调试与比较 | `diff`、`breakpoint_hits`、`slice`、`first_divergence` | 查看步骤变化、命中语义断点并定位第一次差异 |
+| JSON 协议 | `encode_json`、`AlgorithmTrace::decode_json`、`validate` | 读写并校验稳定的 Trace Schema v1 |
+| 输出 | `render_trace_html`、`render_trace_svg`、`render_trace_playground` | 生成离线 HTML、SVG 或诊断页面 |
+
+完整公开接口由 `moon info` 生成在 [pkg.generated.mbti](pkg.generated.mbti) 中。
+
+## 独立 consumer 示例
+
+`consumer/frontierlab_consumer_demo` 是一个单独的 MoonBit 项目。它通过
+Mooncakes 安装 `shop1111/frontierlab`，不引用当前仓库中的源码，因此可以模拟
+一个真正的外部使用者。
+
+这个项目有两个作用：验证发布包确实能被其他项目安装和调用，以及提供一个完整
+的集成示例。普通用户不需要运行它；安装依赖并调用上面的公开 API 即可。
+
+发布后可用以下命令核验：
+
+```bash
+cd consumer/frontierlab_consumer_demo
+moon tree
+moon check --target all --deny-warn
+moon test --target all --deny-warn
+```
+
+consumer 不会被打入 FrontierLab 的 Mooncakes 源码包，它运行时生成的
+`evidence/` 目录也不会提交到 Git。
+
+## 开发与验证
 
 ```bash
 moon check --target all --deny-warn
@@ -124,20 +139,14 @@ moon package --list
 moon package
 ```
 
-覆盖率门禁要求统一诊断、调试器、契约、codec、report、quality 和 CLI 调度
-零未覆盖，且扣除带理由的真正入口、benchmark、示例入口后，全仓不超过 10 行。规则记录在
-[`coverage-exemptions.json`](coverage-exemptions.json)。
+更多资料：
 
-## Documentation
-
-- [三分钟演示脚本](DEMO_SCRIPT.md)
-- [评委逐步验收](ACCEPTANCE.md)
 - [Trace Schema v1](docs/TRACE_SCHEMA.md)
-- [三种集成路径](docs/INTEGRATION.md)
+- [算法集成说明](docs/INTEGRATION.md)
 - [渲染与安全模型](docs/RENDERING.md)
 - [可复现性能记录](BENCHMARKS.md)
-- [发布与逐平台核验](RELEASE_GUIDE.md)
 - [变更记录](CHANGELOG.md)
+- [贡献指南](CONTRIBUTING.md)
 
 ## License
 

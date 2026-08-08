@@ -5,4 +5,10 @@ target/
 target
 .mooncakes/
 .moonagent/
+AGENTS.md
+ACCEPTANCE.md
+DEMO_SCRIPT.md
+VALIDATION.md
+RELEASE_GUIDE.md
 PROJECT_APPLICATION.md
+consumer/frontierlab_consumer_demo/evidence/

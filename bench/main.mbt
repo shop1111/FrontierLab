@@ -53,7 +53,7 @@ fn main raise {
   println(
     "steps,build_ms,encode_ms,decode_ms,html_ms,diff_ms,contract_ms,divergence_ms,json_bytes,html_bytes",
   )
-  let args = @sys.get_cli_args()
+  let args = @env.args()
   let counts : Array[Int] = if args.length() > 1 {
     args[1:].map(value => @strconv.parse_int(value))
   } else {

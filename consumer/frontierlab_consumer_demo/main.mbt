@@ -44,7 +44,7 @@ fn write_evidence(directory : String) -> Unit raise {
 
 ///|
 fn main raise {
-  let args = @sys.get_cli_args()
+  let args = @env.args()
   let directory = if args.length() > 1 { args[1] } else { "evidence" }
   write_evidence(directory)
 }

@@ -139,7 +139,7 @@ fn selection_sort_trace(faulty : Bool) -> @frontierlab.AlgorithmTrace raise {
   builder.finish(summary=[
     @frontierlab.TraceAttribute::new(
       key="consumer_dependency",
-      value="shop1111/frontierlab@0.6.0",
+      value="shop1111/frontierlab@0.7.1",
     ),
     @frontierlab.TraceAttribute::new(
       key="fault_injected",
