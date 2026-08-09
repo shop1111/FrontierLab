@@ -5,7 +5,7 @@ FrontierLab 是一个 MoonBit 算法轨迹库。它把算法执行过程记录�
 渲染能力。
 
 [![CI](https://github.com/shop1111/FrontierLab/actions/workflows/ci.yml/badge.svg)](https://github.com/shop1111/FrontierLab/actions/workflows/ci.yml)
-[![Mooncakes](https://img.shields.io/badge/Mooncakes-v0.7.1-7c3aed)](https://mooncakes.io/docs/shop1111/frontierlab)
+[![Mooncakes](https://img.shields.io/badge/Mooncakes-v0.8.0-7c3aed)](https://mooncakes.io/docs/shop1111/frontierlab)
 
 [在线打开 AI Trace Clinic](https://shop1111.github.io/FrontierLab/playground.html) ·
 [Mooncakes](https://mooncakes.io/docs/shop1111/frontierlab) ·
@@ -16,7 +16,7 @@ FrontierLab 是一个 MoonBit 算法轨迹库。它把算法执行过程记录�
 在 MoonBit 项目中添加依赖：
 
 ```bash
-moon add shop1111/frontierlab@0.7.1
+moon add shop1111/frontierlab@0.8.0
 ```
 
 然后在需要使用 FrontierLab 的包中导入 `shop1111/frontierlab`。
@@ -49,6 +49,34 @@ assert_true(result.passed())
 4. 将轨迹交给规则检查、差异分析、JSON 编解码或渲染 API。
 
 可直接运行的完整代码见 [API 示例](API.mbt.md) 和[集成说明](docs/INTEGRATION.md)。
+
+## 内置算法 Adapter
+
+Adapter 把算法输入和执行步骤转换成统一的 `AlgorithmTrace`，因此这些轨迹可以
+直接交给 JSON、HTML/SVG、分析、断点、diff 和诊断 API：
+
+| 类别 | Adapter | 场景 | 主要语义事件 |
+|---|---|---|---|
+| 排序 | `insertion_sort_trace`、`insertion_sort_items_trace` | `Sequence` | `Compare`、`Swap` |
+| 集合 | `union_find_trace` | `Sets` | `Compare`、`Union`、`Update` |
+| 一维 DP | `fibonacci_dp_trace`、`coin_change_dp_trace` | `Sequence` | `Update`、依赖高亮 |
+| 二维 DP | `zero_one_knapsack_dp_trace`、`lcs_dp_trace` | `Grid` | `Update`、`Visit` |
+| 平衡树 | `red_black_tree_trace` | `Graph` | 插入、重着色、旋转、查找 |
+| 路径搜索桥接 | `search_trace_to_algorithm_trace` | `Grid` | `Visit`、`Relax` |
+
+Fibonacci 和零钱兑换保留各自简单的算法级入口，但内部共享一维 DP 场景表达。
+红黑树支持 `Insert` 和 `Find` 操作；节点标签中的 `[R]`、`[B]` 在不修改
+Trace Schema v1 的前提下持久表示颜色。
+
+```mbt nocheck
+let lcs = @frontierlab.lcs_dp_trace("ABCBDAB", "BDCABA")
+let tree = @frontierlab.red_black_tree_trace([
+  @frontierlab.Insert(30),
+  @frontierlab.Insert(10),
+  @frontierlab.Insert(20),
+  @frontierlab.Find(20),
+])
+```
 
 ## CLI
 

@@ -15,6 +15,8 @@ pub fn bfs(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule) -> Pa
 
 pub fn bfs_trace(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule) -> SearchTrace raise
 
+pub fn coin_change_dp_trace(Array[Int], Int, title? : String, object_id? : String, label? : String, options? : TraceOptions) -> AlgorithmTrace raise TraceError
+
 pub fn compare_algorithms(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule, heuristic? : Heuristic) -> CompareReport raise
 
 pub let debug_report_version : String
@@ -31,6 +33,8 @@ pub fn export_svg(GridMap, start~ : Position, goal~ : Position, trace? : SearchT
 
 pub fn faulty_insertion_sort_demo_trace() -> AlgorithmTrace raise
 
+pub fn fibonacci_dp_trace(Int, title? : String, object_id? : String, label? : String, options? : TraceOptions) -> AlgorithmTrace raise TraceError
+
 pub fn first_divergence(AlgorithmTrace, AlgorithmTrace) -> TraceDivergence?
 
 pub fn grid_path_contract(object_id~ : String) -> TraceContract
@@ -45,9 +49,13 @@ pub fn insertion_sort_items_trace(Array[SortTraceItem], title? : String, object_
 
 pub fn insertion_sort_trace(Array[Int], title? : String, object_id? : String, label? : String) -> AlgorithmTrace raise TraceError
 
+pub fn lcs_dp_trace(String, String, title? : String, object_id? : String, label? : String, options? : TraceOptions) -> AlgorithmTrace raise TraceError
+
 pub fn pathfinding_demo_trace() -> AlgorithmTrace raise
 
 pub let project_name : String
+
+pub fn red_black_tree_trace(Array[RedBlackTreeOperation], title? : String, object_id? : String, label? : String, options? : TraceOptions) -> AlgorithmTrace raise TraceError
 
 pub fn render_trace_html(AlgorithmTrace) -> String
 
@@ -66,6 +74,8 @@ pub fn sorted_int_sequence_contract(object_id~ : String) -> TraceContract
 pub fn union_find_demo_trace() -> AlgorithmTrace raise
 
 pub fn union_find_trace(Int, Array[UnionOperation], title? : String, object_id? : String, label? : String, compress_paths? : Bool) -> AlgorithmTrace raise TraceError
+
+pub fn zero_one_knapsack_dp_trace(Array[Int], Array[Int], Int, title? : String, object_id? : String, label? : String, options? : TraceOptions) -> AlgorithmTrace raise TraceError
 
 // Errors
 pub(all) suberror TraceError {
@@ -285,6 +295,11 @@ pub struct Position {
   y : Int
 } derive(Eq, ToJson, @debug.Debug)
 pub fn Position::new(x~ : Int, y~ : Int) -> Self
+
+pub(all) enum RedBlackTreeOperation {
+  Insert(Int)
+  Find(Int)
+} derive(Eq, ToJson, @debug.Debug)
 
 pub struct Scene {
   objects : Array[SceneObject]

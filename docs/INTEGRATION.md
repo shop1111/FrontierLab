@@ -14,6 +14,26 @@ Use `Custom` when no built-in event describes the transition. Keep the custom `k
 
 For existing FrontierLab searches, call `search_trace_to_algorithm_trace` rather than rebuilding grid scenes manually.
 
+## Bundled classic adapters
+
+FrontierLab includes algorithm-level adapters for insertion sort, Union-Find,
+Fibonacci DP, minimum coin change, 0/1 knapsack, longest common subsequence,
+and red-black-tree insertion/search. Fibonacci and coin change share the same
+private one-dimensional scene representation while preserving distinct public
+inputs, validation, recurrence annotations, and summaries.
+
+The DP adapters emit `Update` for completed states and highlight the states
+used by the recurrence. Knapsack and LCS map rows and columns to stable
+`cell-x-y` grid ids; LCS additionally emits `Visit` while reconstructing its
+deterministic result. Red-black-tree nodes retain insertion-order ids and encode
+persistent colors as `[R]`/`[B]` labels. Its stable custom event keys are
+`rb-insert`, `rb-recolor`, `rb-rotate-left`, `rb-rotate-right`, `rb-find-hit`,
+and `rb-find-miss`.
+
+Every new adapter accepts `TraceOptions`. Invalid dimensions or domain inputs
+raise `TraceError`, and oversized state spaces are rejected before allocating
+their complete scene tables.
+
 ## Checking and comparing traces
 
 After building a trace, prefer `diagnose_trace(actual, contract=..., expected=...)` for a single authoritative result. It returns the contract report, optional first divergence, focus step, actual transition diff, reference diff, and a portable focused window around the failure. Use `trace.diff(from_step=..., to_step=...)`, `trace.breakpoint_hits(...)`, and `trace.slice(center=...)` when assembling a custom workflow.

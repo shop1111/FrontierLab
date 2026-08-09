@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.0 - 2026-08-10
+
+- Added algorithm-level adapters for Fibonacci DP, minimum coin change, 0/1
+  knapsack, and longest common subsequence with reusable sequence/grid scenes.
+- Added a Schema-v1-compatible red-black-tree adapter with stable node ids,
+  insertion balancing, recoloring, rotations, lookup paths, and invariant
+  validation.
+- Added checked API examples, JSON/rendering coverage, invalid-input tests, and
+  deterministic DP/red-black-tree acceptance scenarios.
+
 ## 0.7.1 - 2026-08-09
 
 - Migrated executable argument handling from the legacy `@sys.get_cli_args()`
