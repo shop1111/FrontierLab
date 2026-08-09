@@ -103,7 +103,7 @@ fn execute_cli(
   inputs : Map[String, String],
 ) -> Diagnosis raise {
   if args.contains("--version") {
-    return Diagnosis::new(stdout="FrontierLab 0.7.1")
+    return Diagnosis::new(stdout="FrontierLab 0.8.0")
   }
   if args.length() < 2 || args.contains("--help") {
     return Diagnosis::new(stdout=usage())

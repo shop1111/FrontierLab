@@ -73,3 +73,40 @@ test "debug and verify an algorithm trace" {
   assert_true(report.passed)
 }
 ```
+
+```mbt check
+///|
+test "build one and two dimensional dynamic programming traces" {
+  let fibonacci = @frontierlab.fibonacci_dp_trace(10)
+  assert_eq(fibonacci.summary[3].value, "55")
+  let coins = @frontierlab.coin_change_dp_trace([1, 3, 4], 6)
+  assert_eq(coins.summary[3].value, "2")
+  let knapsack = @frontierlab.zero_one_knapsack_dp_trace(
+    [2, 3, 4],
+    [4, 5, 6],
+    5,
+  )
+  assert_eq(knapsack.summary[4].value, "9")
+  let lcs = @frontierlab.lcs_dp_trace("ABCBDAB", "BDCABA")
+  assert_eq(lcs.summary[3].value, "4")
+  assert_eq(lcs.summary[4].value, "BCBA")
+}
+```
+
+```mbt check
+///|
+test "trace red black tree balancing and lookup" {
+  let trace = @frontierlab.red_black_tree_trace([
+    @frontierlab.Insert(30),
+    @frontierlab.Insert(10),
+    @frontierlab.Insert(20),
+    @frontierlab.Find(20),
+    @frontierlab.Find(99),
+  ])
+  let stats = trace.analyze()
+  assert_true(stats.event_count("rb-rotate-left") > 0)
+  assert_true(stats.event_count("rb-rotate-right") > 0)
+  assert_eq(stats.event_count("rb-find-hit"), 1)
+  assert_eq(stats.event_count("rb-find-miss"), 1)
+}
+```
