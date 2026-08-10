@@ -13,6 +13,20 @@ if (!fs.existsSync(htmlPath)) {
 }
 
 const html = fs.readFileSync(htmlPath, "utf8");
+assert.ok(!html.includes("Export current SVG"));
+assert.ok(!html.includes("downloadSvg"));
+for (const role of [
+  "current",
+  "candidate",
+  "compared",
+  "changed",
+  "visited",
+  "frontier",
+  "result",
+  "error",
+]) {
+  assert.ok(html.includes(`[data-role=${role}]`), `${role} style must exist`);
+}
 const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
 assert.equal(scripts.length, 1, "expected exactly one executable inline script");
 

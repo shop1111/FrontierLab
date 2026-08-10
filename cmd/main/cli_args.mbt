@@ -1,10 +1,10 @@
 ///|
 fn usage() -> String {
   (
-    #|FrontierLab 0.8.0 - AI Trace Clinic
+    #|FrontierLab 0.9.1 - HTML Trace Player
     #|  frontierlab diagnose <expected.json> <actual.json> --contract <name> --object <id> --format <text|json> [--counterexample <path>] [--report <path>]
-    #|  frontierlab demo <insertion-sort|faulty-insertion-sort|union-find|pathfinding> --format <html|svg|json> --output <path|->
-    #|  frontierlab render <trace.json> --format <html|svg> --output <path|-> [--step N]
+    #|  frontierlab demo <insertion-sort|faulty-insertion-sort|union-find|pathfinding|fibonacci|coin-change|knapsack|lcs|red-black-tree> --format <html|json|svg> --output <path|->
+    #|  frontierlab render <trace.json> --format <html|json|svg> --output <path|-> [--step N]
     #|  frontierlab analyze <trace.json>
     #|  frontierlab validate <trace.json>
     #|  frontierlab playground --output <path|->
@@ -13,6 +13,7 @@ fn usage() -> String {
     #|  frontierlab verify <trace.json> --contract <sequence-transition|sorted-int-sequence|insertion-sort-int|grid-path> --object ID --format <text|json> [--counterexample PATH]
     #|  frontierlab diverge <expected.json> <actual.json> --format <text|json> [--counterexample PATH]
     #|  frontierlab --version
+    #|  Note: SVG output is legacy compatibility only and will be removed in v1.0; prefer HTML or JSON.
   )
 }
 

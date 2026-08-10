@@ -37,6 +37,11 @@ test "generate an offline trace playground" {
   let html = @frontierlab.render_trace_playground()
   assert_true(html.contains("AI Trace Clinic"))
   assert_true(!html.contains("<script src="))
+  let player = @frontierlab.render_trace_html(
+    @frontierlab.insertion_sort_trace([3, 1, 2]),
+  )
+  assert_true(player.contains("id=\"guide\""))
+  assert_true(player.contains("FrontierLabPlayerCore"))
 }
 ```
 

@@ -1,5 +1,6 @@
 ///|
 /// Render one trace frame as a deterministic, standalone SVG document.
+#deprecated("Legacy static renderer; use render_trace_html or Schema v1 JSON. This API will be removed in v1.0.", skip_current_package=true)
 pub fn render_trace_svg(
   trace : AlgorithmTrace,
   step? : Int = -1,
@@ -37,6 +38,7 @@ pub fn render_trace_svg(
 
 ///|
 /// Render every recorded step. An empty trace yields its initial scene.
+#deprecated("Legacy static renderer; use render_trace_html or Schema v1 JSON. This API will be removed in v1.0.", skip_current_package=true)
 pub fn render_trace_svg_frames(
   trace : AlgorithmTrace,
   width? : Int = 900,

@@ -200,9 +200,9 @@ pub fn zero_one_knapsack_dp_trace(
   weights : Array[Int],
   values : Array[Int],
   capacity : Int,
-  title? : String = "0/1 Knapsack DP",
+  title? : String = "0/1 背包动态规划",
   object_id? : String = "dp",
-  label? : String = "Knapsack table",
+  label? : String = "背包状态表",
   options? : TraceOptions = TraceOptions::default(),
 ) -> AlgorithmTrace raise TraceError {
   if weights.length() != values.length() {
@@ -239,7 +239,7 @@ pub fn zero_one_knapsack_dp_trace(
   let builder = TraceBuilder::new(
     title~,
     algorithm="zero-one-knapsack-dp",
-    description="Choose or skip each item for every capacity.",
+    description="逐件考虑物品，在每个容量下比较选择与跳过。",
     initial_scene=dp_grid_scene(labels, object_id, label, []),
     options~,
   )
@@ -282,11 +282,11 @@ pub fn zero_one_knapsack_dp_trace(
         ),
         scene=dp_grid_scene(labels, object_id, label, highlights),
         annotation=Annotation::new(
-          title="Item \{row}, capacity \{column}",
+          title="第 \{row} 件物品，容量 \{column}",
           body=if included > excluded {
-            "Take item \{row - 1}; best value becomes \{included}."
+            "选择第 \{row} 件物品，当前最优价值更新为 \{included}。"
           } else {
-            "Skip item \{row - 1}; best value remains \{excluded}."
+            "跳过第 \{row} 件物品，当前最优价值保持为 \{excluded}。"
           },
         ),
       )
@@ -302,8 +302,8 @@ pub fn zero_one_knapsack_dp_trace(
       ),
     ]),
     annotation=Annotation::new(
-      title="Knapsack optimum",
-      body="The maximum value is \{table[result_row][capacity]}.",
+      title="背包最优解",
+      body="容量 \{capacity} 下的最大价值为 \{table[result_row][capacity]}。",
     ),
   )
   builder.finish(summary=[

@@ -1,11 +1,11 @@
 # FrontierLab
 
 FrontierLab 是一个 MoonBit 算法轨迹库。它把算法执行过程记录为带稳定实体 ID
-的语义事件和场景快照，并提供检查、对比、调试、JSON 编解码和离线 HTML/SVG
-渲染能力。
+的语义事件和场景快照，并提供检查、对比、调试、JSON 编解码和精修后的离线
+HTML 可视化能力。
 
 [![CI](https://github.com/shop1111/FrontierLab/actions/workflows/ci.yml/badge.svg)](https://github.com/shop1111/FrontierLab/actions/workflows/ci.yml)
-[![Mooncakes](https://img.shields.io/badge/Mooncakes-v0.8.0-7c3aed)](https://mooncakes.io/docs/shop1111/frontierlab)
+[![Mooncakes](https://img.shields.io/badge/Mooncakes-package-7c3aed)](https://mooncakes.io/docs/shop1111/frontierlab)
 
 [在线打开 AI Trace Clinic](https://shop1111.github.io/FrontierLab/playground.html) ·
 [Mooncakes](https://mooncakes.io/docs/shop1111/frontierlab) ·
@@ -16,7 +16,7 @@ FrontierLab 是一个 MoonBit 算法轨迹库。它把算法执行过程记录�
 在 MoonBit 项目中添加依赖：
 
 ```bash
-moon add shop1111/frontierlab@0.8.0
+moon add shop1111/frontierlab
 ```
 
 然后在需要使用 FrontierLab 的包中导入 `shop1111/frontierlab`。
@@ -53,7 +53,7 @@ assert_true(result.passed())
 ## 内置算法 Adapter
 
 Adapter 把算法输入和执行步骤转换成统一的 `AlgorithmTrace`，因此这些轨迹可以
-直接交给 JSON、HTML/SVG、分析、断点、diff 和诊断 API：
+直接交给 JSON、HTML、分析、断点、diff 和诊断 API：
 
 | 类别 | Adapter | 场景 | 主要语义事件 |
 |---|---|---|---|
@@ -107,6 +107,34 @@ python scripts\build_cli.py
 .\_dist\frontierlab.exe --version
 ```
 
+## 生成算法可视化
+
+最直接的用法是让 CLI 生成一个完全离线的 HTML 文件，然后双击打开。页面默认
+使用中文，可切换 English，并会显示比较对象、交换方向、旧值到新值、DP 依赖、
+网格坐标、图节点移动、Adapter 注释和伪代码行。
+
+```powershell
+New-Item -ItemType Directory -Force _build\visual | Out-Null
+moon run cmd/main -- demo insertion-sort --format html --output _build/visual/insertion-sort.html
+moon run cmd/main -- demo fibonacci --format html --output _build/visual/fibonacci.html
+moon run cmd/main -- demo coin-change --format html --output _build/visual/coin-change.html
+moon run cmd/main -- demo knapsack --format html --output _build/visual/knapsack.html
+moon run cmd/main -- demo lcs --format html --output _build/visual/lcs.html
+moon run cmd/main -- demo union-find --format html --output _build/visual/union-find.html
+moon run cmd/main -- demo pathfinding --format html --output _build/visual/pathfinding.html
+moon run cmd/main -- demo red-black-tree --format html --output _build/visual/red-black-tree.html
+```
+
+如果已经有 Schema v1 JSON 轨迹，则使用：
+
+```powershell
+moon run cmd/main -- render trace.json --format html --output trace.html
+```
+
+`render_trace_svg` 与 `render_trace_svg_frames` 在 v0.9 仅保留为旧代码兼容入口，
+已经标记弃用，并计划在 v1.0 删除。新项目应选择交互 HTML；需要交换或长期存档
+轨迹数据时选择 Schema v1 JSON。
+
 ## 离线浏览器工具
 
 AI Trace Clinic 是一个单文件离线页面，可导入、回放和比较轨迹，不依赖服务器、
@@ -127,7 +155,7 @@ moon run cmd/main -- playground --output _build/playground.html
 | 统一诊断 | `diagnose_trace`、`TraceDiagnosis::passed` | 同时执行规则检查、参考轨迹比较和聚焦切片 |
 | 调试与比较 | `diff`、`breakpoint_hits`、`slice`、`first_divergence` | 查看步骤变化、命中语义断点并定位第一次差异 |
 | JSON 协议 | `encode_json`、`AlgorithmTrace::decode_json`、`validate` | 读写并校验稳定的 Trace Schema v1 |
-| 输出 | `render_trace_html`、`render_trace_svg`、`render_trace_playground` | 生成离线 HTML、SVG 或诊断页面 |
+| 输出 | `render_trace_html`、`render_trace_playground` | 生成交互式离线 HTML 或诊断页面；SVG API 仅作弃用兼容 |
 
 完整公开接口由 `moon info` 生成在 [pkg.generated.mbti](pkg.generated.mbti) 中。
 
@@ -162,6 +190,7 @@ moon info
 moon test --target all --deny-warn
 python scripts/check_coverage.py
 node scripts/check_playground.mjs
+node scripts/check_renderer.mjs _build/renderer/insertion-sort.html
 python scripts/validate_cli.py
 moon package --list
 moon package

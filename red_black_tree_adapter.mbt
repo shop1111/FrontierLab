@@ -9,9 +9,9 @@ pub(all) enum RedBlackTreeOperation {
 /// Build a red-black-tree trace with insertion balancing and lookup paths.
 pub fn red_black_tree_trace(
   operations : Array[RedBlackTreeOperation],
-  title? : String = "Red-Black Tree",
+  title? : String = "红黑树",
   object_id? : String = "tree",
-  label? : String = "Red-black tree",
+  label? : String = "红黑树结构",
   options? : TraceOptions = TraceOptions::default(),
 ) -> AlgorithmTrace raise TraceError {
   let mut requested_nodes = 0
@@ -38,7 +38,7 @@ pub fn red_black_tree_trace(
   let builder = TraceBuilder::new(
     title~,
     algorithm="red-black-tree",
-    description="Insert, rebalance, and search a red-black tree with stable node ids.",
+    description="使用稳定节点 ID 展示红黑树的插入、平衡修复和查找过程。",
     initial_scene=red_black_tree_scene(nodes, object_id, label, [], Result),
     options~,
   )
@@ -70,6 +70,28 @@ pub fn red_black_tree_trace(
           nodes[parent].right = node_index
         }
         stats.insertions += 1
+        let insert_attributes = [
+          TraceAttribute::new(key="key", value=key.to_string()),
+        ]
+        let insert_body = if parent < 0 {
+          "将键 \{key} 作为根节点插入，初始颜色为红色。"
+        } else {
+          let direction = if key < nodes[parent].key { "left" } else { "right" }
+          insert_attributes.push(
+            TraceAttribute::new(
+              key="parent",
+              value=nodes[parent].key.to_string(),
+            ),
+          )
+          insert_attributes.push(
+            TraceAttribute::new(key="direction", value=direction),
+          )
+          if direction == "left" {
+            "将键 \{key} 作为节点 \{nodes[parent].key} 的左孩子插入，初始颜色为红色。"
+          } else {
+            "将键 \{key} 作为节点 \{nodes[parent].key} 的右孩子插入，初始颜色为红色。"
+          }
+        }
         record_red_black_event(
           builder,
           nodes,
@@ -77,11 +99,11 @@ pub fn red_black_tree_trace(
           object_id,
           label,
           kind="rb-insert",
-          attributes=[TraceAttribute::new(key="key", value=key.to_string())],
+          attributes=insert_attributes,
           highlighted=[node_index],
           role=Changed,
-          title="Insert red node",
-          body="Insert key \{key} as a red leaf.",
+          title="插入红色节点",
+          body=insert_body,
         )
         root = red_black_tree_fix_insert(
           builder, nodes, root, node_index, object_id, label, stats,
@@ -104,8 +126,8 @@ pub fn red_black_tree_trace(
               Current,
             ),
             annotation=Annotation::new(
-              title="Find \{key}",
-              body="Compare \{key} with node \{nodes[current].key}.",
+              title="查找键 \{key}",
+              body="将键 \{key} 与节点 \{nodes[current].key} 比较。",
             ),
           )
           if key == nodes[current].key {
@@ -128,8 +150,8 @@ pub fn red_black_tree_trace(
             attributes=[TraceAttribute::new(key="key", value=key.to_string())],
             highlighted=[found],
             role=Result,
-            title="Key found",
-            body="Key \{key} exists in the tree.",
+            title="查找命中",
+            body="树中存在键 \{key}。",
           )
         } else {
           stats.missed += 1
@@ -143,8 +165,8 @@ pub fn red_black_tree_trace(
             attributes=[TraceAttribute::new(key="key", value=key.to_string())],
             highlighted=[],
             role=Error,
-            title="Key not found",
-            body="Key \{key} is not present in the tree.",
+            title="查找未命中",
+            body="树中不存在键 \{key}。",
           )
         }
       }
@@ -155,8 +177,8 @@ pub fn red_black_tree_trace(
     event=Complete,
     scene=red_black_tree_scene(nodes, object_id, label, all_nodes, Result),
     annotation=Annotation::new(
-      title="Red-black tree complete",
-      body="All requested insertions and lookups are complete.",
+      title="红黑树操作完成",
+      body="所有插入和查找操作均已完成。",
     ),
   )
   let inorder : Array[String] = []
@@ -270,8 +292,8 @@ fn red_black_tree_fix_insert(
           ],
           highlighted=[parent, uncle, grand],
           role=Changed,
-          title="Recolor family",
-          body="Parent and uncle become black; grandparent becomes red.",
+          title="节点组重新着色",
+          body="父节点和叔节点变为黑色，祖父节点变为红色。",
         )
         current = grand
       } else {
@@ -292,8 +314,8 @@ fn red_black_tree_fix_insert(
             ],
             highlighted=[current, nodes[current].parent],
             role=Changed,
-            title="Rotate left",
-            body="Rotate left around pivot \{pivot_key}.",
+            title="左旋",
+            body="以节点 \{pivot_key} 为支点执行左旋。",
           )
         }
         let fixed_parent = nodes[current].parent
@@ -316,8 +338,8 @@ fn red_black_tree_fix_insert(
           ],
           highlighted=[fixed_parent, fixed_grand],
           role=Changed,
-          title="Prepare right rotation",
-          body="Make the parent black and the grandparent red.",
+          title="准备右旋",
+          body="将父节点变为黑色、祖父节点变为红色。",
         )
         let pivot_key = nodes[fixed_grand].key
         root = red_black_rotate_right(nodes, root, fixed_grand)
@@ -334,8 +356,8 @@ fn red_black_tree_fix_insert(
           ],
           highlighted=[fixed_grand, nodes[fixed_grand].parent],
           role=Changed,
-          title="Rotate right",
-          body="Rotate right around pivot \{pivot_key}.",
+          title="右旋",
+          body="以节点 \{pivot_key} 为支点执行右旋。",
         )
       }
     } else {
@@ -360,8 +382,8 @@ fn red_black_tree_fix_insert(
           ],
           highlighted=[parent, uncle, grand],
           role=Changed,
-          title="Recolor family",
-          body="Parent and uncle become black; grandparent becomes red.",
+          title="节点组重新着色",
+          body="父节点和叔节点变为黑色，祖父节点变为红色。",
         )
         current = grand
       } else {
@@ -382,8 +404,8 @@ fn red_black_tree_fix_insert(
             ],
             highlighted=[current, nodes[current].parent],
             role=Changed,
-            title="Rotate right",
-            body="Rotate right around pivot \{pivot_key}.",
+            title="右旋",
+            body="以节点 \{pivot_key} 为支点执行右旋。",
           )
         }
         let fixed_parent = nodes[current].parent
@@ -406,8 +428,8 @@ fn red_black_tree_fix_insert(
           ],
           highlighted=[fixed_parent, fixed_grand],
           role=Changed,
-          title="Prepare left rotation",
-          body="Make the parent black and the grandparent red.",
+          title="准备左旋",
+          body="将父节点变为黑色、祖父节点变为红色。",
         )
         let pivot_key = nodes[fixed_grand].key
         root = red_black_rotate_left(nodes, root, fixed_grand)
@@ -424,8 +446,8 @@ fn red_black_tree_fix_insert(
           ],
           highlighted=[fixed_grand, nodes[fixed_grand].parent],
           role=Changed,
-          title="Rotate left",
-          body="Rotate left around pivot \{pivot_key}.",
+          title="左旋",
+          body="以节点 \{pivot_key} 为支点执行左旋。",
         )
       }
     }
@@ -445,8 +467,8 @@ fn red_black_tree_fix_insert(
       ],
       highlighted=[root],
       role=Changed,
-      title="Blacken root",
-      body="The root must always be black.",
+      title="根节点染黑",
+      body="红黑树的根节点必须始终为黑色。",
     )
   }
   root
@@ -547,6 +569,7 @@ fn red_black_tree_scene(
           id="edge-\{node.id}-\{child.id}",
           from=node.id,
           to=child.id,
+          label="left",
           directed=true,
         ),
       )
@@ -558,6 +581,7 @@ fn red_black_tree_scene(
           id="edge-\{node.id}-\{child.id}",
           from=node.id,
           to=child.id,
+          label="right",
           directed=true,
         ),
       )

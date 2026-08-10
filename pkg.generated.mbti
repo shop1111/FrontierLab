@@ -61,8 +61,10 @@ pub fn render_trace_html(AlgorithmTrace) -> String
 
 pub fn render_trace_playground() -> String raise TraceError
 
+#deprecated
 pub fn render_trace_svg(AlgorithmTrace, step? : Int, width? : Int) -> String raise
 
+#deprecated
 pub fn render_trace_svg_frames(AlgorithmTrace, width? : Int) -> Array[String] raise
 
 pub fn search_trace_to_algorithm_trace(GridMap, start~ : Position, goal~ : Position, algorithm~ : String, trace~ : SearchTrace) -> AlgorithmTrace raise

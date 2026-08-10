@@ -116,6 +116,7 @@ test "Graph and grid validate references and dimensions" {
 }
 
 ///|
+#warnings("-deprecated")
 test "SVG renderer covers sequence sets graph and grid" {
   let graph = @frontierlab.GraphState::new(
     id="graph",
@@ -206,7 +207,16 @@ test "HTML renderer is standalone interactive and script-safe" {
   builder.record(event=@frontierlab.Custom("demo", []), scene~)
   let html = @frontierlab.render_trace_html(builder.finish())
   assert_true(html.contains("<!doctype html>"))
+  assert_true(html.contains("lang=\"zh-CN\""))
   assert_true(html.contains("id=\"timeline\""))
+  assert_true(html.contains("id=\"guide\""))
+  assert_true(html.contains("id=\"language\""))
+  assert_true(html.contains("FrontierLabPlayerCore"))
+  assert_true(html.contains("function eventGuide"))
+  assert_true(html.contains("data-entity-key"))
+  assert_true(html.contains("node.animate"))
+  assert_true(html.contains("--current-bg:#ffedd5"))
+  assert_true(html.contains("--current-fg:#7c2d12"))
   assert_true(html.contains("prefers-reduced-motion"))
   assert_true(html.contains("\\u003c/script>"))
   assert_false(html.contains("https://"))
@@ -231,6 +241,7 @@ test "search adapter preserves final search result metadata" {
 }
 
 ///|
+#warnings("-deprecated")
 test "empty traces render their initial scene and reject invalid steps" {
   let scene = sequence_scene(["1"])
   let trace = @frontierlab.TraceBuilder::new(
@@ -255,6 +266,7 @@ test "empty traces render their initial scene and reject invalid steps" {
 }
 
 ///|
+#warnings("-deprecated")
 test "all highlight roles have deterministic SVG colors" {
   let roles = [
     @frontierlab.Current,
@@ -501,6 +513,7 @@ test "trace validation rejects duplicate summary keys and step gaps" {
 }
 
 ///|
+#warnings("-deprecated")
 test "cyclic graph layout renders self loops parallel edges and arrows" {
   let graph = @frontierlab.GraphState::new(
     id="cyclic",
@@ -758,7 +771,11 @@ test "offline playground embeds validation analysis export and safe examples" {
   assert_true(html.contains("function validate(d)"))
   assert_true(html.contains("function analyze(d)"))
   assert_true(html.contains("function lint(d)"))
-  assert_true(html.contains("Export current SVG"))
+  assert_false(html.contains("Export current SVG"))
+  assert_false(html.contains("downloadSvg"))
+  assert_true(html.contains("[data-role=candidate]"))
+  assert_true(html.contains("[data-role=visited]"))
+  assert_true(html.contains("[data-role=frontier]"))
   assert_true(html.contains("Semantic breakpoints"))
   assert_true(html.contains("Trace contract"))
   assert_true(html.contains("First divergence"))

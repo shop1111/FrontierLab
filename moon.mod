@@ -15,7 +15,7 @@ import {
 
 name = "shop1111/frontierlab"
 
-version = "0.8.0"
+version = "0.9.1"
 
 readme = "README.md"
 
@@ -23,9 +23,16 @@ repository = "https://github.com/shop1111/FrontierLab.git"
 
 license = "MIT"
 
-keywords = [ "algorithm", "trace", "visualization", "education", "svg", "html" ]
+keywords = [
+  "algorithm",
+  "trace",
+  "visualization",
+  "education",
+  "html",
+  "debugger",
+]
 
-description = "A MoonBit algorithm trace protocol and offline HTML/SVG visualization kit."
+description = "A MoonBit algorithm trace protocol and polished offline HTML visualization kit."
 
 options(
   exclude: [ "consumer/frontierlab_consumer_demo", "PROJECT_APPLICATION.md" ],

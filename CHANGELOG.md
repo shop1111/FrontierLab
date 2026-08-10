@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.9.1 - 2026-08-10
+
+- Rebuilt the standalone HTML trace player around readable role palettes,
+  Chinese/English interface switching, event-specific guidance, sequence/grid
+  axes, deterministic graph rendering, and reduced-motion-aware FLIP movement.
+- Added explicit Compare, Swap, Update, Visit, Relax, Union, Complete, and
+  Custom-event explanations, including swap index direction, DP dependencies,
+  value transitions, and custom red-black-tree attributes.
+- Removed AI Trace Clinic's placeholder SVG title-card export and completed its
+  readable styling for every highlight role.
+- Deprecated `render_trace_svg` and `render_trace_svg_frames`; the compatible
+  CLI SVG format is now marked legacy, with removal scheduled for v1.0.
+- Added built-in HTML demos for Fibonacci, coin change, knapsack, LCS, and
+  red-black trees plus renderer conformance and contrast checks.
+
 ## 0.8.0 - 2026-08-10
 
 - Added algorithm-level adapters for Fibonacci DP, minimum coin change, 0/1

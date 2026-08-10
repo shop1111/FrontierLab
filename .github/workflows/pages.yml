@@ -30,15 +30,25 @@ jobs:
         run: |
           moon update
           moon run cmd/main -- demo insertion-sort --format html --output docs/insertion-sort.html
+          moon run cmd/main -- demo fibonacci --format html --output docs/fibonacci.html
+          moon run cmd/main -- demo coin-change --format html --output docs/coin-change.html
+          moon run cmd/main -- demo knapsack --format html --output docs/knapsack.html
+          moon run cmd/main -- demo lcs --format html --output docs/lcs.html
           moon run cmd/main -- demo union-find --format html --output docs/union-find.html
           moon run cmd/main -- demo pathfinding --format html --output docs/pathfinding.html
+          moon run cmd/main -- demo red-black-tree --format html --output docs/red-black-tree.html
           moon run cmd/main -- playground --output docs/playground.html
           test -s docs/index.html
           test -s docs/insertion-sort.html
+          test -s docs/knapsack.html
+          test -s docs/lcs.html
           test -s docs/union-find.html
           test -s docs/pathfinding.html
+          test -s docs/red-black-tree.html
           test -s docs/playground.html
           grep -q "AI Trace Clinic" docs/playground.html
+          node scripts/check_renderer.mjs docs/insertion-sort.html
+          node scripts/check_playground.mjs docs/playground.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

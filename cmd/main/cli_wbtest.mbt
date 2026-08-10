@@ -95,6 +95,7 @@ test "diagnosis combines contract divergence focus and counterexample" {
 test "CLI helpers keep report version and command compatibility" {
   assert_true(usage().contains("frontierlab diagnose"))
   assert_true(usage().contains("sorted-int-sequence"))
+  assert_true(usage().contains("SVG output is legacy"))
   assert_true(
     json_envelope("verify", true, "null").contains(
       "\"report_version\":\"frontierlab-debug-report/1.0\"",
@@ -279,6 +280,11 @@ test "CLI dispatch reports malformed invocations" {
   }
   ignore(demo("union-find"))
   ignore(demo("pathfinding"))
+  ignore(demo("fibonacci"))
+  ignore(demo("coin-change"))
+  ignore(demo("knapsack"))
+  ignore(demo("lcs"))
+  ignore(demo("red-black-tree"))
   try demo("unknown") catch {
     _ => ()
   } noraise {

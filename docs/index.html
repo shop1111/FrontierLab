@@ -1,25 +1,29 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>FrontierLab Demo</title>
   <style>
-    :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#07111f;color:#f8fafc;font:16px/1.55 system-ui,sans-serif}main{max-width:1050px;margin:auto;padding:42px 22px}h1{font-size:clamp(36px,7vw,72px);line-height:1;margin:.2em 0}.lead{max-width:760px;color:#94a3b8;font-size:19px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px;margin:38px 0}.card{display:block;background:#0f172a;border:1px solid #334155;border-radius:18px;padding:16px;text-decoration:none;color:inherit;transition:.15s transform}.card:hover{border-color:#60a5fa;transform:translateY(-2px)}.card img{width:100%}.playground{border-color:#60a5fa;background:linear-gradient(145deg,#0f172a,#172554)}.badge{color:#60a5fa;font-family:monospace}code{background:#1e293b;padding:3px 6px;border-radius:5px}a{color:#60a5fa}
+    :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#07111f;color:#f8fafc;font:16px/1.55 system-ui,sans-serif}main{max-width:1050px;margin:auto;padding:42px 22px}h1{font-size:clamp(36px,7vw,72px);line-height:1;margin:.2em 0}.lead{max-width:780px;color:#b6c2d5;font-size:19px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin:38px 0}.card{display:block;background:#0f172a;border:1px solid #334155;border-radius:16px;padding:18px;text-decoration:none;color:inherit;transition:.15s transform}.card:hover{border-color:#60a5fa;transform:translateY(-2px)}.card h2{margin:.1em 0 .35em}.card p{margin:0;color:#b6c2d5}.playground{border-color:#60a5fa;background:linear-gradient(145deg,#0f172a,#172554)}.badge{color:#93c5fd;font-family:monospace}code{background:#1e293b;padding:3px 6px;border-radius:5px}a{color:#93c5fd}
   </style>
 </head>
 <body><main>
-  <span class="badge">FrontierLab AI Trace Clinic</span>
-  <h1>Find the first step where an algorithm goes wrong.</h1>
-  <p class="lead">FrontierLab gives algorithm libraries and AI agents semantic breakpoints, frame diffs, process contracts, first-divergence detection, and portable visual counterexamples.</p>
+  <span class="badge">FrontierLab v0.9 HTML Player</span>
+  <h1>看清算法每一步为什么发生。</h1>
+  <p class="lead">交互页面会解释比较对象、交换方向、DP 依赖、网格坐标与红黑树旋转；需要定位错误时，再进入 AI Trace Clinic 查看契约失败和第一次差异。</p>
   <div class="grid">
-    <a class="card playground" href="playground.html"><h2>Open AI Trace Clinic →</h2><p>Run the built-in incorrect sort, compare expected and actual behavior at step 10, and export a focused trace slice—all offline.</p></a>
-    <a class="card" href="insertion-sort.html"><img src="insertion-sort.svg" alt="Insertion sort"><h2>Insertion sort</h2><p>Open the interactive comparison and swap trace.</p></a>
-    <a class="card" href="union-find.html"><img src="union-find.svg" alt="Union-Find"><h2>Union-Find</h2><p>Replay component merges and path compression.</p></a>
-    <a class="card" href="pathfinding.html"><img src="pathfinding.svg" alt="A star"><h2>A* frontier</h2><p>Explore visits, relaxations, and the final path.</p></a>
+    <a class="card playground" href="playground.html"><h2>AI Trace Clinic →</h2><p>诊断错误轨迹、第一次差异和聚焦反例。</p></a>
+    <a class="card" href="insertion-sort.html"><h2>插入排序</h2><p>观察比较对象、交换方向和元素实际移动。</p></a>
+    <a class="card" href="fibonacci.html"><h2>Fibonacci DP</h2><p>查看一维状态递推与依赖来源。</p></a>
+    <a class="card" href="coin-change.html"><h2>零钱兑换</h2><p>查看多候选最优化和不可达状态。</p></a>
+    <a class="card" href="knapsack.html"><h2>0/1 背包</h2><p>在二维坐标中比较选择与跳过。</p></a>
+    <a class="card" href="lcs.html"><h2>最长公共子序列</h2><p>跟随 DP 更新和最终回溯路径。</p></a>
+    <a class="card" href="union-find.html"><h2>并查集</h2><p>回放集合合并和路径压缩。</p></a>
+    <a class="card" href="pathfinding.html"><h2>A* 寻路</h2><p>查看访问、松弛方向和最终路径。</p></a>
+    <a class="card" href="red-black-tree.html"><h2>红黑树</h2><p>理解插入、重着色、旋转和查找路径。</p></a>
   </div>
-  <p>Generate the offline playground locally:</p>
-  <p><code>moon run cmd/main -- playground --output playground.html</code></p>
-  <p><a href="https://github.com/shop1111/FrontierLab">Source and documentation</a> · <a href="TRACE_SCHEMA.md">Trace schema</a> · <a href="INTEGRATION.md">Integration guide</a></p>
+  <p>本地生成：<code>moon run cmd/main -- demo insertion-sort --format html --output insertion-sort.html</code></p>
+  <p><a href="https://github.com/shop1111/FrontierLab">源码与文档</a> · <a href="TRACE_SCHEMA.md">Trace Schema</a> · <a href="INTEGRATION.md">集成说明</a></p>
 </main></body>
 </html>

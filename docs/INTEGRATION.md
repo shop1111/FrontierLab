@@ -4,7 +4,7 @@
 2. Build an initial `Scene` from one or more `Sequence`, `Sets`, `Graph`, or `Grid` objects.
 3. Create a `TraceBuilder` with a title and stable algorithm key.
 4. At meaningful algorithm boundaries, call `record` with a semantic event, complete scene, and optional annotation.
-5. Finish and validate the trace, then pass it to the HTML/SVG renderer or `encode_json`. Use `AlgorithmTrace::decode_json` to consume an external schema-v1 document.
+5. Finish and validate the trace, then pass it to the HTML renderer or `encode_json`. Use `AlgorithmTrace::decode_json` to consume an external schema-v1 document. The SVG renderer is deprecated in v0.9 and scheduled for removal in v1.0.
 
 Prefer meaningful steps over logging every assignment. A sorting trace normally records comparisons and moves; graph search records visits and relaxations; dynamic programming records cell updates and dependency choices.
 
@@ -76,3 +76,16 @@ moon run cmd/main -- playground --output playground.html
 Open the resulting file directly. It contains no external scripts or network
 requirements, and includes the same intentionally incorrect selection-sort
 example as the CLI fixtures.
+
+For a focused algorithm demonstration instead of diagnosis, generate the v0.9
+interactive player:
+
+```bash
+moon run cmd/main -- demo insertion-sort --format html --output insertion-sort.html
+moon run cmd/main -- demo lcs --format html --output lcs.html
+moon run cmd/main -- demo red-black-tree --format html --output red-black-tree.html
+```
+
+The player explains semantic events in Chinese or English, preserves Adapter
+annotations, shows indexes/grid coordinates, and animates stable entity IDs
+between complete scene snapshots.

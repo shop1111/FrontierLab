@@ -1,4 +1,5 @@
 ///|
+#warnings("-deprecated")
 fn render_content(
   trace : @frontierlab.AlgorithmTrace,
   format : String,
@@ -93,6 +94,20 @@ fn demo(name : String) -> @frontierlab.AlgorithmTrace raise {
     "faulty-insertion-sort" => @frontierlab.faulty_insertion_sort_demo_trace()
     "union-find" => @frontierlab.union_find_demo_trace()
     "pathfinding" => @frontierlab.pathfinding_demo_trace()
+    "fibonacci" => @frontierlab.fibonacci_dp_trace(10)
+    "coin-change" => @frontierlab.coin_change_dp_trace([1, 3, 4], 6)
+    "knapsack" =>
+      @frontierlab.zero_one_knapsack_dp_trace([2, 3, 4], [4, 5, 6], 5)
+    "lcs" => @frontierlab.lcs_dp_trace("ABCBDAB", "BDCABA")
+    "red-black-tree" =>
+      @frontierlab.red_black_tree_trace([
+        @frontierlab.Insert(30),
+        @frontierlab.Insert(10),
+        @frontierlab.Insert(20),
+        @frontierlab.Insert(40),
+        @frontierlab.Find(20),
+        @frontierlab.Find(99),
+      ])
     other => fail("Unknown demo: \{other}")
   }
 }
@@ -103,7 +118,7 @@ fn execute_cli(
   inputs : Map[String, String],
 ) -> Diagnosis raise {
   if args.contains("--version") {
-    return Diagnosis::new(stdout="FrontierLab 0.8.0")
+    return Diagnosis::new(stdout="FrontierLab 0.9.1")
   }
   if args.length() < 2 || args.contains("--help") {
     return Diagnosis::new(stdout=usage())

@@ -71,7 +71,9 @@ jobs:
       - name: Verify CLI render/validate flow
         run: |
           mkdir -p _build/ci
-          moon run cmd/main -- demo insertion-sort --format svg --output _build/ci/insertion-sort.svg
+          moon run cmd/main -- demo insertion-sort --format html --output _build/ci/insertion-sort.html
+          moon run cmd/main -- demo knapsack --format html --output _build/ci/knapsack.html
+          moon run cmd/main -- demo red-black-tree --format html --output _build/ci/red-black-tree.html
           moon run cmd/main -- demo union-find --format json --output _build/ci/union-find.json
           moon run cmd/main -- analyze _build/ci/union-find.json | tee _build/ci/union-find-analysis.txt
           moon run cmd/main -- validate fixtures/schema-v1/all-events.json
@@ -96,7 +98,9 @@ jobs:
           set -e
           test "$verify_exit" -eq 2
           test "$diverge_exit" -eq 2
-          test -s _build/ci/insertion-sort.svg
+          test -s _build/ci/insertion-sort.html
+          test -s _build/ci/knapsack.html
+          test -s _build/ci/red-black-tree.html
           test -s _build/ci/union-find.json
           test -s _build/ci/union-find-analysis.txt
           test -s _build/ci/all-events.html
@@ -106,6 +110,9 @@ jobs:
 
       - name: Clinic conformance
         run: node scripts/check_playground.mjs _build/ci/playground.html
+
+      - name: HTML renderer conformance
+        run: node scripts/check_renderer.mjs _build/ci/insertion-sort.html
 
       - name: Package module
         run: |
