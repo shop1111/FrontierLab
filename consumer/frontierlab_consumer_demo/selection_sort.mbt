@@ -1,7 +1,7 @@
 ///|
 struct DemoItem {
   id : String
-  value : Int
+  value : Int32
 } derive(Debug, Eq)
 
 ///|
@@ -36,7 +36,7 @@ fn selection_target(item : DemoItem) -> @frontierlab.TargetRef {
 ///|
 fn selection_sort_trace(faulty : Bool) -> @frontierlab.AlgorithmTrace raise {
   let working = [5, 2, 4, 1, 3].mapi(fn(index, value) {
-    { id: "item-\{index}", value }
+    { id: "item-\{index}", value, }
   })
   let title = if faulty {
     "Faulty selection sort - stale index"
@@ -139,7 +139,7 @@ fn selection_sort_trace(faulty : Bool) -> @frontierlab.AlgorithmTrace raise {
   builder.finish(summary=[
     @frontierlab.TraceAttribute::new(
       key="consumer_dependency",
-      value="shop1111/frontierlab@0.7.1",
+      value="shop1111/frontierlab@0.10.0",
     ),
     @frontierlab.TraceAttribute::new(
       key="fault_injected",
