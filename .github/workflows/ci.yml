@@ -61,6 +61,8 @@ jobs:
           moon run examples/insertion_sort > /tmp/insertion-sort.html
           moon run examples/union_find > /tmp/union-find.html
           moon run examples/pathfinding_trace > /tmp/pathfinding.html
+          moon run examples/traced_sort > /tmp/traced-sort.html
+          node scripts/check_renderer.mjs /tmp/traced-sort.html
 
       - name: Benchmark correctness smoke
         run: |
