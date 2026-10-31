@@ -53,6 +53,41 @@ assert_true(result.passed())
 
 可直接运行的完整代码见 [API 示例](API.mbt.md) 和[集成说明](docs/INTEGRATION.md)。
 
+## 自动适配：不写埋点代码
+
+对于数组类算法，不必手动调用 `TraceBuilder`。有两种自动方式：
+
+**追踪容器 `TracedArray`**：把参数类型从 `Array` 换成 `TracedArray`，算法
+正文照常写。`a.less(i, j)`、`a.compare(i, j)` 记录比较，`a.swap(i, j)` 记录
+交换，`a[i] = v` 记录更新，读取 `a[i]` 只计数不生成步骤。直接写
+`a[i] < a[j]` 不会被记录为比较，需要比较时请用 `less` 或 `compare`。
+
+```mbt nocheck
+fn bubble_sort(a : @frontierlab.TracedArray[Int]) -> Unit {
+  for end = a.length() - 1; end > 0; end = end - 1 {
+    for i in 0..<end {
+      if a.less(i + 1, i) {
+        a.swap(i, i + 1)
+      }
+    }
+  }
+}
+
+let a = @frontierlab.TracedArray::new([5, 2, 4, 1, 3], title="Bubble sort")
+bubble_sort(a)
+let html = @frontierlab.render_trace_html(a.finish())
+```
+
+**快照推断 `SequenceProbe`**：算法继续使用普通 `Array`，每次变化后调用一次
+`probe.observe(values)`。FrontierLab 比较前后快照，自动推断交换、更新、移动、
+插入和删除事件，并保持元素 ID 稳定；比较不会改变数据，需要时用
+`probe.compare(i, j)` 补充。
+
+两者都接受 `level` 参数：`Full` 记录完整轨迹，`Count` 只统计比较、交换、读、
+写次数（`counts()`），`Off` 什么都不做，用作测量追踪开销的基准。记录过程中
+的错误（例如超过步数上限）会保留到 `finish()` 时再抛出，因此被追踪的算法
+不需要声明 `raise`。完整示例见 `examples/traced_sort`。
+
 ## 内置算法 Adapter
 
 Adapter 把算法输入和执行步骤转换成统一的 `AlgorithmTrace`，因此这些轨迹可以

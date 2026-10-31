@@ -1,5 +1,22 @@
 # Integrating an Algorithm
 
+For array algorithms, start with automatic tracing and fall back to
+`TraceBuilder` only when you need custom scenes or events:
+
+- `TracedArray[T]` records `Compare`, `Swap`, and `Update` events from the
+  operations the algorithm performs (`less`, `compare`, `swap`, `a[i] = v`).
+  Reads are counted but not recorded as steps.
+- `SequenceProbe[T]` infers `Swap`, `Update`, and `Custom` `move`, `insert`,
+  `remove`, or `edit` events from value snapshots passed to `observe`, while
+  keeping element ids stable. Unchanged snapshots record nothing.
+
+Both take a `TraceLevel` (`Full`, `Count`, or `Off`), expose `counts()`, and
+defer recording errors to `finish()`. Traces with `Update` or `Custom` events
+change element values, so the permutation-based `sequence-transition` and
+`sorted-int-sequence` contracts apply only to swap-based traces.
+
+To build a trace by hand:
+
 1. Assign stable IDs to logical entities. Do not use the current array index as identity if elements move. Address them with `TargetRef::entity(object_id, entity_id)`; use `TargetRef::object(object_id)` for an entire scene object.
 2. Build an initial `Scene` from one or more `Sequence`, `Sets`, `Graph`, or `Grid` objects.
 3. Create a `TraceBuilder` with a title and stable algorithm key.

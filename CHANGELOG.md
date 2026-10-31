@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Added `TracedArray[T]`, an array whose `less`, `compare`, `swap`, and
+  indexed writes record `Compare`, `Swap`, and `Update` events, so array
+  algorithms are traced without `TraceBuilder` code.
+- Added `SequenceProbe[T]`, which infers `Swap`, `Update`, and `Custom`
+  move/insert/remove/edit events from value snapshots and keeps element ids
+  stable across moves.
+- Added `TraceLevel` (`Full`, `Count`, `Off`) and `OperationCounts` for
+  counting compares, swaps, reads, and writes with or without recording.
+- Added the `examples/traced_sort` executable example.
+
 ## 0.9.2 - Unreleased
 
 - Raised the supported toolchain to MoonBit `moonc` 0.10.16 or newer; CI now

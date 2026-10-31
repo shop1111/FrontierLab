@@ -361,6 +361,18 @@ pub fn ObjectUsage::not_equal(Self, Self) -> Bool
 pub fn ObjectUsage::to_json(Self) -> Json
 pub fn ObjectUsage::to_repr(Self) -> @debug.Repr
 
+pub struct OperationCounts {
+  compares : Int32
+  swaps : Int32
+  reads : Int32
+  writes : Int32
+  snapshots : Int32
+} derive(Eq, ToJson, @debug.Debug)
+pub fn OperationCounts::equal(Self, Self) -> Bool
+pub fn OperationCounts::not_equal(Self, Self) -> Bool
+pub fn OperationCounts::to_json(Self) -> Json
+pub fn OperationCounts::to_repr(Self) -> @debug.Repr
+
 pub struct ParentLink {
   child : Position
   parent : Position
@@ -443,6 +455,15 @@ pub fn SequenceItem::new(id~ : String, value~ : String) -> Self
 pub fn SequenceItem::not_equal(Self, Self) -> Bool
 pub fn SequenceItem::to_json(Self) -> Json
 pub fn SequenceItem::to_repr(Self) -> @debug.Repr
+
+pub struct SequenceProbe[T] {
+  // private fields
+}
+pub fn[T] SequenceProbe::compare(Self[T], Int32, Int32, note? : String) -> Unit
+pub fn[T] SequenceProbe::counts(Self[T]) -> OperationCounts
+pub fn[T] SequenceProbe::finish(Self[T]) -> AlgorithmTrace raise TraceError
+pub fn[T : Show] SequenceProbe::new(Array[T], title? : String, algorithm? : String, object_id? : String, label? : String, level? : TraceLevel, options? : TraceOptions) -> Self[T]
+pub fn[T : Eq + Show] SequenceProbe::observe(Self[T], Array[T], note? : String) -> Unit
 
 pub struct SequenceState {
   id : String
@@ -682,6 +703,16 @@ pub fn TraceFrameDiff::to_json(Self) -> Json
 pub fn TraceFrameDiff::to_json_string(Self) -> String
 pub fn TraceFrameDiff::to_repr(Self) -> @debug.Repr
 
+pub(all) enum TraceLevel {
+  Off
+  Count
+  Full
+} derive(Eq, ToJson, @debug.Debug)
+pub fn TraceLevel::equal(Self, Self) -> Bool
+pub fn TraceLevel::not_equal(Self, Self) -> Bool
+pub fn TraceLevel::to_json(Self) -> Json
+pub fn TraceLevel::to_repr(Self) -> @debug.Repr
+
 pub struct TraceLintIssue {
   severity : TraceLintSeverity
   code : String
@@ -806,6 +837,22 @@ pub fn TraceViolationSeverity::equal(Self, Self) -> Bool
 pub fn TraceViolationSeverity::not_equal(Self, Self) -> Bool
 pub fn TraceViolationSeverity::to_json(Self) -> Json
 pub fn TraceViolationSeverity::to_repr(Self) -> @debug.Repr
+
+pub struct TracedArray[T] {
+  // private fields
+}
+pub fn[T : Compare] TracedArray::compare(Self[T], Int32, Int32) -> Int32
+pub fn[T] TracedArray::counts(Self[T]) -> OperationCounts
+pub fn[T] TracedArray::finish(Self[T]) -> AlgorithmTrace raise TraceError
+#alias("_[_]")
+pub fn[T] TracedArray::get(Self[T], Int32) -> T
+pub fn[T] TracedArray::length(Self[T]) -> Int32
+pub fn[T : Compare] TracedArray::less(Self[T], Int32, Int32) -> Bool
+pub fn[T : Show] TracedArray::new(Array[T], title? : String, algorithm? : String, object_id? : String, label? : String, level? : TraceLevel, options? : TraceOptions) -> Self[T]
+#alias("_[_]=_")
+pub fn[T : Show] TracedArray::set(Self[T], Int32, T) -> Unit
+pub fn[T] TracedArray::swap(Self[T], Int32, Int32) -> Unit
+pub fn[T] TracedArray::to_array(Self[T]) -> Array[T]
 
 pub struct UnionOperation {
   left : Int32
