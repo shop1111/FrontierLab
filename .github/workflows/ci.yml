@@ -17,7 +17,7 @@ jobs:
 
       - name: Set up MoonBit
         run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "0.10.4+2cc641edf"
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "0.10.18+6c83a7f62"
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
 
       - name: Check toolchain
@@ -129,15 +129,17 @@ jobs:
             _build/ci/
             _build/publish/shop1111-frontierlab-*.zip
 
-  current-compatibility:
-    name: Current MoonBit compatibility
+  latest-compatibility:
+    name: Latest MoonBit compatibility (advisory)
     runs-on: ubuntu-latest
+    # Early warning for upcoming toolchain changes; the pinned job above gates.
+    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Set up MoonBit
         run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "0.10.6+80dc50f24"
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
       - name: Run strict compatibility gates
         run: |

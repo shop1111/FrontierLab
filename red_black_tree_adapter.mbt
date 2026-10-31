@@ -1,18 +1,27 @@
 ///|
 /// One operation accepted by the red-black-tree trace adapter.
 pub(all) enum RedBlackTreeOperation {
-  Insert(Int)
-  Find(Int)
+  Insert(Int32)
+  Find(Int32)
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend RedBlackTreeOperation with Debug::{to_repr}
+
+///|
+pub extend RedBlackTreeOperation with Eq::{not_equal, equal}
+
+///|
+pub extend RedBlackTreeOperation with ToJson::{to_json}
 
 ///|
 /// Build a red-black-tree trace with insertion balancing and lookup paths.
 pub fn red_black_tree_trace(
   operations : Array[RedBlackTreeOperation],
-  title? : String = "红黑树",
-  object_id? : String = "tree",
-  label? : String = "红黑树结构",
-  options? : TraceOptions = TraceOptions::default(),
+  title~ : String = "红黑树",
+  object_id~ : String = "tree",
+  label~ : String = "红黑树结构",
+  options~ : TraceOptions = TraceOptions::default(),
 ) -> AlgorithmTrace raise TraceError {
   let mut requested_nodes = 0
   for operation in operations {
@@ -214,32 +223,32 @@ priv enum RedBlackColor {
 ///|
 priv struct RedBlackNode {
   id : String
-  key : Int
+  key : Int32
   mut color : RedBlackColor
-  mut parent : Int
-  mut left : Int
-  mut right : Int
+  mut parent : Int32
+  mut left : Int32
+  mut right : Int32
 }
 
 ///|
 fn RedBlackNode::new(
   id~ : String,
-  key~ : Int,
+  key~ : Int32,
   color~ : RedBlackColor,
-  parent~ : Int,
+  parent~ : Int32,
 ) -> RedBlackNode {
-  { id, key, color, parent, left: -1, right: -1 }
+  { id, key, color, parent, left: -1, right: -1, }
 }
 
 ///|
 priv struct RedBlackTreeStats {
-  mut insertions : Int
-  mut searches : Int
-  mut found : Int
-  mut missed : Int
-  mut visits : Int
-  mut rotations : Int
-  mut recolors : Int
+  mut insertions : Int32
+  mut searches : Int32
+  mut found : Int32
+  mut missed : Int32
+  mut visits : Int32
+  mut rotations : Int32
+  mut recolors : Int32
 }
 
 ///|
@@ -259,12 +268,12 @@ fn RedBlackTreeStats::new() -> RedBlackTreeStats {
 fn red_black_tree_fix_insert(
   builder : TraceBuilder,
   nodes : Array[RedBlackNode],
-  initial_root : Int,
-  inserted : Int,
+  initial_root : Int32,
+  inserted : Int32,
   object_id : String,
   label : String,
   stats : RedBlackTreeStats,
-) -> Int raise TraceError {
+) -> Int32 raise TraceError {
   let mut root = initial_root
   let mut current = inserted
   while current != root && red_black_color(nodes, nodes[current].parent) == Red {
@@ -477,9 +486,9 @@ fn red_black_tree_fix_insert(
 ///|
 fn red_black_rotate_left(
   nodes : Array[RedBlackNode],
-  initial_root : Int,
-  pivot : Int,
-) -> Int {
+  initial_root : Int32,
+  pivot : Int32,
+) -> Int32 {
   let mut root = initial_root
   let promoted = nodes[pivot].right
   nodes[pivot].right = nodes[promoted].left
@@ -502,9 +511,9 @@ fn red_black_rotate_left(
 ///|
 fn red_black_rotate_right(
   nodes : Array[RedBlackNode],
-  initial_root : Int,
-  pivot : Int,
-) -> Int {
+  initial_root : Int32,
+  pivot : Int32,
+) -> Int32 {
   let mut root = initial_root
   let promoted = nodes[pivot].left
   nodes[pivot].left = nodes[promoted].right
@@ -528,12 +537,12 @@ fn red_black_rotate_right(
 fn record_red_black_event(
   builder : TraceBuilder,
   nodes : Array[RedBlackNode],
-  root : Int,
+  root : Int32,
   object_id : String,
   label : String,
   kind~ : String,
   attributes~ : Array[TraceAttribute],
-  highlighted~ : Array[Int],
+  highlighted~ : Array[Int32],
   role~ : HighlightRole,
   title~ : String,
   body~ : String,
@@ -551,7 +560,7 @@ fn red_black_tree_scene(
   nodes : Array[RedBlackNode],
   object_id : String,
   label : String,
-  highlighted : Array[Int],
+  highlighted : Array[Int32],
   role : HighlightRole,
 ) -> Scene raise TraceError {
   let graph_nodes = nodes.map(fn(node) {
@@ -601,7 +610,7 @@ fn red_black_tree_scene(
 }
 
 ///|
-fn red_black_color(nodes : Array[RedBlackNode], index : Int) -> RedBlackColor {
+fn red_black_color(nodes : Array[RedBlackNode], index : Int32) -> RedBlackColor {
   if index < 0 {
     Black
   } else {
@@ -612,9 +621,9 @@ fn red_black_color(nodes : Array[RedBlackNode], index : Int) -> RedBlackColor {
 ///|
 fn red_black_tree_find_index(
   nodes : Array[RedBlackNode],
-  root : Int,
-  key : Int,
-) -> Int {
+  root : Int32,
+  key : Int32,
+) -> Int32 {
   for current = root; current >= 0; {
     if key == nodes[current].key {
       break current
@@ -631,7 +640,7 @@ fn red_black_tree_find_index(
 ///|
 fn validate_red_black_tree(
   nodes : Array[RedBlackNode],
-  root : Int,
+  root : Int32,
 ) -> Unit raise TraceError {
   if nodes.is_empty() {
     if root != -1 {
@@ -658,12 +667,12 @@ fn validate_red_black_tree(
 ///|
 fn validate_red_black_subtree(
   nodes : Array[RedBlackNode],
-  index : Int,
-  parent : Int,
-  minimum : Int?,
-  maximum : Int?,
+  index : Int32,
+  parent : Int32,
+  minimum : Int32?,
+  maximum : Int32?,
   seen : Array[Bool],
-) -> Int raise TraceError {
+) -> Int32 raise TraceError {
   if index < 0 {
     return 1
   }
@@ -715,7 +724,7 @@ fn validate_red_black_subtree(
 }
 
 ///|
-fn red_black_tree_height(nodes : Array[RedBlackNode], root : Int) -> Int {
+fn red_black_tree_height(nodes : Array[RedBlackNode], root : Int32) -> Int32 {
   if root < 0 {
     0
   } else {
@@ -727,7 +736,10 @@ fn red_black_tree_height(nodes : Array[RedBlackNode], root : Int) -> Int {
 }
 
 ///|
-fn red_black_tree_black_height(nodes : Array[RedBlackNode], root : Int) -> Int {
+fn red_black_tree_black_height(
+  nodes : Array[RedBlackNode],
+  root : Int32,
+) -> Int32 {
   if root < 0 {
     0
   } else {
@@ -739,7 +751,7 @@ fn red_black_tree_black_height(nodes : Array[RedBlackNode], root : Int) -> Int {
 ///|
 fn red_black_tree_inorder(
   nodes : Array[RedBlackNode],
-  root : Int,
+  root : Int32,
   values : Array[String],
 ) -> Unit {
   if root >= 0 {

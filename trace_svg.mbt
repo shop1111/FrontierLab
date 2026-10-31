@@ -3,8 +3,8 @@
 #deprecated("Legacy static renderer; use render_trace_html or Schema v1 JSON. This API will be removed in v1.0.", skip_current_package=true)
 pub fn render_trace_svg(
   trace : AlgorithmTrace,
-  step? : Int = -1,
-  width? : Int = 900,
+  step~ : Int32 = -1,
+  width~ : Int32 = 900,
 ) -> String raise {
   let scene = trace_scene_at(trace, step)
   let height = scene_height(scene)
@@ -41,7 +41,7 @@ pub fn render_trace_svg(
 #deprecated("Legacy static renderer; use render_trace_html or Schema v1 JSON. This API will be removed in v1.0.", skip_current_package=true)
 pub fn render_trace_svg_frames(
   trace : AlgorithmTrace,
-  width? : Int = 900,
+  width~ : Int32 = 900,
 ) -> Array[String] raise {
   if trace.steps.is_empty() {
     [render_trace_svg(trace, step=-1, width~)]
@@ -53,7 +53,7 @@ pub fn render_trace_svg_frames(
 }
 
 ///|
-fn trace_scene_at(trace : AlgorithmTrace, step : Int) -> Scene raise {
+fn trace_scene_at(trace : AlgorithmTrace, step : Int32) -> Scene raise {
   if trace.steps.is_empty() || step < 0 {
     trace.initial_scene
   } else if step >= trace.steps.length() {
@@ -64,7 +64,7 @@ fn trace_scene_at(trace : AlgorithmTrace, step : Int) -> Scene raise {
 }
 
 ///|
-fn trace_annotation_at(trace : AlgorithmTrace, step : Int) -> Annotation? {
+fn trace_annotation_at(trace : AlgorithmTrace, step : Int32) -> Annotation? {
   if step < 0 || step >= trace.steps.length() {
     None
   } else {
@@ -73,7 +73,7 @@ fn trace_annotation_at(trace : AlgorithmTrace, step : Int) -> Annotation? {
 }
 
 ///|
-fn scene_height(scene : Scene) -> Int {
+fn scene_height(scene : Scene) -> Int32 {
   let mut height = 150
   for object in scene.objects {
     height += match object {
@@ -91,8 +91,8 @@ fn render_sequence_svg(
   out : StringBuilder,
   value : SequenceState,
   scene : Scene,
-  y : Int,
-) -> Int {
+  y : Int32,
+) -> Int32 {
   svg_text(out, 28, y + 20, value.label, 16, "#e2e8f0")
   for i, item in value.items {
     let x = 28 + i * 72
@@ -108,8 +108,8 @@ fn render_sets_svg(
   out : StringBuilder,
   value : SetState,
   scene : Scene,
-  y : Int,
-) -> Int {
+  y : Int32,
+) -> Int32 {
   svg_text(out, 28, y + 20, value.label, 16, "#e2e8f0")
   let mut row = y + 36
   for group in value.groups {
@@ -126,8 +126,8 @@ fn render_graph_svg(
   out : StringBuilder,
   value : GraphState,
   scene : Scene,
-  y : Int,
-) -> Int {
+  y : Int32,
+) -> Int32 {
   svg_text(out, 28, y + 20, value.label, 16, "#e2e8f0")
   let points = layout_graph(value)
   out.write_string(
@@ -185,8 +185,8 @@ fn render_grid_svg(
   out : StringBuilder,
   value : GridState,
   scene : Scene,
-  y : Int,
-) -> Int {
+  y : Int32,
+) -> Int32 {
   svg_text(out, 28, y + 20, value.label, 16, "#e2e8f0")
   for cell in value.cells {
     let x = 28 + cell.x * 44
@@ -219,8 +219,8 @@ fn render_grid_svg(
 ///|
 priv struct GraphLayoutPoint {
   id : String
-  x : Int
-  y : Int
+  x : Int32
+  y : Int32
 }
 
 ///|
@@ -242,7 +242,7 @@ fn layout_graph(graph : GraphState) -> Array[GraphLayoutPoint] {
       indegree[to] += 1
     }
   }
-  let queue : Array[Int] = []
+  let queue : Array[Int32] = []
   for i in 0..<count {
     if indegree[i] == 0 {
       queue.push(i)
@@ -268,11 +268,11 @@ fn layout_graph(graph : GraphState) -> Array[GraphLayoutPoint] {
     }
   }
   if queue.length() == count {
-    let slots : Map[Int, Int] = Map([])
+    let slots : Map[Int32, Int32] = Map([])
     graph.nodes.mapi(fn(i, node) {
       let slot = slots.get(level[i]).unwrap_or(0)
       slots[level[i]] = slot + 1
-      { id: node.id, x: 75 + level[i] * 170, y: 70 + slot * 82 }
+      { id: node.id, x: 75 + level[i] * 170, y: 70 + slot * 82, }
     })
   } else {
     let offsets = [
@@ -288,7 +288,7 @@ fn layout_graph(graph : GraphState) -> Array[GraphLayoutPoint] {
     graph.nodes.mapi(fn(i, node) {
       let ring = i / 8
       let (dx, dy) = offsets[i % 8]
-      { id: node.id, x: 180 + ring * 230 + dx, y: 120 + dy }
+      { id: node.id, x: 180 + ring * 230 + dx, y: 120 + dy, }
     })
   }
 }
@@ -319,10 +319,10 @@ fn highlight_color(
 ///|
 fn svg_box(
   out : StringBuilder,
-  x : Int,
-  y : Int,
-  width : Int,
-  height : Int,
+  x : Int32,
+  y : Int32,
+  width : Int32,
+  height : Int32,
   fill : String,
 ) -> Unit {
   out.write_string(
@@ -333,12 +333,12 @@ fn svg_box(
 ///|
 fn svg_text(
   out : StringBuilder,
-  x : Int,
-  y : Int,
+  x : Int32,
+  y : Int32,
   text : String,
-  size : Int,
+  size : Int32,
   color : String,
-  anchor? : String = "start",
+  anchor~ : String = "start",
 ) -> Unit {
   out.write_string(
     "<text x=\"\{x}\" y=\"\{y}\" text-anchor=\"\{anchor}\" font-family=\"ui-monospace, monospace\" font-size=\"\{size}\" fill=\"\{color}\">\{escape_markup(text)}</text>\n",

@@ -1,5 +1,5 @@
 ///|
-fn make_scene(value : Int) -> @frontierlab.Scene raise {
+fn make_scene(value : Int32) -> @frontierlab.Scene raise {
   @frontierlab.Scene::new(objects=[
     @frontierlab.Sequence(
       @frontierlab.SequenceState::new(id="benchmark", label="Benchmark", items=[
@@ -10,7 +10,7 @@ fn make_scene(value : Int) -> @frontierlab.Scene raise {
 }
 
 ///|
-fn run_case(step_count : Int) -> Unit raise {
+fn run_case(step_count : Int32) -> Unit raise {
   let started = @env.now()
   let options = @frontierlab.TraceOptions::new(
     max_steps=step_count,
@@ -54,7 +54,7 @@ fn main raise {
     "steps,build_ms,encode_ms,decode_ms,html_ms,diff_ms,contract_ms,divergence_ms,json_bytes,html_bytes",
   )
   let args = @env.args()
-  let counts : Array[Int] = if args.length() > 1 {
+  let counts : Array[Int32] = if args.length() > 1 {
     args[1:].map(value => @strconv.parse_int(value))
   } else {
     [100, 1000, 10000]

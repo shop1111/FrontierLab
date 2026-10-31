@@ -9,7 +9,7 @@ fn wire_array(values : Array[Json]) -> Json {
 }
 
 ///|
-fn wire_int(value : Int) -> Json {
+fn wire_int(value : Int32) -> Json {
   Json::number(value.to_double(), repr=value.to_string())
 }
 
@@ -305,7 +305,7 @@ fn expect_string(value : Json, context : String) -> String raise TraceError {
 }
 
 ///|
-fn expect_int(value : Json, context : String) -> Int raise TraceError {
+fn expect_int(value : Json, context : String) -> Int32 raise TraceError {
   match value {
     Number(number, ..) => number.to_int()
     _ => raise JsonSyntax("Expected integer at \{context}")
@@ -332,7 +332,7 @@ fn decode_target(value : Json, context : String) -> TargetRef raise TraceError {
     Some(value) => Some(expect_string(value, "\{context}.entity_id"))
     None => None
   }
-  { object_id, entity_id }
+  { object_id, entity_id, }
 }
 
 ///|
@@ -576,7 +576,7 @@ fn decode_scene(value : Json, context : String) -> Scene raise TraceError {
 /// Decode and validate the stable FrontierLab schema-v1 wire format.
 pub fn AlgorithmTrace::decode_json(
   input : StringView,
-  options? : TraceOptions = TraceOptions::default(),
+  options~ : TraceOptions = TraceOptions::default(),
 ) -> AlgorithmTrace raise TraceError {
   let json = @json.parse(input) catch {
     error => raise JsonSyntax(error.to_string())

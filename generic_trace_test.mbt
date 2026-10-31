@@ -1,7 +1,7 @@
 ///|
 fn sequence_scene(
   values : Array[String],
-  highlights? : Array[@frontierlab.Highlight] = [],
+  highlights~ : Array[@frontierlab.Highlight] = [],
 ) -> @frontierlab.Scene raise {
   @frontierlab.Scene::new(
     objects=[

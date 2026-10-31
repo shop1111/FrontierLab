@@ -1,7 +1,7 @@
 ///|
 fn usage() -> String {
   (
-    #|FrontierLab 0.9.1 - HTML Trace Player
+    #|FrontierLab 0.9.2 - HTML Trace Player
     #|  frontierlab diagnose <expected.json> <actual.json> --contract <name> --object <id> --format <text|json> [--counterexample <path>] [--report <path>]
     #|  frontierlab demo <insertion-sort|faulty-insertion-sort|union-find|pathfinding|fibonacci|coin-change|knapsack|lcs|red-black-tree> --format <html|json|svg> --output <path|->
     #|  frontierlab render <trace.json> --format <html|json|svg> --output <path|-> [--step N]

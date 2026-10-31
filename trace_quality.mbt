@@ -7,22 +7,40 @@ pub(all) enum TraceLintSeverity {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend TraceLintSeverity with Debug::{to_repr}
+
+///|
+pub extend TraceLintSeverity with Eq::{not_equal, equal}
+
+///|
+pub extend TraceLintSeverity with ToJson::{to_json}
+
+///|
 /// A non-throwing quality observation for a trace document.
 pub struct TraceLintIssue {
   severity : TraceLintSeverity
   code : String
   message : String
-  step : Int
+  step : Int32
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend TraceLintIssue with Debug::{to_repr}
+
+///|
+pub extend TraceLintIssue with Eq::{not_equal, equal}
+
+///|
+pub extend TraceLintIssue with ToJson::{to_json}
 
 ///|
 pub fn TraceLintIssue::new(
   severity~ : TraceLintSeverity,
   code~ : String,
   message~ : String,
-  step? : Int = -1,
+  step~ : Int32 = -1,
 ) -> TraceLintIssue {
-  { severity, code, message, step }
+  { severity, code, message, step, }
 }
 
 ///|
@@ -60,26 +78,35 @@ pub fn TraceLintIssue::severity_name(self : TraceLintIssue) -> String {
 ///|
 /// A compact row describing one renderable point in a trace timeline.
 pub struct TraceTimelineEntry {
-  step : Int
+  step : Int32
   event_name : String
-  target_count : Int
-  object_count : Int
-  entity_count : Int
-  highlight_count : Int
+  target_count : Int32
+  object_count : Int32
+  entity_count : Int32
+  highlight_count : Int32
   annotation_title : String
   completed : Bool
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend TraceTimelineEntry with Debug::{to_repr}
+
+///|
+pub extend TraceTimelineEntry with Eq::{not_equal, equal}
+
+///|
+pub extend TraceTimelineEntry with ToJson::{to_json}
+
+///|
 pub fn TraceTimelineEntry::new(
-  step~ : Int,
+  step~ : Int32,
   event_name~ : String,
-  target_count~ : Int,
-  object_count~ : Int,
-  entity_count~ : Int,
-  highlight_count~ : Int,
-  annotation_title? : String = "",
-  completed? : Bool = false,
+  target_count~ : Int32,
+  object_count~ : Int32,
+  entity_count~ : Int32,
+  highlight_count~ : Int32,
+  annotation_title~ : String = "",
+  completed~ : Bool = false,
 ) -> TraceTimelineEntry {
   {
     step,
@@ -242,7 +269,7 @@ pub fn AlgorithmTrace::lint_markdown(self : AlgorithmTrace) -> String {
 pub fn AlgorithmTrace::lint_count(
   self : AlgorithmTrace,
   severity : TraceLintSeverity,
-) -> Int {
+) -> Int32 {
   self
   .lint()
   .fold(init=0, fn(total, issue) {
@@ -355,7 +382,7 @@ fn timeline_event_name(event : TraceEvent) -> String {
 }
 
 ///|
-fn timeline_event_target_count(event : TraceEvent) -> Int {
+fn timeline_event_target_count(event : TraceEvent) -> Int32 {
   match event {
     Compare(targets) => targets.length()
     Swap(_, _) => 2
@@ -377,7 +404,7 @@ fn lint_severity_name(severity : TraceLintSeverity) -> String {
 }
 
 ///|
-fn quality_step_label(step : Int) -> String {
+fn quality_step_label(step : Int32) -> String {
   if step < 0 {
     "initial"
   } else {

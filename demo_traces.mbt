@@ -1,6 +1,6 @@
 ///|
 /// Build the insertion-sort trace used by the bundled demo and CLI.
-pub fn insertion_sort_demo_trace(values : Array[Int]) -> AlgorithmTrace raise {
+pub fn insertion_sort_demo_trace(values : Array[Int32]) -> AlgorithmTrace raise {
   insertion_sort_trace(values)
 }
 

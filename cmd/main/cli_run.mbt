@@ -3,7 +3,7 @@
 fn render_content(
   trace : @frontierlab.AlgorithmTrace,
   format : String,
-  step : Int,
+  step : Int32,
 ) -> String raise {
   match format {
     "html" => @frontierlab.render_trace_html(trace)
@@ -16,7 +16,7 @@ fn render_content(
 ///|
 fn decode_trace(
   content : String,
-  validate? : Bool = true,
+  validate~ : Bool = true,
 ) -> @frontierlab.AlgorithmTrace raise {
   let trace = @frontierlab.AlgorithmTrace::decode_json(content)
   if validate {
@@ -29,7 +29,7 @@ fn decode_trace(
 fn input_trace(
   inputs : Map[String, String],
   path : String,
-  validate? : Bool = true,
+  validate~ : Bool = true,
 ) -> @frontierlab.AlgorithmTrace raise {
   match inputs.get(path) {
     Some(content) => decode_trace(content, validate~)
@@ -118,7 +118,7 @@ fn execute_cli(
   inputs : Map[String, String],
 ) -> Diagnosis raise {
   if args.contains("--version") {
-    return Diagnosis::new(stdout="FrontierLab 0.9.1")
+    return Diagnosis::new(stdout="FrontierLab 0.9.2")
   }
   if args.length() < 2 || args.contains("--help") {
     return Diagnosis::new(stdout=usage())
@@ -257,7 +257,7 @@ fn execute_cli(
           "breakpoints",
           debug_format(args),
           out.to_string(),
-          hits.to_json().stringify(indent=2),
+          Json(hits).stringify(indent=2),
         ),
       )
     }
@@ -338,6 +338,6 @@ fn execute_cli(
 }
 
 ///|
-fn run_cli(args : Array[String]) -> Int raise {
+fn run_cli(args : Array[String]) -> Int32 raise {
   apply_execution(execute_cli(args, read_cli_inputs(args)))
 }

@@ -6,11 +6,20 @@ pub(all) enum Heuristic {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend Heuristic with Debug::{to_repr}
+
+///|
+pub extend Heuristic with Eq::{not_equal, equal}
+
+///|
+pub extend Heuristic with ToJson::{to_json}
+
+///|
 pub fn heuristic_distance(
   kind : Heuristic,
   from : Position,
   to : Position,
-) -> Int {
+) -> Int32 {
   let dx = abs_int(from.x - to.x)
   let dy = abs_int(from.y - to.y)
   match kind {
@@ -25,8 +34,8 @@ pub fn astar(
   grid : GridMap,
   start~ : Position,
   goal~ : Position,
-  rule? : MoveRule = FourDirections,
-  heuristic? : Heuristic = Manhattan,
+  rule~ : MoveRule = FourDirections,
+  heuristic~ : Heuristic = Manhattan,
 ) -> PathResult raise {
   astar_trace(grid, start~, goal~, rule~, heuristic~).result
 }
@@ -36,8 +45,8 @@ pub fn astar_trace(
   grid : GridMap,
   start~ : Position,
   goal~ : Position,
-  rule? : MoveRule = FourDirections,
-  heuristic? : Heuristic = Manhattan,
+  rule~ : MoveRule = FourDirections,
+  heuristic~ : Heuristic = Manhattan,
 ) -> SearchTrace raise {
   ensure_search_points(grid, start, goal)
   let frontier : Array[Position] = [start]
@@ -133,7 +142,7 @@ fn astar_frontier_index(
   costs : Array[CostEntry],
   goal : Position,
   heuristic : Heuristic,
-) -> Int {
+) -> Int32 {
   let mut best_index = 0
   let mut best_score = astar_score(frontier[0], costs, goal, heuristic)
   for i in 1..<frontier.length() {
@@ -152,13 +161,13 @@ fn astar_score(
   costs : Array[CostEntry],
   goal : Position,
   heuristic : Heuristic,
-) -> Int {
+) -> Int32 {
   cost_lookup(costs, position).unwrap() +
   heuristic_distance(heuristic, position, goal)
 }
 
 ///|
-fn abs_int(value : Int) -> Int {
+fn abs_int(value : Int32) -> Int32 {
   if value < 0 {
     0 - value
   } else {

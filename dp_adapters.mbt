@@ -1,11 +1,11 @@
 ///|
 /// Build a Fibonacci dynamic-programming trace for `F(n)`.
 pub fn fibonacci_dp_trace(
-  n : Int,
-  title? : String = "Fibonacci DP",
-  object_id? : String = "dp",
-  label? : String = "Fibonacci states",
-  options? : TraceOptions = TraceOptions::default(),
+  n : Int32,
+  title~ : String = "Fibonacci DP",
+  object_id~ : String = "dp",
+  label~ : String = "Fibonacci states",
+  options~ : TraceOptions = TraceOptions::default(),
 ) -> AlgorithmTrace raise TraceError {
   if n < 0 {
     raise InvalidStep("Fibonacci index must be nonnegative")
@@ -75,12 +75,12 @@ pub fn fibonacci_dp_trace(
 ///|
 /// Build a one-dimensional minimum-coin-change dynamic-programming trace.
 pub fn coin_change_dp_trace(
-  coins : Array[Int],
-  amount : Int,
-  title? : String = "Coin Change DP",
-  object_id? : String = "dp",
-  label? : String = "Minimum coins",
-  options? : TraceOptions = TraceOptions::default(),
+  coins : Array[Int32],
+  amount : Int32,
+  title~ : String = "Coin Change DP",
+  object_id~ : String = "dp",
+  label~ : String = "Minimum coins",
+  options~ : TraceOptions = TraceOptions::default(),
 ) -> AlgorithmTrace raise TraceError {
   if amount < 0 {
     raise InvalidStep("Coin-change amount must be nonnegative")
@@ -197,13 +197,13 @@ pub fn coin_change_dp_trace(
 ///|
 /// Build a two-dimensional 0/1-knapsack dynamic-programming trace.
 pub fn zero_one_knapsack_dp_trace(
-  weights : Array[Int],
-  values : Array[Int],
-  capacity : Int,
-  title? : String = "0/1 背包动态规划",
-  object_id? : String = "dp",
-  label? : String = "背包状态表",
-  options? : TraceOptions = TraceOptions::default(),
+  weights : Array[Int32],
+  values : Array[Int32],
+  capacity : Int32,
+  title~ : String = "0/1 背包动态规划",
+  object_id~ : String = "dp",
+  label~ : String = "背包状态表",
+  options~ : TraceOptions = TraceOptions::default(),
 ) -> AlgorithmTrace raise TraceError {
   if weights.length() != values.length() {
     raise InvalidStep("Knapsack weights and values must have the same length")
@@ -323,10 +323,10 @@ pub fn zero_one_knapsack_dp_trace(
 pub fn lcs_dp_trace(
   left : String,
   right : String,
-  title? : String = "Longest Common Subsequence DP",
-  object_id? : String = "dp",
-  label? : String = "LCS table",
-  options? : TraceOptions = TraceOptions::default(),
+  title~ : String = "Longest Common Subsequence DP",
+  object_id~ : String = "dp",
+  label~ : String = "LCS table",
+  options~ : TraceOptions = TraceOptions::default(),
 ) -> AlgorithmTrace raise TraceError {
   let left_chars = left.to_array()
   let right_chars = right.to_array()
@@ -410,7 +410,7 @@ pub fn lcs_dp_trace(
     }
   }
   let result_chars : Array[Char] = []
-  let result_cells : Array[(Int, Int)] = []
+  let result_cells : Array[(Int32, Int32)] = []
   let mut row = left_chars.length()
   let mut column = right_chars.length()
   while row > 0 && column > 0 {
@@ -498,7 +498,7 @@ fn dp_sequence_scene(
 }
 
 ///|
-fn dp_sequence_target(object_id : String, index : Int) -> TargetRef {
+fn dp_sequence_target(object_id : String, index : Int32) -> TargetRef {
   TargetRef::entity(object_id, "state-\{index}")
 }
 
@@ -533,19 +533,19 @@ fn dp_grid_scene(
 }
 
 ///|
-fn dp_grid_cell_id(column : Int, row : Int) -> String {
+fn dp_grid_cell_id(column : Int32, row : Int32) -> String {
   "cell-\{column}-\{row}"
 }
 
 ///|
-fn dp_grid_target(object_id : String, column : Int, row : Int) -> TargetRef {
+fn dp_grid_target(object_id : String, column : Int32, row : Int32) -> TargetRef {
   TargetRef::entity(object_id, dp_grid_cell_id(column, row))
 }
 
 ///|
 fn dp_result_cell_highlights(
   object_id : String,
-  cells : Array[(Int, Int)],
+  cells : Array[(Int32, Int32)],
 ) -> Array[Highlight] {
   cells.map(fn(cell) {
     Highlight::new(
@@ -557,10 +557,10 @@ fn dp_result_cell_highlights(
 
 ///|
 fn checked_grid_cell_count(
-  width : Int,
-  height : Int,
+  width : Int32,
+  height : Int32,
   options : TraceOptions,
-) -> Int raise TraceError {
+) -> Int32 raise TraceError {
   if width <= 0 || height <= 0 {
     raise InvalidGrid("DP table dimensions must be positive")
   }
@@ -573,8 +573,8 @@ fn checked_grid_cell_count(
 
 ///|
 fn ensure_adapter_capacity(
-  entities : Int,
-  steps : Int,
+  entities : Int32,
+  steps : Int32,
   options : TraceOptions,
 ) -> Unit raise TraceError {
   if entities > options.max_entities_per_scene {

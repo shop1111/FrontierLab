@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.9.2 - Unreleased
+
+- Raised the supported toolchain to MoonBit `moonc` 0.10.16 or newer; CI now
+  pins `0.10.18+6c83a7f62` and adds a non-blocking latest-toolchain job.
+- Declared every derived `Debug`, `Eq`, `ToJson`, `FromJson`, and `Show`
+  method explicitly with `pub extend`, so `--deny-warn` passes on current
+  compilers and existing calls such as `trace.to_json()` keep working.
+- Replaced the deprecated `Array::to_json()` call in the CLI breakpoint report.
+- Moved Mooncakes packaging rules from the deprecated `moon.mod` `exclude`
+  option to `.moonignore`, and stopped local presentation drafts from being
+  packaged.
+- Reformatted sources with the current `moon fmt` and refreshed benchmarks.
+
 ## 0.9.1 - 2026-08-10
 
 - Rebuilt the standalone HTML trace player around readable role palettes,

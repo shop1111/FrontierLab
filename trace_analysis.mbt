@@ -2,19 +2,28 @@
 /// A counted event kind in an `AlgorithmTrace`.
 pub struct EventCount {
   name : String
-  count : Int
-  first_step : Int
-  last_step : Int
+  count : Int32
+  first_step : Int32
+  last_step : Int32
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend EventCount with Debug::{to_repr}
+
+///|
+pub extend EventCount with Eq::{not_equal, equal}
+
+///|
+pub extend EventCount with ToJson::{to_json}
 
 ///|
 pub fn EventCount::new(
   name~ : String,
-  count? : Int = 0,
-  first_step? : Int = -1,
-  last_step? : Int = -1,
+  count~ : Int32 = 0,
+  first_step~ : Int32 = -1,
+  last_step~ : Int32 = -1,
 ) -> EventCount {
-  { name, count, first_step, last_step }
+  { name, count, first_step, last_step, }
 }
 
 ///|
@@ -22,22 +31,31 @@ pub fn EventCount::new(
 pub struct ObjectUsage {
   object_id : String
   object_kind : String
-  appearances : Int
-  max_entities : Int
-  first_step : Int
-  last_step : Int
+  appearances : Int32
+  max_entities : Int32
+  first_step : Int32
+  last_step : Int32
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend ObjectUsage with Debug::{to_repr}
+
+///|
+pub extend ObjectUsage with Eq::{not_equal, equal}
+
+///|
+pub extend ObjectUsage with ToJson::{to_json}
 
 ///|
 pub fn ObjectUsage::new(
   object_id~ : String,
   object_kind~ : String,
-  appearances? : Int = 0,
-  max_entities? : Int = 0,
-  first_step? : Int = -1,
-  last_step? : Int = -1,
+  appearances~ : Int32 = 0,
+  max_entities~ : Int32 = 0,
+  first_step~ : Int32 = -1,
+  last_step~ : Int32 = -1,
 ) -> ObjectUsage {
-  { object_id, object_kind, appearances, max_entities, first_step, last_step }
+  { object_id, object_kind, appearances, max_entities, first_step, last_step, }
 }
 
 ///|
@@ -45,26 +63,35 @@ pub fn ObjectUsage::new(
 pub struct TargetUsage {
   object_id : String
   entity_id : String?
-  references : Int
-  event_references : Int
-  highlight_references : Int
-  first_step : Int
-  last_step : Int
+  references : Int32
+  event_references : Int32
+  highlight_references : Int32
+  first_step : Int32
+  last_step : Int32
   event_names : Array[String]
   highlight_roles : Array[String]
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend TargetUsage with Debug::{to_repr}
+
+///|
+pub extend TargetUsage with Eq::{not_equal, equal}
+
+///|
+pub extend TargetUsage with ToJson::{to_json}
+
+///|
 pub fn TargetUsage::new(
   object_id~ : String,
   entity_id? : String,
-  references? : Int = 0,
-  event_references? : Int = 0,
-  highlight_references? : Int = 0,
-  first_step? : Int = -1,
-  last_step? : Int = -1,
-  event_names? : Array[String] = [],
-  highlight_roles? : Array[String] = [],
+  references~ : Int32 = 0,
+  event_references~ : Int32 = 0,
+  highlight_references~ : Int32 = 0,
+  first_step~ : Int32 = -1,
+  last_step~ : Int32 = -1,
+  event_names~ : Array[String] = [],
+  highlight_roles~ : Array[String] = [],
 ) -> TargetUsage {
   {
     object_id,
@@ -85,19 +112,28 @@ pub fn TargetUsage::new(
 pub struct TraceStats {
   title : String
   algorithm : String
-  step_count : Int
+  step_count : Int32
   completed : Bool
   event_counts : Array[EventCount]
   object_usage : Array[ObjectUsage]
   target_usage : Array[TargetUsage]
-  initial_object_count : Int
-  max_objects_per_scene : Int
-  max_entities_per_scene : Int
-  summary_count : Int
-  annotation_count : Int
-  custom_event_count : Int
-  highlight_count : Int
+  initial_object_count : Int32
+  max_objects_per_scene : Int32
+  max_entities_per_scene : Int32
+  summary_count : Int32
+  annotation_count : Int32
+  custom_event_count : Int32
+  highlight_count : Int32
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend TraceStats with Debug::{to_repr}
+
+///|
+pub extend TraceStats with Eq::{not_equal, equal}
+
+///|
+pub extend TraceStats with ToJson::{to_json}
 
 ///|
 pub fn TraceStats::summary_report(self : TraceStats) -> String {
@@ -147,7 +183,7 @@ pub fn TraceStats::summary_report(self : TraceStats) -> String {
 }
 
 ///|
-pub fn TraceStats::event_count(self : TraceStats, name : String) -> Int {
+pub fn TraceStats::event_count(self : TraceStats, name : String) -> Int32 {
   match self.event_counts.search_by(fn(item) { item.name == name }) {
     Some(index) => self.event_counts[index].count
     None => 0
@@ -155,7 +191,7 @@ pub fn TraceStats::event_count(self : TraceStats, name : String) -> Int {
 }
 
 ///|
-pub fn TraceStats::object_count(self : TraceStats, object_id : String) -> Int {
+pub fn TraceStats::object_count(self : TraceStats, object_id : String) -> Int32 {
   match self.object_usage.search_by(fn(item) { item.object_id == object_id }) {
     Some(index) => self.object_usage[index].appearances
     None => 0
@@ -167,7 +203,7 @@ pub fn TraceStats::target_count(
   self : TraceStats,
   object_id : String,
   entity_id? : String,
-) -> Int {
+) -> Int32 {
   match
     self.target_usage.search_by(fn(item) {
       item.object_id == object_id && item.entity_id == entity_id
@@ -180,7 +216,7 @@ pub fn TraceStats::target_count(
 ///|
 pub fn TraceStats::top_targets(
   self : TraceStats,
-  limit? : Int = 10,
+  limit~ : Int32 = 10,
 ) -> Array[TargetUsage] {
   let values = self.target_usage.copy()
   values.sort_by(fn(left, right) {
@@ -291,7 +327,7 @@ pub fn AlgorithmTrace::summary_report(self : AlgorithmTrace) -> String {
 fn add_event_count(
   counts : Array[EventCount],
   name : String,
-  step : Int,
+  step : Int32,
 ) -> Unit {
   match counts.search_by(fn(item) { item.name == name }) {
     Some(index) => {
@@ -313,7 +349,7 @@ fn add_event_count(
 ///|
 fn collect_scene_usage(
   scene : Scene,
-  step : Int,
+  step : Int32,
   objects : Array[ObjectUsage],
   targets : Array[TargetUsage],
 ) -> Unit {
@@ -327,7 +363,7 @@ fn collect_scene_usage(
 fn add_object_usage(
   values : Array[ObjectUsage],
   object : SceneObject,
-  step : Int,
+  step : Int32,
 ) -> Unit {
   let object_id = object.id()
   let kind = scene_object_kind(object)
@@ -362,7 +398,7 @@ fn add_object_usage(
 fn add_scene_object_targets(
   values : Array[TargetUsage],
   object : SceneObject,
-  step : Int,
+  step : Int32,
 ) -> Unit {
   add_target_usage(
     values,
@@ -437,7 +473,7 @@ fn add_scene_object_targets(
 ///|
 fn collect_event_targets(
   event : TraceEvent,
-  step : Int,
+  step : Int32,
   values : Array[TargetUsage],
 ) -> Unit {
   let name = trace_event_name(event)
@@ -500,7 +536,7 @@ fn collect_event_targets(
 fn add_target_usage(
   values : Array[TargetUsage],
   target : TargetRef,
-  step : Int,
+  step : Int32,
   event_name~ : String,
   highlight_role~ : String?,
 ) -> Unit {
@@ -600,7 +636,7 @@ fn scene_object_kind(object : SceneObject) -> String {
 }
 
 ///|
-fn scene_object_entity_count(object : SceneObject) -> Int {
+fn scene_object_entity_count(object : SceneObject) -> Int32 {
   match object {
     Sequence(state) => state.items.length()
     Sets(state) =>
@@ -621,7 +657,7 @@ fn target_usage_label(value : TargetUsage) -> String {
 }
 
 ///|
-fn max_int(left : Int, right : Int) -> Int {
+fn max_int(left : Int32, right : Int32) -> Int32 {
   if left >= right {
     left
   } else {

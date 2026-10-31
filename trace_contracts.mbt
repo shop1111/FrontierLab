@@ -5,27 +5,45 @@ pub(all) enum TraceViolationSeverity {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend TraceViolationSeverity with Debug::{to_repr}
+
+///|
+pub extend TraceViolationSeverity with Eq::{not_equal, equal}
+
+///|
+pub extend TraceViolationSeverity with ToJson::{to_json}
+
+///|
 pub struct TraceViolation {
   contract : String
   code : String
   severity : TraceViolationSeverity
-  step : Int
+  step : Int32
   targets : Array[TargetRef]
   message : String
   evidence : Array[TraceAttribute]
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend TraceViolation with Debug::{to_repr}
+
+///|
+pub extend TraceViolation with Eq::{not_equal, equal}
+
+///|
+pub extend TraceViolation with ToJson::{to_json}
+
+///|
 pub fn TraceViolation::new(
   contract~ : String,
   code~ : String,
-  severity? : TraceViolationSeverity = Error,
-  step? : Int = -1,
-  targets? : Array[TargetRef] = [],
+  severity~ : TraceViolationSeverity = Error,
+  step~ : Int32 = -1,
+  targets~ : Array[TargetRef] = [],
   message~ : String,
-  evidence? : Array[TraceAttribute] = [],
+  evidence~ : Array[TraceAttribute] = [],
 ) -> TraceViolation {
-  { contract, code, severity, step, targets, message, evidence }
+  { contract, code, severity, step, targets, message, evidence, }
 }
 
 ///|
@@ -37,6 +55,15 @@ pub struct ContractReport {
   first_failure : TraceViolation?
   counterexample : TraceCounterexample?
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend ContractReport with Debug::{to_repr}
+
+///|
+pub extend ContractReport with Eq::{not_equal, equal}
+
+///|
+pub extend ContractReport with ToJson::{to_json}
 
 ///|
 pub fn ContractReport::to_json_string(self : ContractReport) -> String {
@@ -93,7 +120,7 @@ pub fn TraceContract::new(
   description~ : String,
   checker~ : (AlgorithmTrace) -> Array[TraceViolation],
 ) -> TraceContract {
-  { name, description, checker }
+  { name, description, checker, }
 }
 
 ///|
@@ -251,7 +278,7 @@ fn check_sequence_transitions(
 fn check_sequence_identity(
   before : SequenceState,
   after : SequenceState,
-  step : Int,
+  step : Int32,
   object_id : String,
   violations : Array[TraceViolation],
 ) -> Unit {
@@ -306,7 +333,7 @@ fn check_swap_transition(
   after : SequenceState,
   left : TargetRef,
   right : TargetRef,
-  step : Int,
+  step : Int32,
   violations : Array[TraceViolation],
 ) -> Unit {
   match (left.entity_id, right.entity_id) {

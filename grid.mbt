@@ -1,12 +1,21 @@
 ///|
 pub struct Position {
-  x : Int
-  y : Int
+  x : Int32
+  y : Int32
 } derive(Debug, Eq, ToJson)
 
 ///|
-pub fn Position::new(x~ : Int, y~ : Int) -> Position {
-  { x, y }
+pub extend Position with Debug::{to_repr}
+
+///|
+pub extend Position with Eq::{not_equal, equal}
+
+///|
+pub extend Position with ToJson::{to_json}
+
+///|
+pub fn Position::new(x~ : Int32, y~ : Int32) -> Position {
+  { x, y, }
 }
 
 ///|
@@ -16,25 +25,52 @@ pub(all) enum MoveRule {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend MoveRule with Debug::{to_repr}
+
+///|
+pub extend MoveRule with Eq::{not_equal, equal}
+
+///|
+pub extend MoveRule with ToJson::{to_json}
+
+///|
 struct WeightedCell {
   position : Position
-  weight : Int
+  weight : Int32
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend WeightedCell with Debug::{to_repr}
+
+///|
+pub extend WeightedCell with Eq::{not_equal, equal}
+
+///|
+pub extend WeightedCell with ToJson::{to_json}
+
+///|
 pub struct GridMap {
-  width : Int
-  height : Int
+  width : Int32
+  height : Int32
   obstacles : Array[Position]
   weights : Array[WeightedCell]
 } derive(Debug, Eq, ToJson)
 
 ///|
-pub fn GridMap::new(width~ : Int, height~ : Int) -> GridMap raise {
+pub extend GridMap with Debug::{to_repr}
+
+///|
+pub extend GridMap with Eq::{not_equal, equal}
+
+///|
+pub extend GridMap with ToJson::{to_json}
+
+///|
+pub fn GridMap::new(width~ : Int32, height~ : Int32) -> GridMap raise {
   if width <= 0 || height <= 0 {
     fail("GridMap dimensions must be positive")
   }
-  { width, height, obstacles: [], weights: [] }
+  { width, height, obstacles: [], weights: [], }
 }
 
 ///|
@@ -74,7 +110,7 @@ pub fn GridMap::with_obstacle(
 pub fn GridMap::with_weight(
   self : GridMap,
   position : Position,
-  weight : Int,
+  weight : Int32,
 ) -> GridMap raise {
   if !self.contains(position) {
     fail("Weighted position is outside the grid")
@@ -85,14 +121,14 @@ pub fn GridMap::with_weight(
   let next = self.copy()
   let existing = next.weights.search_by(fn(cell) { cell.position == position })
   match existing {
-    Some(index) => next.weights[index] = { position, weight }
-    None => next.weights.push({ position, weight })
+    Some(index) => next.weights[index] = { position, weight, }
+    None => next.weights.push({ position, weight, })
   }
   next
 }
 
 ///|
-pub fn GridMap::weight_at(self : GridMap, position : Position) -> Int {
+pub fn GridMap::weight_at(self : GridMap, position : Position) -> Int32 {
   match self.weights.search_by(fn(cell) { cell.position == position }) {
     Some(index) => self.weights[index].weight
     None => 1

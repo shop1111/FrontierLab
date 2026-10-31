@@ -2,43 +2,61 @@
 /// One stable value in a sortable sequence trace.
 pub struct SortTraceItem {
   id : String
-  value : Int
+  value : Int32
   label : String
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend SortTraceItem with Debug::{to_repr}
+
+///|
+pub extend SortTraceItem with Eq::{not_equal, equal}
+
+///|
+pub extend SortTraceItem with ToJson::{to_json}
+
+///|
 pub fn SortTraceItem::new(
   id~ : String,
-  value~ : Int,
-  label? : String = "",
+  value~ : Int32,
+  label~ : String = "",
 ) -> SortTraceItem {
-  { id, value, label: if label == "" { value.to_string() } else { label } }
+  { id, value, label: if label == "" { value.to_string() } else { label }, }
 }
 
 ///|
 /// One union operation for the Union-Find trace adapter.
 pub struct UnionOperation {
-  left : Int
-  right : Int
+  left : Int32
+  right : Int32
   label : String
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend UnionOperation with Debug::{to_repr}
+
+///|
+pub extend UnionOperation with Eq::{not_equal, equal}
+
+///|
+pub extend UnionOperation with ToJson::{to_json}
+
+///|
 pub fn UnionOperation::new(
-  left~ : Int,
-  right~ : Int,
-  label? : String = "",
+  left~ : Int32,
+  right~ : Int32,
+  label~ : String = "",
 ) -> UnionOperation {
-  { left, right, label: if label == "" { "\{left}-\{right}" } else { label } }
+  { left, right, label: if label == "" { "\{left}-\{right}" } else { label }, }
 }
 
 ///|
 /// Build a reusable insertion-sort trace from plain integer values.
 pub fn insertion_sort_trace(
-  values : Array[Int],
-  title? : String = "Insertion Sort",
-  object_id? : String = "values",
-  label? : String = "Insertion sort",
+  values : Array[Int32],
+  title~ : String = "Insertion Sort",
+  object_id~ : String = "values",
+  label~ : String = "Insertion sort",
 ) -> AlgorithmTrace raise TraceError {
   insertion_sort_items_trace(
     values.mapi(fn(index, value) {
@@ -55,9 +73,9 @@ pub fn insertion_sort_trace(
 /// ids. Stable ids make animated swaps and external annotations deterministic.
 pub fn insertion_sort_items_trace(
   items : Array[SortTraceItem],
-  title? : String = "Insertion Sort",
-  object_id? : String = "values",
-  label? : String = "Insertion sort",
+  title~ : String = "Insertion Sort",
+  object_id~ : String = "values",
+  label~ : String = "Insertion sort",
 ) -> AlgorithmTrace raise TraceError {
   ensure_unique_sort_items(items)
   let working = items.copy()
@@ -160,12 +178,12 @@ pub fn insertion_sort_items_trace(
 ///|
 /// Build a reusable Union-Find trace from a size and an ordered operation list.
 pub fn union_find_trace(
-  size : Int,
+  size : Int32,
   operations : Array[UnionOperation],
-  title? : String = "Union-Find",
-  object_id? : String = "components",
-  label? : String = "Disjoint sets",
-  compress_paths? : Bool = true,
+  title~ : String = "Union-Find",
+  object_id~ : String = "components",
+  label~ : String = "Disjoint sets",
+  compress_paths~ : Bool = true,
 ) -> AlgorithmTrace raise TraceError {
   if size <= 0 {
     raise LimitExceeded("Union-Find trace size must be positive")
@@ -338,7 +356,7 @@ fn ensure_unique_sort_items(
 }
 
 ///|
-fn union_find_root(parent : Array[Int], value : Int) -> Int {
+fn union_find_root(parent : Array[Int32], value : Int32) -> Int32 {
   for current = value; parent[current] != current; {
     continue parent[current]
   } nobreak {
@@ -348,11 +366,11 @@ fn union_find_root(parent : Array[Int], value : Int) -> Int {
 
 ///|
 fn union_find_attach(
-  parent : Array[Int],
-  rank : Array[Int],
-  left_root : Int,
-  right_root : Int,
-) -> (Int, Int) {
+  parent : Array[Int32],
+  rank : Array[Int32],
+  left_root : Int32,
+  right_root : Int32,
+) -> (Int32, Int32) {
   if rank[left_root] < rank[right_root] {
     parent[left_root] = right_root
     (right_root, left_root)
@@ -368,7 +386,7 @@ fn union_find_attach(
 
 ///|
 fn union_find_scene(
-  parent : Array[Int],
+  parent : Array[Int32],
   object_id : String,
   label : String,
   highlights : Array[Highlight],
@@ -395,7 +413,7 @@ fn union_find_scene(
 
 ///|
 fn final_union_highlights(
-  parent : Array[Int],
+  parent : Array[Int32],
   object_id : String,
 ) -> Array[Highlight] {
   let highlights : Array[Highlight] = []
@@ -413,7 +431,7 @@ fn final_union_highlights(
 }
 
 ///|
-fn union_component_count(parent : Array[Int]) -> Int {
+fn union_component_count(parent : Array[Int32]) -> Int32 {
   let mut count = 0
   for value in 0..<parent.length() {
     if union_find_root(parent, value) == value {

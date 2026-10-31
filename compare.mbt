@@ -2,10 +2,19 @@
 pub struct AlgorithmReport {
   algorithm : String
   reachable : Bool
-  visited_count : Int
-  path_length : Int
-  total_cost : Int
+  visited_count : Int32
+  path_length : Int32
+  total_cost : Int32
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend AlgorithmReport with Debug::{to_repr}
+
+///|
+pub extend AlgorithmReport with Eq::{not_equal, equal}
+
+///|
+pub extend AlgorithmReport with ToJson::{to_json}
 
 ///|
 pub struct CompareReport {
@@ -13,12 +22,21 @@ pub struct CompareReport {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend CompareReport with Debug::{to_repr}
+
+///|
+pub extend CompareReport with Eq::{not_equal, equal}
+
+///|
+pub extend CompareReport with ToJson::{to_json}
+
+///|
 pub fn compare_algorithms(
   grid : GridMap,
   start~ : Position,
   goal~ : Position,
-  rule? : MoveRule = FourDirections,
-  heuristic? : Heuristic = Manhattan,
+  rule~ : MoveRule = FourDirections,
+  heuristic~ : Heuristic = Manhattan,
 ) -> CompareReport raise {
   {
     entries: [

@@ -1,8 +1,17 @@
 ///|
 pub struct CostEntry {
   position : Position
-  cost : Int
+  cost : Int32
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend CostEntry with Debug::{to_repr}
+
+///|
+pub extend CostEntry with Eq::{not_equal, equal}
+
+///|
+pub extend CostEntry with ToJson::{to_json}
 
 ///|
 pub struct ParentLink {
@@ -11,25 +20,43 @@ pub struct ParentLink {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend ParentLink with Debug::{to_repr}
+
+///|
+pub extend ParentLink with Eq::{not_equal, equal}
+
+///|
+pub extend ParentLink with ToJson::{to_json}
+
+///|
 pub struct PathResult {
   reachable : Bool
   path : Array[Position]
-  cost : Int
-  visited_count : Int
+  cost : Int32
+  visited_count : Int32
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend PathResult with Debug::{to_repr}
+
+///|
+pub extend PathResult with Eq::{not_equal, equal}
+
+///|
+pub extend PathResult with ToJson::{to_json}
 
 ///|
 pub fn PathResult::found(
   path~ : Array[Position],
-  cost~ : Int,
-  visited_count~ : Int,
+  cost~ : Int32,
+  visited_count~ : Int32,
 ) -> PathResult {
-  { reachable: true, path, cost, visited_count }
+  { reachable: true, path, cost, visited_count, }
 }
 
 ///|
-pub fn PathResult::not_found(visited_count~ : Int) -> PathResult {
-  { reachable: false, path: [], cost: 0, visited_count }
+pub fn PathResult::not_found(visited_count~ : Int32) -> PathResult {
+  { reachable: false, path: [], cost: 0, visited_count, }
 }
 
 ///|
@@ -40,6 +67,15 @@ pub struct TraceStep {
   cost : Array[CostEntry]
   parent : Array[ParentLink]
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend TraceStep with Debug::{to_repr}
+
+///|
+pub extend TraceStep with Eq::{not_equal, equal}
+
+///|
+pub extend TraceStep with ToJson::{to_json}
 
 ///|
 pub fn TraceStep::new(
@@ -65,25 +101,34 @@ pub struct SearchTrace {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend SearchTrace with Debug::{to_repr}
+
+///|
+pub extend SearchTrace with Eq::{not_equal, equal}
+
+///|
+pub extend SearchTrace with ToJson::{to_json}
+
+///|
 pub fn SearchTrace::new(
   result~ : PathResult,
   steps~ : Array[TraceStep],
 ) -> SearchTrace {
-  { result, steps }
+  { result, steps, }
 }
 
 ///|
-pub fn CostEntry::new(position~ : Position, cost~ : Int) -> CostEntry {
-  { position, cost }
+pub fn CostEntry::new(position~ : Position, cost~ : Int32) -> CostEntry {
+  { position, cost, }
 }
 
 ///|
 pub fn ParentLink::new(child~ : Position, parent~ : Position) -> ParentLink {
-  { child, parent }
+  { child, parent, }
 }
 
 ///|
-fn cost_lookup(entries : Array[CostEntry], position : Position) -> Int? {
+fn cost_lookup(entries : Array[CostEntry], position : Position) -> Int32? {
   match entries.search_by(fn(entry) { entry.position == position }) {
     Some(index) => Some(entries[index].cost)
     None => None
@@ -94,11 +139,11 @@ fn cost_lookup(entries : Array[CostEntry], position : Position) -> Int? {
 fn cost_put(
   entries : Array[CostEntry],
   position : Position,
-  cost : Int,
+  cost : Int32,
 ) -> Unit {
   match entries.search_by(fn(entry) { entry.position == position }) {
-    Some(index) => entries[index] = { position, cost }
-    None => entries.push({ position, cost })
+    Some(index) => entries[index] = { position, cost, }
+    None => entries.push({ position, cost, })
   }
 }
 
@@ -109,8 +154,8 @@ fn parent_put(
   parent : Position,
 ) -> Unit {
   match entries.search_by(fn(entry) { entry.child == child }) {
-    Some(index) => entries[index] = { child, parent }
-    None => entries.push({ child, parent })
+    Some(index) => entries[index] = { child, parent, }
+    None => entries.push({ child, parent, })
   }
 }
 

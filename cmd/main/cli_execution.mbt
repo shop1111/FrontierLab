@@ -1,17 +1,17 @@
 ///|
 struct Diagnosis {
-  exit_code : Int
+  exit_code : Int32
   stdout : String
   artifacts : Array[(String, String)]
 }
 
 ///|
 fn Diagnosis::new(
-  exit_code? : Int = 0,
-  stdout? : String = "",
-  artifacts? : Array[(String, String)] = [],
+  exit_code~ : Int32 = 0,
+  stdout~ : String = "",
+  artifacts~ : Array[(String, String)] = [],
 ) -> Diagnosis {
-  { exit_code, stdout, artifacts }
+  { exit_code, stdout, artifacts, }
 }
 
 ///|
@@ -89,7 +89,7 @@ fn collect_artifact(
 fn output_execution(
   path : String,
   content : String,
-  summary? : String = "",
+  summary~ : String = "",
 ) -> Diagnosis {
   if path == "-" {
     Diagnosis::new(stdout=content)
@@ -106,7 +106,7 @@ fn output_execution(
 }
 
 ///|
-fn apply_execution(value : Diagnosis) -> Int raise {
+fn apply_execution(value : Diagnosis) -> Int32 raise {
   for artifact in value.artifacts {
     @fs.write_string_to_file(artifact.0, artifact.1)
   }
