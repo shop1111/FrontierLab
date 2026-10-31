@@ -47,3 +47,18 @@ test "consumer proves contract and counterexample exit semantics" {
   assert_eq(counterexample.focus_step, 2)
   assert_eq(counterexample.trace.steps.length(), 5)
 }
+
+///|
+test "published package traces an unmodified sort through TracedArray" {
+  let a = @frontierlab.TracedArray::new([3, 1, 2])
+  for end = a.length() - 1; end > 0; end = end - 1 {
+    for i in 0..<end {
+      if a.less(i + 1, i) {
+        a.swap(i, i + 1)
+      }
+    }
+  }
+  assert_eq(a.to_array(), [1, 2, 3])
+  let trace = a.finish()
+  assert_eq(trace.analyze().event_count("swap"), 2)
+}
