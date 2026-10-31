@@ -15,7 +15,7 @@ import {
 
 name = "shop1111/frontierlab"
 
-version = "0.9.1"
+version = "0.9.2"
 
 readme = "README.md"
 
@@ -33,7 +33,3 @@ keywords = [
 ]
 
 description = "A MoonBit algorithm trace protocol and polished offline HTML visualization kit."
-
-options(
-  exclude: [ "consumer/frontierlab_consumer_demo", "PROJECT_APPLICATION.md" ],
-)

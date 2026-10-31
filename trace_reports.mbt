@@ -38,7 +38,10 @@ pub fn TraceStats::object_table(self : TraceStats) -> String {
 
 ///|
 /// Render the most referenced targets as a Markdown table.
-pub fn TraceStats::target_table(self : TraceStats, limit? : Int = 10) -> String {
+pub fn TraceStats::target_table(
+  self : TraceStats,
+  limit~ : Int32 = 10,
+) -> String {
   let out = StringBuilder()
   out.write_string(
     "| Target | References | Event refs | Highlight refs | Events | Roles |\n",
@@ -66,7 +69,7 @@ pub fn TraceStats::target_table(self : TraceStats, limit? : Int = 10) -> String 
 /// Render the full analysis as Markdown for READMEs, reports, and CI artifacts.
 pub fn TraceStats::to_markdown(
   self : TraceStats,
-  target_limit? : Int = 10,
+  target_limit~ : Int32 = 10,
 ) -> String {
   let out = StringBuilder()
   out.write_string("# FrontierLab trace analysis\n\n")
@@ -92,7 +95,7 @@ pub fn TraceStats::to_markdown(
 ///|
 pub fn AlgorithmTrace::analysis_markdown(
   self : AlgorithmTrace,
-  target_limit? : Int = 10,
+  target_limit~ : Int32 = 10,
 ) -> String {
   self.analyze().to_markdown(target_limit~)
 }
@@ -103,7 +106,7 @@ fn escape_table_cell(value : String) -> String {
 }
 
 ///|
-fn format_step(step : Int) -> String {
+fn format_step(step : Int32) -> String {
   if step < 0 {
     "initial"
   } else {

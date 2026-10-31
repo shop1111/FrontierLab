@@ -4,7 +4,7 @@ pub fn export_svg(
   start~ : Position,
   goal~ : Position,
   trace? : SearchTrace,
-  cell_size? : Int = 32,
+  cell_size~ : Int32 = 32,
 ) -> String {
   let path = match trace {
     Some(t) => t.result.path
@@ -73,7 +73,7 @@ fn svg_cell_color(
 fn svg_rect(
   out : StringBuilder,
   position : Position,
-  cell_size : Int,
+  cell_size : Int32,
   fill : String,
 ) -> Unit {
   let x = position.x * cell_size
@@ -87,7 +87,7 @@ fn svg_rect(
 fn svg_label(
   out : StringBuilder,
   position : Position,
-  cell_size : Int,
+  cell_size : Int32,
   label : String,
 ) -> Unit {
   let x = position.x * cell_size + cell_size / 2

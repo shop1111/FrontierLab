@@ -1,24 +1,31 @@
 # Toolchain policy
 
-FrontierLab validates two fixed MoonBit compiler versions:
+FrontierLab requires MoonBit `moonc` 0.10.16 or newer. CI pins one fixed
+compiler and also watches the latest release:
 
 ```text
-Minimum supported: moonc v0.10.4+2cc641edf
-Current stable:    moonc v0.10.6+80dc50f24
+Pinned (blocking):    moonc v0.10.18+6c83a7f62
+Latest (advisory):    whatever the official installer serves today
 ```
 
-The minimum version runs the complete CI, packaging, examples, CLI, coverage,
-and generated-interface checks. The current stable version runs strict
-all-target check, build, and test gates. Both jobs are blocking.
+The pinned version runs the complete CI, packaging, examples, CLI, coverage,
+and generated-interface checks. The latest version runs strict all-target
+check, build, and test gates as an early warning; a failure there does not
+block a merge, but should be fixed before the next release.
 
-Using fixed versions keeps release status reproducible and prevents a future
-floating toolchain update from changing the status of an otherwise unchanged
+Using a fixed blocking version keeps release status reproducible and prevents
+a future toolchain update from changing the status of an otherwise unchanged
 release.
 
-To install either compiler on Unix, pass its complete version to the official
-installer, for example:
+To install the pinned compiler on Unix, pass its complete version (including
+the build hash) to the official installer:
 
 ```sh
 curl -fsSL https://cli.moonbitlang.com/install/unix.sh |
-  bash -s -- "0.10.6+80dc50f24"
+  bash -s -- "0.10.18+6c83a7f62"
 ```
+
+After upgrading a local toolchain, delete stale target outputs
+(`_build/native`, `_build/js`, `_build/wasm`, `_build/wasm-gc`) before running
+`python scripts/check_coverage.py`; coverage metadata produced by an older
+compiler makes `moon coverage analyze` fail with "conflicting trace metadata".

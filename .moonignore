@@ -1,0 +1,21 @@
+# Mooncakes packaging rules. A root .moonignore replaces .gitignore for
+# `moon package`, so the .gitignore rules are repeated here.
+.DS_Store
+_build/
+_dist/
+target/
+target
+.mooncakes/
+.moonagent/
+AGENTS.md
+ACCEPTANCE.md
+DEMO_SCRIPT.md
+VALIDATION.md
+RELEASE_GUIDE.md
+PROJECT_APPLICATION.md
+AI_DIAGNOSIS_CURRENT_STATE_REPORT.md
+DEFENSE_PPT_*.md
+/submission/
+
+# Standalone consumer project; it installs FrontierLab from Mooncakes.
+consumer/frontierlab_consumer_demo/

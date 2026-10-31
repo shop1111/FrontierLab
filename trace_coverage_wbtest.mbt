@@ -1,7 +1,7 @@
 ///|
 fn coverage_sequence(
   entries : Array[(String, String)],
-  id? : String = "values",
+  id~ : String = "values",
 ) -> Scene raise {
   Scene::new(objects=[
     Sequence(
@@ -30,7 +30,7 @@ fn coverage_trace(
     initial_scene,
     steps: values.mapi(fn(index, value) {
       let (event, scene) = value
-      { index, event, scene, annotation: None }
+      { index, event, scene, annotation: None, }
     }),
     summary: [],
   }
@@ -38,7 +38,7 @@ fn coverage_trace(
 
 ///|
 test "contracts cover missing disappearing and unstable sequences" {
-  let empty : Scene = { objects: [], highlights: [] }
+  let empty : Scene = { objects: [], highlights: [], }
   let missing = sequence_transition_contract(object_id="values").check(
     coverage_trace(empty, []),
   )
@@ -122,7 +122,7 @@ test "contracts cover malformed swaps integers and object kinds" {
   let grid = Grid(
     GridState::new(id="values", label="Wrong kind", width=1, height=1, cells=[]),
   )
-  let wrong_kind : Scene = { objects: [grid], highlights: [] }
+  let wrong_kind : Scene = { objects: [grid], highlights: [], }
   assert_eq(
     insertion_sort_int_contract(object_id="values").check(
       coverage_trace(wrong_kind, []),
@@ -135,7 +135,7 @@ test "contracts cover malformed swaps integers and object kinds" {
 
 ///|
 test "grid contract covers missing blocked discontinuous and endpoint paths" {
-  let empty : Scene = { objects: [], highlights: [] }
+  let empty : Scene = { objects: [], highlights: [], }
   assert_eq(
     grid_path_contract(object_id="grid").check(coverage_trace(empty, [])).violations[0].code,
     "missing-grid",
@@ -290,7 +290,7 @@ test "debugger covers invalid slices length endings and add remove changes" {
   assert_true(
     debugger_scene_diff(one, changed_kind).any(fn(c) { c.kind is Updated }),
   )
-  let removed_object : Scene = { objects: [], highlights: [] }
+  let removed_object : Scene = { objects: [], highlights: [], }
   assert_true(
     debugger_scene_diff(one, removed_object).any(fn(c) { c.kind is Removed }),
   )
@@ -307,7 +307,7 @@ test "debugger covers invalid slices length endings and add remove changes" {
 
 ///|
 test "quality diagnostics cover empty malformed growing and clean traces" {
-  let empty : Scene = { objects: [], highlights: [] }
+  let empty : Scene = { objects: [], highlights: [], }
   let malformed : AlgorithmTrace = {
     schema_version: "1.0",
     title: " ",
@@ -376,7 +376,7 @@ test "quality diagnostics cover empty malformed growing and clean traces" {
 
 ///|
 test "empty analysis report tables are explicit" {
-  let empty : Scene = { objects: [], highlights: [] }
+  let empty : Scene = { objects: [], highlights: [], }
   let stats = coverage_trace(empty, []).analyze()
   assert_true(stats.event_table().contains("| none |"))
   assert_true(stats.object_table().contains("| none |"))
@@ -585,7 +585,7 @@ test "model validation covers limits references schema and completion order" {
     _ => fail("duplicate strings must fail")
   }
   let base = coverage_trace(scene, [])
-  let unsupported : AlgorithmTrace = { ..base, schema_version: "2.0" }
+  let unsupported : AlgorithmTrace = { ..base, schema_version: "2.0", }
   try unsupported.validate() catch {
     UnsupportedSchema(_) => ()
     _ => fail("expected unsupported schema")

@@ -13,33 +13,60 @@ pub(all) enum TraceChangeKind {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend TraceChangeKind with Debug::{to_repr}
+
+///|
+pub extend TraceChangeKind with Eq::{not_equal, equal}
+
+///|
+pub extend TraceChangeKind with ToJson::{to_json}
+
+///|
 pub struct TraceChange {
   kind : TraceChangeKind
   target : TargetRef
   before_value : String
   after_value : String
-  before_index : Int
-  after_index : Int
+  before_index : Int32
+  after_index : Int32
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend TraceChange with Debug::{to_repr}
+
+///|
+pub extend TraceChange with Eq::{not_equal, equal}
+
+///|
+pub extend TraceChange with ToJson::{to_json}
 
 ///|
 pub fn TraceChange::new(
   kind~ : TraceChangeKind,
   target~ : TargetRef,
-  before_value? : String = "",
-  after_value? : String = "",
-  before_index? : Int = -1,
-  after_index? : Int = -1,
+  before_value~ : String = "",
+  after_value~ : String = "",
+  before_index~ : Int32 = -1,
+  after_index~ : Int32 = -1,
 ) -> TraceChange {
-  { kind, target, before_value, after_value, before_index, after_index }
+  { kind, target, before_value, after_value, before_index, after_index, }
 }
 
 ///|
 pub struct TraceFrameDiff {
-  from_step : Int
-  to_step : Int
+  from_step : Int32
+  to_step : Int32
   changes : Array[TraceChange]
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend TraceFrameDiff with Debug::{to_repr}
+
+///|
+pub extend TraceFrameDiff with Eq::{not_equal, equal}
+
+///|
+pub extend TraceFrameDiff with ToJson::{to_json}
 
 ///|
 pub fn TraceFrameDiff::is_empty(self : TraceFrameDiff) -> Bool {
@@ -78,12 +105,12 @@ pub fn TraceFrameDiff::report(self : TraceFrameDiff) -> String {
 ///|
 pub fn AlgorithmTrace::diff(
   self : AlgorithmTrace,
-  from_step~ : Int,
-  to_step~ : Int,
+  from_step~ : Int32,
+  to_step~ : Int32,
 ) -> TraceFrameDiff raise TraceError {
   let before = debugger_scene_at(self, from_step)
   let after = debugger_scene_at(self, to_step)
-  { from_step, to_step, changes: debugger_scene_diff(before, after) }
+  { from_step, to_step, changes: debugger_scene_diff(before, after), }
 }
 
 ///|
@@ -95,23 +122,41 @@ pub struct TraceBreakpoint {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend TraceBreakpoint with Debug::{to_repr}
+
+///|
+pub extend TraceBreakpoint with Eq::{not_equal, equal}
+
+///|
+pub extend TraceBreakpoint with ToJson::{to_json}
+
+///|
 pub fn TraceBreakpoint::new(
-  event_kind? : String = "",
+  event_kind~ : String = "",
   target? : TargetRef,
-  role? : String = "",
-  changed_only? : Bool = false,
+  role~ : String = "",
+  changed_only~ : Bool = false,
 ) -> TraceBreakpoint {
-  { event_kind, target, role, changed_only }
+  { event_kind, target, role, changed_only, }
 }
 
 ///|
 pub struct TraceBreakpointHit {
-  step : Int
+  step : Int32
   event_kind : String
   targets : Array[TargetRef]
   changes : Array[TraceChange]
   reason : String
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend TraceBreakpointHit with Debug::{to_repr}
+
+///|
+pub extend TraceBreakpointHit with Eq::{not_equal, equal}
+
+///|
+pub extend TraceBreakpointHit with ToJson::{to_json}
 
 ///|
 pub fn AlgorithmTrace::breakpoint_hits(
@@ -159,12 +204,21 @@ pub fn AlgorithmTrace::breakpoint_hits(
 ///|
 pub struct TraceCounterexample {
   original_title : String
-  original_start : Int
-  original_focus : Int
-  original_end : Int
-  focus_step : Int
+  original_start : Int32
+  original_focus : Int32
+  original_end : Int32
+  focus_step : Int32
   trace : AlgorithmTrace
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend TraceCounterexample with Debug::{to_repr}
+
+///|
+pub extend TraceCounterexample with Eq::{not_equal, equal}
+
+///|
+pub extend TraceCounterexample with ToJson::{to_json}
 
 ///|
 pub fn TraceCounterexample::to_json_string(
@@ -176,9 +230,9 @@ pub fn TraceCounterexample::to_json_string(
 ///|
 pub fn AlgorithmTrace::slice(
   self : AlgorithmTrace,
-  center~ : Int,
-  before? : Int = 2,
-  after? : Int = 2,
+  center~ : Int32,
+  before~ : Int32 = 2,
+  after~ : Int32 = 2,
 ) -> TraceCounterexample raise TraceError {
   if center < 0 || center >= self.steps.length() {
     raise InvalidStep("Slice center \{center} is outside the trace.")
@@ -232,14 +286,32 @@ pub(all) enum TraceDivergenceKind {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend TraceDivergenceKind with Debug::{to_repr}
+
+///|
+pub extend TraceDivergenceKind with Eq::{not_equal, equal}
+
+///|
+pub extend TraceDivergenceKind with ToJson::{to_json}
+
+///|
 pub struct TraceDivergence {
-  step : Int
+  step : Int32
   kind : TraceDivergenceKind
   message : String
   expected_event : String
   actual_event : String
   scene_diff : TraceFrameDiff?
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend TraceDivergence with Debug::{to_repr}
+
+///|
+pub extend TraceDivergence with Eq::{not_equal, equal}
+
+///|
+pub extend TraceDivergence with ToJson::{to_json}
 
 ///|
 pub fn TraceDivergence::to_json_string(self : TraceDivergence) -> String {
@@ -276,7 +348,7 @@ pub fn first_divergence(
         message: "Scenes first diverge at step \{index}.",
         expected_event,
         actual_event,
-        scene_diff: Some({ from_step: index, to_step: index, changes }),
+        scene_diff: Some({ from_step: index, to_step: index, changes, }),
       })
     }
   }
@@ -306,7 +378,7 @@ pub fn first_divergence(
 ///|
 fn debugger_scene_at(
   trace : AlgorithmTrace,
-  step : Int,
+  step : Int32,
 ) -> Scene raise TraceError {
   if step == -1 {
     trace.initial_scene
@@ -323,8 +395,14 @@ fn debugger_scene_at(
 struct DebugEntity {
   id : String
   value : String
-  index : Int
+  index : Int32
 } derive(Debug, Eq)
+
+///|
+pub extend DebugEntity with Debug::{to_repr}
+
+///|
+pub extend DebugEntity with Eq::{not_equal, equal}
 
 ///|
 fn debugger_scene_diff(before : Scene, after : Scene) -> Array[TraceChange] {
@@ -453,7 +531,7 @@ fn debugger_entities(object : SceneObject) -> Array[DebugEntity] {
     Sequence(state) => {
       let values : Array[DebugEntity] = []
       for index, item in state.items {
-        values.push({ id: item.id, value: item.value, index })
+        values.push({ id: item.id, value: item.value, index, })
       }
       values
     }
@@ -471,7 +549,7 @@ fn debugger_entities(object : SceneObject) -> Array[DebugEntity] {
     Graph(state) => {
       let values : Array[DebugEntity] = []
       for index, node in state.nodes {
-        values.push({ id: node.id, value: node.label, index })
+        values.push({ id: node.id, value: node.label, index, })
       }
       for index, edge in state.edges {
         values.push({
@@ -599,7 +677,7 @@ fn debugger_breakpoint_reason(value : TraceBreakpoint) -> String {
 }
 
 ///|
-fn debugger_max(left : Int, right : Int) -> Int {
+fn debugger_max(left : Int32, right : Int32) -> Int32 {
   if left >= right {
     left
   } else {
@@ -608,7 +686,7 @@ fn debugger_max(left : Int, right : Int) -> Int {
 }
 
 ///|
-fn debugger_min(left : Int, right : Int) -> Int {
+fn debugger_min(left : Int32, right : Int32) -> Int32 {
   if left <= right {
     left
   } else {

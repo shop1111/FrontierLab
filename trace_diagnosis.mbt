@@ -4,11 +4,20 @@
 pub struct TraceDiagnosis {
   contract_report : ContractReport
   divergence : TraceDivergence?
-  focus_step : Int
+  focus_step : Int32
   transition_diff : TraceFrameDiff?
   reference_diff : TraceFrameDiff?
   focused_slice : TraceCounterexample?
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend TraceDiagnosis with Debug::{to_repr}
+
+///|
+pub extend TraceDiagnosis with Eq::{not_equal, equal}
+
+///|
+pub extend TraceDiagnosis with ToJson::{to_json}
 
 ///|
 /// Return whether both the semantic contract and optional reference agree.
@@ -76,7 +85,10 @@ pub fn diagnose_trace(
 }
 
 ///|
-fn diagnosis_focus_step(contract_step : Int, divergence_step : Int) -> Int {
+fn diagnosis_focus_step(
+  contract_step : Int32,
+  divergence_step : Int32,
+) -> Int32 {
   if contract_step < 0 {
     divergence_step
   } else if divergence_step < 0 {

@@ -6,8 +6,17 @@ pub struct TraceAttribute {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend TraceAttribute with Debug::{to_repr}
+
+///|
+pub extend TraceAttribute with Eq::{not_equal, equal}
+
+///|
+pub extend TraceAttribute with ToJson::{to_json}
+
+///|
 pub fn TraceAttribute::new(key~ : String, value~ : String) -> TraceAttribute {
-  { key, value }
+  { key, value, }
 }
 
 ///|
@@ -18,13 +27,25 @@ pub struct TargetRef {
 } derive(Debug, Eq, ToJson, FromJson)
 
 ///|
+pub extend TargetRef with Debug::{to_repr}
+
+///|
+pub extend TargetRef with Eq::{not_equal, equal}
+
+///|
+pub extend TargetRef with ToJson::{to_json}
+
+///|
+pub extend TargetRef with @json.FromJson::{from_json}
+
+///|
 pub fn TargetRef::object(object_id : String) -> TargetRef {
-  { object_id, entity_id: None }
+  { object_id, entity_id: None, }
 }
 
 ///|
 pub fn TargetRef::entity(object_id : String, entity_id : String) -> TargetRef {
-  { object_id, entity_id: Some(entity_id) }
+  { object_id, entity_id: Some(entity_id), }
 }
 
 ///|
@@ -40,6 +61,12 @@ pub(all) suberror TraceError {
   AlreadyCompleted
   LimitExceeded(String)
 } derive(Debug, Eq)
+
+///|
+pub extend TraceError with Debug::{to_repr}
+
+///|
+pub extend TraceError with Eq::{not_equal, equal}
 
 ///|
 pub fn TraceError::message(self : TraceError) -> String {
@@ -62,30 +89,45 @@ pub fn TraceError::message(self : TraceError) -> String {
 }
 
 ///|
+pub extend TraceError with Show::{to_string, output}
+
+///|
 pub impl Show for TraceError with fn output(self : TraceError, logger : &Logger) -> Unit {
   logger.write_string(self.message())
 }
 
 ///|
 pub struct TraceOptions {
-  max_steps : Int
-  max_entities_per_scene : Int
+  max_steps : Int32
+  max_entities_per_scene : Int32
 } derive(Debug, Eq, ToJson, FromJson)
 
 ///|
+pub extend TraceOptions with Debug::{to_repr}
+
+///|
+pub extend TraceOptions with Eq::{not_equal, equal}
+
+///|
+pub extend TraceOptions with ToJson::{to_json}
+
+///|
+pub extend TraceOptions with @json.FromJson::{from_json}
+
+///|
 pub fn TraceOptions::default() -> TraceOptions {
-  { max_steps: 10000, max_entities_per_scene: 10000 }
+  { max_steps: 10000, max_entities_per_scene: 10000, }
 }
 
 ///|
 pub fn TraceOptions::new(
-  max_steps? : Int = 10000,
-  max_entities_per_scene? : Int = 10000,
+  max_steps~ : Int32 = 10000,
+  max_entities_per_scene~ : Int32 = 10000,
 ) -> TraceOptions raise TraceError {
   if max_steps <= 0 || max_entities_per_scene <= 0 {
     raise LimitExceeded("Trace limits must be positive")
   }
-  { max_steps, max_entities_per_scene }
+  { max_steps, max_entities_per_scene, }
 }
 
 ///|
@@ -103,6 +145,15 @@ pub(all) enum TraceEvent {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend TraceEvent with Debug::{to_repr}
+
+///|
+pub extend TraceEvent with Eq::{not_equal, equal}
+
+///|
+pub extend TraceEvent with ToJson::{to_json}
+
+///|
 pub(all) enum HighlightRole {
   Current
   Candidate
@@ -115,30 +166,57 @@ pub(all) enum HighlightRole {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend HighlightRole with Debug::{to_repr}
+
+///|
+pub extend HighlightRole with Eq::{not_equal, equal}
+
+///|
+pub extend HighlightRole with ToJson::{to_json}
+
+///|
 pub struct Highlight {
   target : TargetRef
   role : HighlightRole
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend Highlight with Debug::{to_repr}
+
+///|
+pub extend Highlight with Eq::{not_equal, equal}
+
+///|
+pub extend Highlight with ToJson::{to_json}
+
+///|
 pub fn Highlight::new(target~ : TargetRef, role~ : HighlightRole) -> Highlight {
-  { target, role }
+  { target, role, }
 }
 
 ///|
 pub struct Annotation {
   title : String
   body : String
-  pseudocode_line : Int?
+  pseudocode_line : Int32?
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend Annotation with Debug::{to_repr}
+
+///|
+pub extend Annotation with Eq::{not_equal, equal}
+
+///|
+pub extend Annotation with ToJson::{to_json}
 
 ///|
 pub fn Annotation::new(
   title~ : String,
   body~ : String,
-  pseudocode_line? : Int,
+  pseudocode_line? : Int32,
 ) -> Annotation {
-  { title, body, pseudocode_line }
+  { title, body, pseudocode_line, }
 }
 
 ///|
@@ -148,8 +226,17 @@ pub struct SequenceItem {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend SequenceItem with Debug::{to_repr}
+
+///|
+pub extend SequenceItem with Eq::{not_equal, equal}
+
+///|
+pub extend SequenceItem with ToJson::{to_json}
+
+///|
 pub fn SequenceItem::new(id~ : String, value~ : String) -> SequenceItem {
-  { id, value }
+  { id, value, }
 }
 
 ///|
@@ -160,12 +247,21 @@ pub struct SequenceState {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend SequenceState with Debug::{to_repr}
+
+///|
+pub extend SequenceState with Eq::{not_equal, equal}
+
+///|
+pub extend SequenceState with ToJson::{to_json}
+
+///|
 pub fn SequenceState::new(
   id~ : String,
   label~ : String,
   items~ : Array[SequenceItem],
 ) -> SequenceState {
-  { id, label, items: items.copy() }
+  { id, label, items: items.copy(), }
 }
 
 ///|
@@ -176,12 +272,21 @@ pub struct SetGroup {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend SetGroup with Debug::{to_repr}
+
+///|
+pub extend SetGroup with Eq::{not_equal, equal}
+
+///|
+pub extend SetGroup with ToJson::{to_json}
+
+///|
 pub fn SetGroup::new(
   id~ : String,
   label~ : String,
   members~ : Array[String],
 ) -> SetGroup {
-  { id, label, members: members.copy() }
+  { id, label, members: members.copy(), }
 }
 
 ///|
@@ -192,12 +297,21 @@ pub struct SetState {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend SetState with Debug::{to_repr}
+
+///|
+pub extend SetState with Eq::{not_equal, equal}
+
+///|
+pub extend SetState with ToJson::{to_json}
+
+///|
 pub fn SetState::new(
   id~ : String,
   label~ : String,
   groups~ : Array[SetGroup],
 ) -> SetState {
-  { id, label, groups: groups.map(fn(group) { group.deep_copy() }) }
+  { id, label, groups: groups.map(fn(group) { group.deep_copy() }), }
 }
 
 ///|
@@ -207,8 +321,17 @@ pub struct GraphNode {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend GraphNode with Debug::{to_repr}
+
+///|
+pub extend GraphNode with Eq::{not_equal, equal}
+
+///|
+pub extend GraphNode with ToJson::{to_json}
+
+///|
 pub fn GraphNode::new(id~ : String, label~ : String) -> GraphNode {
-  { id, label }
+  { id, label, }
 }
 
 ///|
@@ -221,14 +344,23 @@ pub struct GraphEdge {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend GraphEdge with Debug::{to_repr}
+
+///|
+pub extend GraphEdge with Eq::{not_equal, equal}
+
+///|
+pub extend GraphEdge with ToJson::{to_json}
+
+///|
 pub fn GraphEdge::new(
   id~ : String,
   from~ : String,
   to~ : String,
-  label? : String = "",
-  directed? : Bool = false,
+  label~ : String = "",
+  directed~ : Bool = false,
 ) -> GraphEdge {
-  { id, from, to, label, directed }
+  { id, from, to, label, directed, }
 }
 
 ///|
@@ -238,6 +370,15 @@ pub struct GraphState {
   nodes : Array[GraphNode]
   edges : Array[GraphEdge]
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend GraphState with Debug::{to_repr}
+
+///|
+pub extend GraphState with Eq::{not_equal, equal}
+
+///|
+pub extend GraphState with ToJson::{to_json}
 
 ///|
 pub fn GraphState::new(
@@ -255,44 +396,62 @@ pub fn GraphState::new(
       )
     }
   }
-  { id, label, nodes: nodes.copy(), edges: edges.copy() }
+  { id, label, nodes: nodes.copy(), edges: edges.copy(), }
 }
 
 ///|
 pub struct GridCellState {
   id : String
-  x : Int
-  y : Int
+  x : Int32
+  y : Int32
   label : String
   blocked : Bool
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend GridCellState with Debug::{to_repr}
+
+///|
+pub extend GridCellState with Eq::{not_equal, equal}
+
+///|
+pub extend GridCellState with ToJson::{to_json}
+
+///|
 pub fn GridCellState::new(
   id~ : String,
-  x~ : Int,
-  y~ : Int,
-  label? : String = "",
-  blocked? : Bool = false,
+  x~ : Int32,
+  y~ : Int32,
+  label~ : String = "",
+  blocked~ : Bool = false,
 ) -> GridCellState {
-  { id, x, y, label, blocked }
+  { id, x, y, label, blocked, }
 }
 
 ///|
 pub struct GridState {
   id : String
   label : String
-  width : Int
-  height : Int
+  width : Int32
+  height : Int32
   cells : Array[GridCellState]
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend GridState with Debug::{to_repr}
+
+///|
+pub extend GridState with Eq::{not_equal, equal}
+
+///|
+pub extend GridState with ToJson::{to_json}
 
 ///|
 pub fn GridState::new(
   id~ : String,
   label~ : String,
-  width~ : Int,
-  height~ : Int,
+  width~ : Int32,
+  height~ : Int32,
   cells~ : Array[GridCellState],
 ) -> GridState raise TraceError {
   if width <= 0 || height <= 0 {
@@ -304,7 +463,7 @@ pub fn GridState::new(
       raise InvalidGrid("Grid scene cell is outside its dimensions")
     }
   }
-  { id, label, width, height, cells: cells.copy() }
+  { id, label, width, height, cells: cells.copy(), }
 }
 
 ///|
@@ -316,15 +475,33 @@ pub(all) enum SceneObject {
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend SceneObject with Debug::{to_repr}
+
+///|
+pub extend SceneObject with Eq::{not_equal, equal}
+
+///|
+pub extend SceneObject with ToJson::{to_json}
+
+///|
 pub struct Scene {
   objects : Array[SceneObject]
   highlights : Array[Highlight]
 } derive(Debug, Eq, ToJson)
 
 ///|
+pub extend Scene with Debug::{to_repr}
+
+///|
+pub extend Scene with Eq::{not_equal, equal}
+
+///|
+pub extend Scene with ToJson::{to_json}
+
+///|
 pub fn Scene::new(
   objects~ : Array[SceneObject],
-  highlights? : Array[Highlight] = [],
+  highlights~ : Array[Highlight] = [],
 ) -> Scene raise TraceError {
   ensure_unique_object_ids(objects)
   let scene = {
@@ -337,11 +514,20 @@ pub fn Scene::new(
 
 ///|
 pub struct AlgorithmTraceStep {
-  index : Int
+  index : Int32
   event : TraceEvent
   scene : Scene
   annotation : Annotation?
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend AlgorithmTraceStep with Debug::{to_repr}
+
+///|
+pub extend AlgorithmTraceStep with Eq::{not_equal, equal}
+
+///|
+pub extend AlgorithmTraceStep with ToJson::{to_json}
 
 ///|
 pub struct AlgorithmTrace {
@@ -353,6 +539,15 @@ pub struct AlgorithmTrace {
   steps : Array[AlgorithmTraceStep]
   summary : Array[TraceAttribute]
 } derive(Debug, Eq, ToJson)
+
+///|
+pub extend AlgorithmTrace with Debug::{to_repr}
+
+///|
+pub extend AlgorithmTrace with Eq::{not_equal, equal}
+
+///|
+pub extend AlgorithmTrace with ToJson::{to_json}
 
 ///|
 /// Mutable recorder that stores immutable scene snapshots.
@@ -367,12 +562,15 @@ pub struct TraceBuilder {
 } derive(Debug)
 
 ///|
+pub extend TraceBuilder with Debug::{to_repr}
+
+///|
 pub fn TraceBuilder::new(
   title~ : String,
   algorithm~ : String,
-  description? : String = "",
+  description~ : String = "",
   initial_scene~ : Scene,
-  options? : TraceOptions = TraceOptions::default(),
+  options~ : TraceOptions = TraceOptions::default(),
 ) -> TraceBuilder raise TraceError {
   initial_scene.validate(options)
   {
@@ -415,7 +613,7 @@ pub fn TraceBuilder::record(
 ///|
 pub fn TraceBuilder::finish(
   self : TraceBuilder,
-  summary? : Array[TraceAttribute] = [],
+  summary~ : Array[TraceAttribute] = [],
 ) -> AlgorithmTrace raise TraceError {
   ensure_unique_summary_keys(summary)
   let trace = {
@@ -447,7 +645,7 @@ fn TraceEvent::deep_copy(self : TraceEvent) -> TraceEvent {
 
 ///|
 fn SetGroup::deep_copy(self : SetGroup) -> SetGroup {
-  { id: self.id, label: self.label, members: self.members.copy() }
+  { id: self.id, label: self.label, members: self.members.copy(), }
 }
 
 ///|
@@ -464,7 +662,7 @@ fn SceneObject::id(self : SceneObject) -> String {
 fn SceneObject::deep_copy(self : SceneObject) -> SceneObject {
   match self {
     Sequence(value) =>
-      Sequence({ id: value.id, label: value.label, items: value.items.copy() })
+      Sequence({ id: value.id, label: value.label, items: value.items.copy(), })
     Sets(value) =>
       Sets({
         id: value.id,
@@ -542,7 +740,7 @@ fn Scene::validate_highlights(self : Scene) -> Unit raise TraceError {
 }
 
 ///|
-fn Scene::entity_count(self : Scene) -> Int {
+fn Scene::entity_count(self : Scene) -> Int32 {
   self.objects.fold(init=0, fn(total, object) {
     let count = match object {
       Sequence(value) => value.items.length()
@@ -650,7 +848,7 @@ fn ensure_unique_summary_keys(
 ///|
 pub fn AlgorithmTrace::validate(
   self : AlgorithmTrace,
-  options? : TraceOptions = TraceOptions::default(),
+  options~ : TraceOptions = TraceOptions::default(),
 ) -> Unit raise TraceError {
   if self.schema_version != "1.0" {
     raise UnsupportedSchema(self.schema_version)

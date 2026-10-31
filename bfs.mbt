@@ -3,7 +3,7 @@ pub fn bfs(
   grid : GridMap,
   start~ : Position,
   goal~ : Position,
-  rule? : MoveRule = FourDirections,
+  rule~ : MoveRule = FourDirections,
 ) -> PathResult raise {
   bfs_trace(grid, start~, goal~, rule~).result
 }
@@ -13,7 +13,7 @@ pub fn bfs_trace(
   grid : GridMap,
   start~ : Position,
   goal~ : Position,
-  rule? : MoveRule = FourDirections,
+  rule~ : MoveRule = FourDirections,
 ) -> SearchTrace raise {
   ensure_search_points(grid, start, goal)
   let queue : Array[Position] = [start]
@@ -95,7 +95,7 @@ fn ensure_search_points(
 }
 
 ///|
-fn queue_frontier(queue : Array[Position], head : Int) -> Array[Position] {
+fn queue_frontier(queue : Array[Position], head : Int32) -> Array[Position] {
   let out : Array[Position] = []
   for i in head..<queue.length() {
     out.push(queue[i])

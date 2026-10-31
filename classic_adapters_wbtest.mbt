@@ -1,7 +1,7 @@
 ///|
 fn expect_invalid_red_black_tree(
   nodes : Array[RedBlackNode],
-  root : Int,
+  root : Int32,
 ) -> Unit raise {
   try validate_red_black_tree(nodes, root) catch {
     InvalidStep(_) => ()
@@ -13,9 +13,9 @@ fn expect_invalid_red_black_tree(
 
 ///|
 fn test_red_black_node(
-  key : Int,
-  color? : RedBlackColor = Black,
-  parent? : Int = -1,
+  key : Int32,
+  color~ : RedBlackColor = Black,
+  parent~ : Int32 = -1,
 ) -> RedBlackNode {
   RedBlackNode::new(id="n-\{key}", key~, color~, parent~)
 }

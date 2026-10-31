@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v5
       - name: Set up MoonBit
         run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "0.10.4+2cc641edf"
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "0.10.18+6c83a7f62"
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
       - name: Generate interactive demos
         run: |
