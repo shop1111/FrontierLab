@@ -88,6 +88,34 @@ let html = @frontierlab.render_trace_html(a.finish())
 的错误（例如超过步数上限）会保留到 `finish()` 时再抛出，因此被追踪的算法
 不需要声明 `raise`。完整示例见 `examples/traced_sort`。
 
+## 复杂度与开销分析
+
+`TraceLevel::Count` 下只累加计数器，不记录轨迹，因此可以对大规模输入测量算法
+本身的操作次数，并拟合复杂度量级：
+
+```mbt nocheck
+let profile = @frontierlab.profile_traced_array(
+  [128, 256, 512, 1024, 2048],
+  fn(n) { Array::makei(n, fn(i) { n - i }) },
+  bubble_sort,
+  metric=Compares,
+)
+println(profile.report()) // Best fit: O(n^2), cost ≈ 0.5 · n^2 ...
+assert_true(profile.check_bound(Quadratic, factor=0.5).is_empty())
+```
+
+- `profile_traced_array` / `profile_complexity`：按输入规模统计比较、交换、读、
+  写次数，用相对误差最小二乘拟合 O(1) 到 O(2^n)，并给出对数坐标下的经验指数。
+- `check_bound`：操作计数是确定的，可以在测试或 CI 中断言“比较次数不超过
+  k·n log n”这类复杂度上界，算法退化时测试直接失败。
+- `measure_tracing_overhead`：同一算法分别在 `Off`、`Count`、`Full` 下计时，
+  报告追踪带来的倍率、每步开销和轨迹体积。计时函数由调用方传入（例如
+  `@env.now`），库本身不依赖平台时钟。
+
+实测结果见[性能记录](BENCHMARKS.md)：只计数的开销约 14%，完整轨迹的开销主要来自
+每一步保存完整快照。可运行示例见 `examples/complexity_profile`，命令行用法见下文
+CLI 一节的 `profile` 命令。
+
 ## 内置算法 Adapter
 
 Adapter 把算法输入和执行步骤转换成统一的 `AlgorithmTrace`，因此这些轨迹可以
@@ -137,6 +165,28 @@ step 10。CLI 的退出码含义为：
 - `0`：输入有效，并且轨迹通过检查且与参考轨迹一致；
 - `2`：输入有效，但轨迹违反规则或与参考轨迹不同；
 - `1`：参数、文件、JSON 或 Schema 无效。
+
+给 `diagnose` 加上 `--timings`，会按阶段输出耗时：读文件、解码和校验两条轨迹、
+规则检查、差异搜索、状态 diff、反例切片和生成报告。`--format json` 时，耗时放在
+`result.timings`。库里的对应接口是 `PhaseTimer`，可以传给 `diagnose_trace`，
+也可以用来给自己的流程分阶段计时。
+
+`profile` 命令不需要写代码，直接对内置排序算法做复杂度分析：
+
+```bash
+moon run cmd/main -- profile heap-sort --bound "O(n log n)" --factor 2
+moon run cmd/main -- profile quick-sort --input sorted --bound "O(n log n)" --factor 2
+```
+
+- 算法：`bubble-sort`、`insertion-sort`、`selection-sort`、`heap-sort`、
+  `quick-sort`，全部基于 `TracedArray` 编写；
+- `--input random|sorted|reversed`：输入形态，`random` 是固定种子的洗牌，
+  结果可复现；
+- `--sizes`（默认 `64,128,256,512,1024`）和 `--metric`（默认 `compares`）；
+- `--bound` 和 `--factor`：检查每个规模的代价不超过 `factor · bound(n)`，
+  超出时退出码为 `2`。上面第二条命令中，快速排序在有序输入上退化成
+  O(n^2)，会被检查出来；
+- `--overhead N`：额外在规模 N 上测量 `Off`、`Count`、`Full` 三档的耗时。
 
 GitHub Release 同时提供 Windows 可执行文件和 SHA256。也可以在本地构建：
 

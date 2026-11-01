@@ -1,5 +1,31 @@
 # Changelog
 
+## Unreleased
+
+- Added complexity profiling: `profile_complexity` and `profile_traced_array`
+  measure operation counts across input sizes, fit O(1) through O(2^n) by
+  relative least squares, and report the empirical log-log exponent.
+- Added `ComplexityProfile::check_bound` for deterministic complexity bounds
+  in tests and CI, plus Markdown reports.
+- Added `measure_tracing_overhead`, which times an algorithm at the `Off`,
+  `Count`, and `Full` levels with a caller-supplied clock and reports ratios,
+  per-step cost, and trace size.
+- Added `OperationCounts::new` for profiling algorithms measured without
+  `TracedArray`.
+- Added the `examples/complexity_profile` example and measured results in
+  `BENCHMARKS.md`.
+- Added `PhaseTimer` and an optional `timer` argument to `diagnose_trace`,
+  which records the contract check, divergence search, state diffs, and
+  counterexample slice as separate phases.
+- Added `ComplexityClass::parse` for labels such as `O(n log n)` and `n^2`.
+- Added `diagnose --timings`, which reports per-phase time for reading,
+  decoding, validating, diagnosing, and rendering, in text or as
+  `result.timings` in JSON.
+- Added the `profile` CLI command: complexity profiles of built-in
+  `TracedArray` sorts on random, sorted, or reversed input, with `--bound`
+  checks that exit with code 2 on violation and optional `--overhead`
+  timing.
+
 ## 0.10.0 - 2026-10-31
 
 - Added `TracedArray[T]`, an array whose `less`, `compare`, `swap`, and
