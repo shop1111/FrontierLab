@@ -348,7 +348,8 @@ test "diagnose --timings reports every phase in text and JSON" {
 test "profile algorithms sort every input shape" {
   for
     name in [
-      "bubble-sort", "insertion-sort", "selection-sort", "heap-sort", "quick-sort",
+      "bubble-sort", "insertion-sort", "shift-insertion-sort", "selection-sort",
+      "heap-sort", "quick-sort",
     ] {
     for shape in ["random", "sorted", "reversed"] {
       let values = profile_input(shape)(37)
@@ -356,7 +357,7 @@ test "profile algorithms sort every input shape" {
         values,
         level=@frontierlab.TraceLevel::Count,
       )
-      profile_algorithm(name)(traced)
+      sort_algorithm(name)(traced)
       assert_eq(traced.to_array(), Array::makei(37, fn(i) { i }))
     }
   }
@@ -450,4 +451,101 @@ test "profile rejects malformed invocations" {
   assert_cli_failure(["frontierlab", "profile", "heap-sort", "--factor", "0"])
   assert_cli_failure(["frontierlab", "profile", "heap-sort", "--overhead", "-1"])
   assert_cli_failure(["frontierlab", "profile", "heap-sort", "--sizes", "8,4"])
+}
+
+///|
+test "faulty algorithms fail on their minimal inputs" {
+  for
+    case in [
+      ("faulty-insertion-sort", [1, 0], [1, 0]),
+      ("faulty-insertion-sort", [1, 2, 0], [1, 0, 2]),
+      ("lossy-insertion-sort", [1, 0], [1, 1]),
+      ("faulty-quick-sort", [0, 1], [1, 0]),
+    ] {
+    let traced = @frontierlab.TracedArray::new(
+      case.1,
+      level=@frontierlab.TraceLevel::Count,
+    )
+    sort_algorithm(case.0)(traced)
+    assert_eq(traced.to_array(), case.2)
+  }
+}
+
+///|
+test "search command shrinks and reports counterexamples" {
+  let found = execute_cli(
+    [
+      "frontierlab", "search", "faulty-quick-sort", "--reference", "quick-sort",
+      "--counterexample", "_build/cli-test-search.html", "--report", "_build/cli-test-search-report.json",
+    ],
+    {},
+  )
+  assert_eq(found.exit_code, 2)
+  assert_true(
+    found.stdout.contains(
+      "# Counterexample search: faulty-quick-sort against quick-sort",
+    ),
+  )
+  assert_true(found.stdout.contains("- Input: [0, 1]"))
+  assert_eq(found.artifacts.map(fn(item) { item.0 }), [
+    "_build/cli-test-search.html", "_build/cli-test-search-report.json",
+  ])
+  assert_true(found.artifacts[0].1.contains("<!doctype html>"))
+  let json = execute_cli(
+    [
+      "frontierlab", "search", "faulty-insertion-sort", "--format", "json", "--counterexample",
+      "_build/cli-test-search.json",
+    ],
+    {},
+  )
+  assert_eq(json.exit_code, 2)
+  assert_true(json.stdout.contains("\"found\":true"))
+  assert_true(json.stdout.contains("\"input\":[1,0]"))
+  assert_true(json.stdout.contains("\"reference\":null"))
+  assert_true(json.stdout.contains("\"expected_output\":null"))
+  assert_true(json.artifacts[0].1.contains("\"schema_version\""))
+  let events = execute_cli(
+    [
+      "frontierlab", "search", "bubble-sort", "--reference", "insertion-sort", "--match-events",
+      "--max-length", "4", "--max-value", "3",
+    ],
+    {},
+  )
+  assert_eq(events.exit_code, 2)
+  assert_true(events.stdout.contains("operations diverge at step 2"))
+  let clean = execute_cli(
+    [
+      "frontierlab", "search", "heap-sort", "--cases", "40", "--seed", "3", "--counterexample",
+      "_build/cli-test-unused.html", "--format", "json",
+    ],
+    {},
+  )
+  assert_eq(clean.exit_code, 0)
+  assert_true(clean.stdout.contains("\"found\":false"))
+  assert_true(clean.stdout.contains("\"seed\":\"3\""))
+  assert_true(clean.artifacts.is_empty())
+  let text = execute_cli(
+    ["frontierlab", "search", "heap-sort", "--cases", "40"],
+    {},
+  )
+  assert_true(text.stdout.contains("No counterexample in 40 cases (seed 1)."))
+  assert_eq(
+    run_cli([
+      "frontierlab", "search", "faulty-insertion-sort", "--format", "json",
+    ]),
+    2,
+  )
+}
+
+///|
+test "search rejects malformed invocations" {
+  assert_cli_failure(["frontierlab", "search"])
+  assert_cli_failure(["frontierlab", "search", "--format", "json"])
+  assert_cli_failure(["frontierlab", "search", "merge-sort"])
+  assert_cli_failure([
+    "frontierlab", "search", "heap-sort", "--reference", "merge-sort",
+  ])
+  assert_cli_failure(["frontierlab", "search", "heap-sort", "--cases", "0"])
+  assert_cli_failure(["frontierlab", "search", "heap-sort", "--match-events"])
+  assert_cli_failure(["frontierlab", "search", "heap-sort", "--seed", "-1"])
 }

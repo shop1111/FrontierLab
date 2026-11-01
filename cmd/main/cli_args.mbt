@@ -3,7 +3,9 @@ fn usage() -> String {
   (
     #|FrontierLab 0.10.0 - HTML Trace Player
     #|  frontierlab diagnose <expected.json> <actual.json> --contract <name> --object <id> --format <text|json> [--counterexample <path>] [--report <path>] [--timings]
-    #|  frontierlab profile <bubble-sort|insertion-sort|selection-sort|heap-sort|quick-sort> [--input <random|sorted|reversed>] [--sizes N,N,...] [--metric <compares|swaps|reads|writes|total>] [--bound <O(...)>] [--factor K] [--overhead N] --format <text|json>
+    #|  frontierlab profile <algorithm> [--input <random|sorted|reversed>] [--sizes N,N,...] [--metric <compares|swaps|reads|writes|total>] [--bound <O(...)>] [--factor K] [--overhead N] --format <text|json>
+    #|  frontierlab search <algorithm> [--reference <algorithm>] [--match-events] [--cases N] [--max-length N] [--max-value N] [--seed N] --format <text|json> [--counterexample <path>] [--report <path>]
+    #|  Algorithms: bubble-sort, insertion-sort, shift-insertion-sort, selection-sort, heap-sort, quick-sort; faulty-insertion-sort, lossy-insertion-sort, and faulty-quick-sort contain deliberate bugs.
     #|  frontierlab demo <insertion-sort|faulty-insertion-sort|union-find|pathfinding|fibonacci|coin-change|knapsack|lcs|red-black-tree> --format <html|json|svg> --output <path|->
     #|  frontierlab render <trace.json> --format <html|json|svg> --output <path|-> [--step N]
     #|  frontierlab analyze <trace.json>

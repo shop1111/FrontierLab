@@ -65,6 +65,8 @@ jobs:
           node scripts/check_renderer.mjs /tmp/traced-sort.html
           moon run examples/complexity_profile --target native | tee /tmp/complexity-profile.md
           grep -q "Best fit: O(n log n)" /tmp/complexity-profile.md
+          moon run examples/counterexample_search | tee /tmp/counterexample-search.md
+          grep -q "Input: \[0, 1, 0\]" /tmp/counterexample-search.md
 
       - name: Benchmark correctness smoke
         run: |
@@ -105,12 +107,18 @@ jobs:
           profile_exit=$?
           moon run cmd/main -- profile quick-sort --input sorted --bound "O(n log n)" --factor 2 --format json > _build/ci/profile-quick-sort-sorted.json
           worst_case_exit=$?
+          moon run cmd/main -- search faulty-quick-sort --reference quick-sort --format json --counterexample _build/ci/search-counterexample.html --report _build/ci/search-diagnosis.html > _build/ci/search.json
+          search_exit=$?
           set -e
           test "$verify_exit" -eq 2
           test "$diverge_exit" -eq 2
           test "$timings_exit" -eq 2
           test "$profile_exit" -eq 0
           test "$worst_case_exit" -eq 2
+          test "$search_exit" -eq 2
+          python -c 'import json; p=json.load(open("_build/ci/search.json", encoding="utf-8")); c=p["result"]["counterexample"]; assert c["input"] == [0, 1] and c["diagnosis"]["focus_step"] == 0'
+          moon run cmd/main -- search heap-sort --cases 200
+          node scripts/check_renderer.mjs _build/ci/search-counterexample.html
           grep -q "| contract check |" _build/ci/diagnosis-timings.txt
           grep -q "Best fit: O(n log n)" _build/ci/profile-heap-sort.md
           python -c 'import json; p=json.load(open("_build/ci/profile-quick-sort-sorted.json", encoding="utf-8")); r=p["result"]; assert r["profile"]["best"]["class"] == "Quadratic" and not r["bound"]["passed"]'

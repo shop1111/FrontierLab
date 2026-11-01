@@ -80,12 +80,14 @@ pub fn[T : Show] TracedArray::set(
 }
 
 ///|
-/// Exchanges two positions and records a `Swap`.
+/// Exchanges two positions and records a `Swap`. The event lists the lower
+/// position first, so `swap(i, j)` and `swap(j, i)` record the same step.
 pub fn[T] TracedArray::swap(
   self : TracedArray[T],
   i : Int32,
   j : Int32,
 ) -> Unit {
+  let (i, j) = if i <= j { (i, j) } else { (j, i) }
   self.values.swap(i, j)
   let tracker = self.tracker
   if tracker.level == Off {

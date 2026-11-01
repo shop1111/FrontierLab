@@ -144,7 +144,10 @@ def main() -> int:
         2,
     )
     run_case("unknown profile algorithm", ["profile", "merge-sort"], 1)
-    print("CLI process matrix: PASS (16/16)")
+    run_case("counterexample found", ["search", "faulty-insertion-sort"], 2)
+    run_case("no counterexample", ["search", "heap-sort", "--cases", "100"], 0)
+    run_case("search without reference for events", ["search", "heap-sort", "--match-events"], 1)
+    print("CLI process matrix: PASS (19/19)")
     return 0
 
 

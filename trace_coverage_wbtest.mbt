@@ -650,3 +650,58 @@ test "codec primitive guards and unknown wire kinds are explicit" {
     _ => fail("unknown trace format must fail")
   }
 }
+
+///|
+test "sequence contracts accept recorded updates and reject mismatched ones" {
+  let before = coverage_sequence([("a", "2"), ("b", "1")])
+  let contract = sequence_transition_contract(object_id="values")
+  let update = Update(TargetRef::entity("values", "b"), "2")
+  let accepted = contract.check(
+    coverage_trace(before, [
+      (update, coverage_sequence([("a", "2"), ("b", "2")])),
+    ]),
+  )
+  assert_true(accepted.passed)
+  let mismatch = contract.check(
+    coverage_trace(before, [
+      (update, coverage_sequence([("a", "2"), ("b", "3")])),
+    ]),
+  )
+  assert_eq(mismatch.violations[0].code, "update-value-mismatch")
+  let reordered = contract.check(
+    coverage_trace(before, [
+      (update, coverage_sequence([("b", "2"), ("a", "2")])),
+    ]),
+  )
+  assert_eq(reordered.violations[0].code, "update-mutated-order")
+  let other_entity = contract.check(
+    coverage_trace(before, [
+      (update, coverage_sequence([("a", "5"), ("b", "2")])),
+    ]),
+  )
+  assert_eq(other_entity.violations[0].code, "stable-value-changed")
+  let object_update = contract.check(
+    coverage_trace(before, [
+      (
+        Update(TargetRef::object("values"), "2"),
+        coverage_sequence([("a", "2"), ("b", "2")]),
+      ),
+    ]),
+  )
+  assert_eq(object_update.violations[0].code, "stable-value-changed")
+  let lost = sorted_int_sequence_contract(object_id="values").check(
+    coverage_trace(before, [
+      (update, coverage_sequence([("a", "2"), ("b", "2")])),
+      (
+        Update(TargetRef::entity("values", "a"), "1"),
+        coverage_sequence([("a", "1"), ("b", "2")]),
+      ),
+      (
+        Update(TargetRef::entity("values", "b"), "1"),
+        coverage_sequence([("a", "1"), ("b", "1")]),
+      ),
+    ]),
+  )
+  assert_eq(lost.violations[0].code, "result-not-permutation")
+  assert_eq(lost.violations[0].step, 2)
+}

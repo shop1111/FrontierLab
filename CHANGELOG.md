@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- Added `search_sequence_counterexample`, which runs seeded random inputs at
+  `TraceLevel::Count`, shrinks the first failure, and diagnoses the minimal
+  input against a reference algorithm or the sorted-output property.
+  `match_events` also reports algorithms whose operations differ from the
+  reference while their outputs agree.
+- Added the `search` CLI command and built-in `faulty-insertion-sort`,
+  `lossy-insertion-sort`, `faulty-quick-sort`, and `shift-insertion-sort`
+  algorithms; a found counterexample exits with code 2.
+- Added the `examples/counterexample_search` example.
+- The `sequence-transition`, `sorted-int-sequence`, and `insertion-sort-int`
+  contracts now accept `Update` steps that change only their target to the
+  recorded value, and the sorting contracts reject results that are not a
+  permutation of the input. The Playground uses the same rules.
+- `TracedArray::swap` now records the lower position first, so `swap(i, j)`
+  and `swap(j, i)` record the same step.
 - Added complexity profiling: `profile_complexity` and `profile_traced_array`
   measure operation counts across input sizes, fit O(1) through O(2^n) by
   relative least squares, and report the empirical log-log exponent.
