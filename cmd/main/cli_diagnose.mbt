@@ -69,3 +69,13 @@ fn diagnosis_html(value : @frontierlab.TraceDiagnosis) -> String {
   let json = diagnosis_json(value).replace_all(old="</", new="<\\/")
   "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\"><meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>FrontierLab diagnostic report</title>\n<style>body{max-width:960px;margin:40px auto;padding:0 20px;font:16px/1.55 system-ui;color:#172033}h1{color:#5b21b6}pre{white-space:pre-wrap;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:18px}</style></head>\n<body><h1>FrontierLab diagnostic report</h1><pre>\{text}</pre>\n<script type=\"application/json\" id=\"frontierlab-diagnosis\">\{json}</script></body></html>"
 }
+
+///|
+/// Adds the recorded phases to a diagnosis JSON object.
+fn timings_json(json : String, timer : @frontierlab.PhaseTimer) -> String {
+  let timings : Json = {
+    "phases": Json(timer.timings()),
+    "total_ms": Json(timer.total_ms()),
+  }
+  "\{json[:json.length() - 1]},\"timings\":\{timings.stringify()}}"
+}

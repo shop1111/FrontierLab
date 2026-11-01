@@ -38,6 +38,43 @@ fn input_trace(
 }
 
 ///|
+fn[T] cli_phase(
+  timer : @frontierlab.PhaseTimer?,
+  name : String,
+  body : () -> T raise?,
+) -> T raise? {
+  match timer {
+    Some(value) => value.measure(name, body)
+    None => body()
+  }
+}
+
+///|
+fn timed_input_trace(
+  inputs : Map[String, String],
+  path : String,
+  label : String,
+  timer : @frontierlab.PhaseTimer?,
+) -> @frontierlab.AlgorithmTrace raise {
+  let content = match inputs.get(path) {
+    Some(value) => value
+    None => fail("Missing CLI input: \{path}")
+  }
+  let trace = cli_phase(timer, "decode \{label}", fn() raise {
+    @frontierlab.AlgorithmTrace::decode_json(content)
+  })
+  cli_phase(timer, "validate \{label}", fn() raise { trace.validate() })
+  trace
+}
+
+///|
+/// A monotonic millisecond clock for `diagnose --timings`.
+fn monotonic_ms() -> () -> Double {
+  let start = @bench.monotonic_clock_start()
+  fn() { @bench.monotonic_clock_end(start) / 1000.0 }
+}
+
+///|
 fn cli_input_paths(args : Array[String]) -> Array[String] {
   if args.length() < 2 {
     return []
@@ -116,6 +153,8 @@ fn demo(name : String) -> @frontierlab.AlgorithmTrace raise {
 fn execute_cli(
   args : Array[String],
   inputs : Map[String, String],
+  timer? : @frontierlab.PhaseTimer,
+  now~ : () -> UInt64 = @env.now,
 ) -> Diagnosis raise {
   if args.contains("--version") {
     return Diagnosis::new(stdout="FrontierLab 0.10.0")
@@ -128,34 +167,43 @@ fn execute_cli(
       if args.length() < 4 {
         fail("diagnose requires expected and actual trace files")
       }
-      let expected = input_trace(inputs, args[2])
-      let actual = input_trace(inputs, args[3])
+      let timer = if args.contains("--timings") { timer } else { None }
+      let expected = timed_input_trace(inputs, args[2], "expected", timer)
+      let actual = timed_input_trace(inputs, args[3], "actual", timer)
       let contract = contract_by_name(
         required_option(args, "--contract"),
         required_option(args, "--object"),
       )
       let format = debug_format(args)
-      let diagnosis = @frontierlab.diagnose_trace(actual, contract~, expected~)
+      let diagnosis = @frontierlab.diagnose_trace(
+        actual,
+        contract~,
+        expected~,
+        timer?,
+      )
       let artifacts : Array[(String, String)] = []
-      collect_artifact(
-        artifacts,
-        counterexample_artifact(
-          option(args, "--counterexample", ""),
-          diagnosis.focused_slice,
-        ),
-      )
-      collect_artifact(
-        artifacts,
-        diagnosis_report_artifact(option(args, "--report", ""), diagnosis),
-      )
+      let (text, json) = cli_phase(timer, "render reports", fn() raise {
+        collect_artifact(
+          artifacts,
+          counterexample_artifact(
+            option(args, "--counterexample", ""),
+            diagnosis.focused_slice,
+          ),
+        )
+        collect_artifact(
+          artifacts,
+          diagnosis_report_artifact(option(args, "--report", ""), diagnosis),
+        )
+        (diagnosis_text(diagnosis), diagnosis_json(diagnosis))
+      })
+      let (text, json) = match timer {
+        Some(value) =>
+          ("\{text}\nTimings:\n\{value.report()}", timings_json(json, value))
+        None => (text, json)
+      }
       Diagnosis::new(
         exit_code=if diagnosis.passed() { 0 } else { 2 },
-        stdout=debug_result(
-          "diagnose",
-          format,
-          diagnosis_text(diagnosis),
-          diagnosis_json(diagnosis),
-        ),
+        stdout=debug_result("diagnose", format, text, json),
         artifacts~,
       )
     }
@@ -333,11 +381,20 @@ fn execute_cli(
           )
       }
     }
+    "profile" => profile_execution(args, now~)
     other => fail("Unknown command: \{other}\n\{usage()}")
   }
 }
 
 ///|
 fn run_cli(args : Array[String]) -> Int32 raise {
-  apply_execution(execute_cli(args, read_cli_inputs(args)))
+  let timer = if args.contains("--timings") {
+    Some(@frontierlab.PhaseTimer::new(clock=monotonic_ms()))
+  } else {
+    None
+  }
+  let inputs = cli_phase(timer, "read files", fn() raise {
+    read_cli_inputs(args)
+  })
+  apply_execution(execute_cli(args, inputs, timer?))
 }

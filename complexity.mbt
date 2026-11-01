@@ -44,6 +44,32 @@ pub fn ComplexityClass::label(self : ComplexityClass) -> String {
 }
 
 ///|
+/// Parses a label such as `O(n log n)`, `n*log(n)`, or `n^2`. Case, spaces, and
+/// the `O(...)` wrapper are optional, and `**`, `²`, and `³` spell powers.
+pub fn ComplexityClass::parse(text : String) -> ComplexityClass? {
+  let compact = StringBuilder()
+  for ch in text.to_lower().replace_all(old="**", new="^") {
+    match ch {
+      ' ' | '\t' | '*' | '(' | ')' => ()
+      '²' => compact.write_string("^2")
+      '³' => compact.write_string("^3")
+      _ => compact.write_char(ch)
+    }
+  }
+  let key = compact.to_string()
+  match key.strip_prefix("o").unwrap_or(key[:]) {
+    "1" => Some(Constant)
+    "logn" | "lgn" => Some(Logarithmic)
+    "n" => Some(Linear)
+    "nlogn" | "nlgn" => Some(Linearithmic)
+    "n^2" | "nn" => Some(Quadratic)
+    "n^3" => Some(Cubic)
+    "2^n" => Some(Exponential)
+    _ => None
+  }
+}
+
+///|
 /// Evaluates the growth function at `n`. Logarithms use base 2 and are at
 /// least 1, so small inputs do not divide by zero.
 pub fn ComplexityClass::evaluate(self : ComplexityClass, n : Int32) -> Double {

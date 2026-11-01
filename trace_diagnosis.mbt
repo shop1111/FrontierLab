@@ -31,16 +31,23 @@ pub fn TraceDiagnosis::passed(self : TraceDiagnosis) -> Bool {
 /// The focus is the earliest non-negative contract failure or divergence.
 /// `transition_diff` describes the actual transition into that focus, while
 /// `reference_diff` compares expected and actual state at the focus.
+/// When `timer` is given, the contract check, divergence search, state diffs,
+/// and counterexample slice are recorded as separate phases.
 pub fn diagnose_trace(
   actual : AlgorithmTrace,
   contract~ : TraceContract,
   expected? : AlgorithmTrace,
+  timer? : PhaseTimer,
 ) -> TraceDiagnosis {
-  let contract_report = contract.check(actual)
-  let divergence = match expected {
-    Some(reference) => first_divergence(reference, actual)
-    None => None
-  }
+  let contract_report = timed_phase(timer, "contract check", fn() {
+    contract.check(actual)
+  })
+  let divergence = timed_phase(timer, "first divergence", fn() {
+    match expected {
+      Some(reference) => first_divergence(reference, actual)
+      None => None
+    }
+  })
   let contract_step = match contract_report.first_failure {
     Some(value) => value.step
     None => -1
@@ -50,30 +57,36 @@ pub fn diagnose_trace(
     None => -1
   }
   let focus_step = diagnosis_focus_step(contract_step, divergence_step)
-  let transition_diff = if focus_step >= 0 && focus_step < actual.steps.length() {
-    Some(try! actual.diff(from_step=focus_step - 1, to_step=focus_step))
-  } else {
-    None
-  }
-  let reference_diff = match expected {
-    Some(reference) if focus_step >= 0 &&
-      focus_step < reference.steps.length() &&
-      focus_step < actual.steps.length() =>
-      Some({
-        from_step: focus_step,
-        to_step: focus_step,
-        changes: debugger_scene_diff(
-          reference.steps[focus_step].scene,
-          actual.steps[focus_step].scene,
-        ),
-      })
-    _ => None
-  }
-  let focused_slice = if focus_step >= 0 && focus_step < actual.steps.length() {
-    Some(try! actual.slice(center=focus_step))
-  } else {
-    None
-  }
+  let (transition_diff, reference_diff) = timed_phase(timer, "state diffs", fn() {
+    let transition_diff = if focus_step >= 0 &&
+      focus_step < actual.steps.length() {
+      Some(try! actual.diff(from_step=focus_step - 1, to_step=focus_step))
+    } else {
+      None
+    }
+    let reference_diff = match expected {
+      Some(reference) if focus_step >= 0 &&
+        focus_step < reference.steps.length() &&
+        focus_step < actual.steps.length() =>
+        Some({
+          from_step: focus_step,
+          to_step: focus_step,
+          changes: debugger_scene_diff(
+            reference.steps[focus_step].scene,
+            actual.steps[focus_step].scene,
+          ),
+        })
+      _ => None
+    }
+    (transition_diff, reference_diff)
+  })
+  let focused_slice = timed_phase(timer, "counterexample slice", fn() {
+    if focus_step >= 0 && focus_step < actual.steps.length() {
+      Some(try! actual.slice(center=focus_step))
+    } else {
+      None
+    }
+  })
   {
     contract_report,
     divergence,

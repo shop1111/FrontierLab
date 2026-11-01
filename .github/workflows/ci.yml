@@ -99,9 +99,21 @@ jobs:
           verify_exit=$?
           moon run cmd/main -- diverge _build/ci/union-find.json _build/ci/faulty-sort.json --format json > _build/ci/divergence-report.json
           diverge_exit=$?
+          moon run cmd/main -- diagnose fixtures/agent-traces/selection-sort-expected.json fixtures/agent-traces/selection-sort-actual.json --contract sorted-int-sequence --object values --timings > _build/ci/diagnosis-timings.txt
+          timings_exit=$?
+          moon run cmd/main -- profile heap-sort --bound "O(n log n)" --factor 2 > _build/ci/profile-heap-sort.md
+          profile_exit=$?
+          moon run cmd/main -- profile quick-sort --input sorted --bound "O(n log n)" --factor 2 --format json > _build/ci/profile-quick-sort-sorted.json
+          worst_case_exit=$?
           set -e
           test "$verify_exit" -eq 2
           test "$diverge_exit" -eq 2
+          test "$timings_exit" -eq 2
+          test "$profile_exit" -eq 0
+          test "$worst_case_exit" -eq 2
+          grep -q "| contract check |" _build/ci/diagnosis-timings.txt
+          grep -q "Best fit: O(n log n)" _build/ci/profile-heap-sort.md
+          python -c 'import json; p=json.load(open("_build/ci/profile-quick-sort-sorted.json", encoding="utf-8")); r=p["result"]; assert r["profile"]["best"]["class"] == "Quadratic" and not r["bound"]["passed"]'
           test -s _build/ci/insertion-sort.html
           test -s _build/ci/knapsack.html
           test -s _build/ci/red-black-tree.html

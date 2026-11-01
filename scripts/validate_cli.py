@@ -119,7 +119,32 @@ def main() -> int:
         ],
         2,
     )
-    print("CLI process matrix: PASS (12/12)")
+    run_case(
+        "timed diagnosis",
+        [
+            "diagnose",
+            str(EXPECTED),
+            str(ACTUAL),
+            "--contract",
+            "sequence-transition",
+            "--object",
+            "values",
+            "--timings",
+        ],
+        2,
+    )
+    run_case(
+        "profile within bound",
+        ["profile", "heap-sort", "--bound", "O(n log n)", "--factor", "2"],
+        0,
+    )
+    run_case(
+        "profile bound violation",
+        ["profile", "quick-sort", "--input", "sorted", "--bound", "O(n log n)", "--factor", "2"],
+        2,
+    )
+    run_case("unknown profile algorithm", ["profile", "merge-sort"], 1)
+    print("CLI process matrix: PASS (16/16)")
     return 0
 
 

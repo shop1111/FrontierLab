@@ -57,3 +57,32 @@ separated.
 costs about 74 µs per step and produces 14.6 million JSON characters, because
 Schema v1 stores a complete 64-element snapshot at every step; keyframe plus
 delta storage is the planned remedy.
+
+## Diagnosis phase timings
+
+`diagnose --timings` on the selection-sort fixtures (two 22 KB traces, 21
+steps each), median of three local runs on 2026-11-01 with
+`moonc 0.10.18+6c83a7f62`:
+
+```bash
+moon run cmd/main --target native -- diagnose \
+  fixtures/agent-traces/selection-sort-expected.json \
+  fixtures/agent-traces/selection-sort-actual.json \
+  --contract sorted-int-sequence --object values --timings
+```
+
+| Phase | native ms | wasm-gc ms |
+|---|---:|---:|
+| read files | 1.89 | 16.93 |
+| decode expected + actual | 1.23 | 2.77 |
+| validate expected + actual | 0.03 | 0.17 |
+| contract check | 0.04 | 0.69 |
+| first divergence | 0.01 | 0.23 |
+| state diffs | 0.01 | 0.27 |
+| counterexample slice | 0.01 | 0.02 |
+| render reports | 0.60 | 1.27 |
+| total | 3.89 | 22.43 |
+
+The semantic work (contract, divergence, diffs, slice) takes under 0.1 ms on
+native. On these small inputs, file reading is about half of the native time
+and three quarters of the wasm-gc time.

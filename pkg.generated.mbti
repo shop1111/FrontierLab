@@ -21,7 +21,7 @@ pub fn compare_algorithms(GridMap, start~ : Position, goal~ : Position, rule? : 
 
 pub let debug_report_version : String
 
-pub fn diagnose_trace(AlgorithmTrace, contract~ : TraceContract, expected? : AlgorithmTrace) -> TraceDiagnosis
+pub fn diagnose_trace(AlgorithmTrace, contract~ : TraceContract, expected? : AlgorithmTrace, timer? : PhaseTimer) -> TraceDiagnosis
 
 pub fn dijkstra(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule) -> PathResult raise
 
@@ -199,6 +199,7 @@ pub fn ComplexityClass::equal(Self, Self) -> Bool
 pub fn ComplexityClass::evaluate(Self, Int32) -> Double
 pub fn ComplexityClass::label(Self) -> String
 pub fn ComplexityClass::not_equal(Self, Self) -> Bool
+pub fn ComplexityClass::parse(String) -> Self?
 pub fn ComplexityClass::to_json(Self) -> Json
 pub fn ComplexityClass::to_repr(Self) -> @debug.Repr
 
@@ -466,6 +467,24 @@ pub fn PathResult::not_equal(Self, Self) -> Bool
 pub fn PathResult::not_found(visited_count~ : Int32) -> Self
 pub fn PathResult::to_json(Self) -> Json
 pub fn PathResult::to_repr(Self) -> @debug.Repr
+
+pub struct PhaseTimer {
+  // private fields
+}
+pub fn[T] PhaseTimer::measure(Self, String, () -> T raise?) -> T raise?
+pub fn PhaseTimer::new(clock~ : () -> Double) -> Self
+pub fn PhaseTimer::report(Self) -> String
+pub fn PhaseTimer::timings(Self) -> Array[PhaseTiming]
+pub fn PhaseTimer::total_ms(Self) -> Double
+
+pub struct PhaseTiming {
+  name : String
+  ms : Double
+} derive(Eq, ToJson, @debug.Debug)
+pub fn PhaseTiming::equal(Self, Self) -> Bool
+pub fn PhaseTiming::not_equal(Self, Self) -> Bool
+pub fn PhaseTiming::to_json(Self) -> Json
+pub fn PhaseTiming::to_repr(Self) -> @debug.Repr
 
 pub struct Position {
   x : Int32

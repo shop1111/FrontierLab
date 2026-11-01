@@ -300,3 +300,154 @@ test "CLI dispatch reports malformed invocations" {
   )
   assert_eq(contract_by_name("grid-path", "grid").name, "grid-path")
 }
+
+///|
+test "diagnose --timings reports every phase in text and JSON" {
+  let expected = "fixtures/agent-traces/selection-sort-expected.json"
+  let actual = "fixtures/agent-traces/selection-sort-actual.json"
+  let args = [
+    "frontierlab", "diagnose", expected, actual, "--contract", "sorted-int-sequence",
+    "--object", "values",
+  ]
+  let inputs = read_cli_inputs(args)
+  let ticks = Ref(0.0)
+  let timer = @frontierlab.PhaseTimer::new(clock=fn() {
+    ticks.val += 1.0
+    ticks.val
+  })
+  let untimed = execute_cli(args, inputs, timer~)
+  assert_false(untimed.stdout.contains("Timings:"))
+  assert_eq(timer.timings().length(), 0)
+  let text = execute_cli([..args, "--timings"], inputs, timer~)
+  assert_eq(text.exit_code, 2)
+  assert_true(text.stdout.contains("Timings:\n| phase | ms | share |"))
+  assert_true(text.stdout.contains("| decode expected | 1.000 | 11.1% |"))
+  assert_true(text.stdout.contains("| contract check | 1.000 |"))
+  assert_true(text.stdout.contains("| render reports | 1.000 |"))
+  assert_true(text.stdout.contains("| total | 9.000 | |"))
+  let json = execute_cli(
+    [..args, "--timings", "--format", "json"],
+    inputs,
+    timer=@frontierlab.PhaseTimer::new(clock=fn() { 0.0 }),
+  )
+  assert_true(
+    json.stdout.contains(
+      "\"timings\":{\"phases\":[{\"name\":\"decode expected\",\"ms\":0}",
+    ),
+  )
+  assert_true(json.stdout.contains("\"total_ms\":0}}}"))
+  assert_eq(run_cli([..args, "--timings"]), 2)
+  try execute_cli(args, {}) catch {
+    _ => ()
+  } noraise {
+    _ => fail("a diagnosis without loaded inputs must fail")
+  }
+}
+
+///|
+test "profile algorithms sort every input shape" {
+  for
+    name in [
+      "bubble-sort", "insertion-sort", "selection-sort", "heap-sort", "quick-sort",
+    ] {
+    for shape in ["random", "sorted", "reversed"] {
+      let values = profile_input(shape)(37)
+      let traced = @frontierlab.TracedArray::new(
+        values,
+        level=@frontierlab.TraceLevel::Count,
+      )
+      profile_algorithm(name)(traced)
+      assert_eq(traced.to_array(), Array::makei(37, fn(i) { i }))
+    }
+  }
+  let shuffled = shuffled_input(16)
+  assert_not_eq(shuffled, Array::makei(16, fn(i) { i }))
+  assert_eq(shuffled_input(16), shuffled)
+  for metric in ["compares", "swaps", "reads", "writes", "total"] {
+    assert_eq(profile_metric(metric).name(), metric)
+  }
+}
+
+///|
+test "profile fits complexity and enforces bounds" {
+  let ticks = Ref(0UL)
+  let now = fn() {
+    ticks.val += 1UL
+    ticks.val
+  }
+  let pass = execute_cli(
+    [
+      "frontierlab", "profile", "heap-sort", "--bound", "O(n log n)", "--factor",
+      "2",
+    ],
+    {},
+    now~,
+  )
+  assert_eq(pass.exit_code, 0)
+  assert_true(pass.stdout.contains("# heap-sort on random input"))
+  assert_true(pass.stdout.contains("Best fit: O(n log n)"))
+  assert_true(pass.stdout.contains("Bound O(n log n) with factor 2: PASS"))
+  let worst = execute_cli(
+    [
+      "frontierlab", "profile", "quick-sort", "--input", "sorted", "--bound", "n log n",
+      "--factor", "2",
+    ],
+    {},
+    now~,
+  )
+  assert_eq(worst.exit_code, 2)
+  assert_true(worst.stdout.contains("Best fit: O(n^2)"))
+  assert_true(worst.stdout.contains("- n = 64: cost 2016 exceeds 768"))
+  let json = execute_cli(
+    [
+      "frontierlab", "profile", "bubble-sort", "--sizes", "8, 16,32", "--metric",
+      "swaps", "--bound", "O(n^2)", "--format", "json",
+    ],
+    {},
+    now~,
+  )
+  assert_eq(json.exit_code, 0)
+  assert_true(json.stdout.contains("\"command\":\"profile\""))
+  assert_true(json.stdout.contains("\"metric\":\"Swaps\""))
+  assert_true(json.stdout.contains("\"passed\":true"))
+  assert_true(json.stdout.contains("\"overhead\":null"))
+  let unbounded = execute_cli(
+    [
+      "frontierlab", "profile", "selection-sort", "--format", "json", "--overhead",
+      "8",
+    ],
+    {},
+    now~,
+  )
+  assert_true(unbounded.stdout.contains("\"bound\":null"))
+  assert_true(unbounded.stdout.contains("\"full_runs\""))
+  let overhead = execute_cli(
+    [
+      "frontierlab", "profile", "insertion-sort", "--sizes", "4,8", "--overhead",
+      "8",
+    ],
+    {},
+    now~,
+  )
+  assert_true(
+    overhead.stdout.contains("## Tracing overhead (n = 8, wall clock)"),
+  )
+  assert_false(overhead.stdout.contains("Bound"))
+}
+
+///|
+test "profile rejects malformed invocations" {
+  assert_cli_failure(["frontierlab", "profile"])
+  assert_cli_failure(["frontierlab", "profile", "--format", "json"])
+  assert_cli_failure(["frontierlab", "profile", "merge-sort"])
+  assert_cli_failure([
+    "frontierlab", "profile", "heap-sort", "--input", "zigzag",
+  ])
+  assert_cli_failure([
+    "frontierlab", "profile", "heap-sort", "--metric", "moves",
+  ])
+  assert_cli_failure(["frontierlab", "profile", "heap-sort", "--bound", "O(n!)"])
+  assert_cli_failure(["frontierlab", "profile", "heap-sort", "--factor", "0"])
+  assert_cli_failure(["frontierlab", "profile", "heap-sort", "--overhead", "-1"])
+  assert_cli_failure(["frontierlab", "profile", "heap-sort", "--sizes", "8,4"])
+}
