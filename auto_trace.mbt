@@ -41,6 +41,19 @@ pub extend OperationCounts with Eq::{not_equal, equal}
 pub extend OperationCounts with ToJson::{to_json}
 
 ///|
+/// Builds counts for `profile_complexity` when an algorithm is measured
+/// without `TracedArray` or `SequenceProbe`.
+pub fn OperationCounts::new(
+  compares~ : Int32 = 0,
+  swaps~ : Int32 = 0,
+  reads~ : Int32 = 0,
+  writes~ : Int32 = 0,
+  snapshots~ : Int32 = 0,
+) -> OperationCounts {
+  { compares, swaps, reads, writes, snapshots, }
+}
+
+///|
 /// Shared state of the automatic sequence tracers: stable ids, displayed
 /// values, counters, and the builder that exists only at `TraceLevel::Full`.
 /// Recording errors are kept until `finish` so traced code needs no `raise`.

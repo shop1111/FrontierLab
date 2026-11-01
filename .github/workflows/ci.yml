@@ -63,6 +63,8 @@ jobs:
           moon run examples/pathfinding_trace > /tmp/pathfinding.html
           moon run examples/traced_sort > /tmp/traced-sort.html
           node scripts/check_renderer.mjs /tmp/traced-sort.html
+          moon run examples/complexity_profile --target native | tee /tmp/complexity-profile.md
+          grep -q "Best fit: O(n log n)" /tmp/complexity-profile.md
 
       - name: Benchmark correctness smoke
         run: |
