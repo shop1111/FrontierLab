@@ -160,6 +160,61 @@ assert.equal(
   "path-crosses-blocked-cell",
 );
 
+// Update steps follow the same rules as the MoonBit sequence contracts.
+const sequenceScene = (values) => ({
+  objects: [
+    {
+      type: "sequence",
+      id: "values",
+      label: "Values",
+      items: values.map(([id, value]) => ({ id, value })),
+    },
+  ],
+  highlights: [],
+});
+const updateTrace = (steps) => ({
+  schema_version: "1.0",
+  title: "Updates",
+  algorithm: "updates",
+  description: "",
+  initial_scene: sequenceScene([["a", "2"], ["b", "1"]]),
+  steps: steps.map(([target, value, scene], index) => ({
+    index,
+    event: { type: "update", target: { object_id: "values", entity_id: target }, value },
+    scene: sequenceScene(scene),
+  })),
+  summary: [],
+});
+const codes = (trace, name) =>
+  Array.from(core.contractViolations(trace, name, "values"), (item) => item.code);
+assert.deepEqual(
+  codes(updateTrace([["b", "2", [["a", "2"], ["b", "2"]]]]), "sequence-transition"),
+  [],
+);
+assert.deepEqual(
+  codes(updateTrace([["b", "2", [["a", "2"], ["b", "3"]]]]), "sequence-transition"),
+  ["update-value-mismatch"],
+);
+assert.deepEqual(
+  codes(updateTrace([["b", "2", [["b", "2"], ["a", "2"]]]]), "sequence-transition"),
+  ["update-mutated-order"],
+);
+assert.deepEqual(
+  codes(updateTrace([["b", "2", [["a", "5"], ["b", "2"]]]]), "sequence-transition"),
+  ["stable-value-changed"],
+);
+assert.deepEqual(
+  codes(
+    updateTrace([
+      ["b", "2", [["a", "2"], ["b", "2"]]],
+      ["a", "1", [["a", "1"], ["b", "2"]]],
+      ["b", "1", [["a", "1"], ["b", "1"]]],
+    ]),
+    "sorted-int-sequence",
+  ),
+  ["result-not-permutation"],
+);
+
 const duplicateObject = structuredClone(expected);
 duplicateObject.initial_scene.objects.push(
   structuredClone(duplicateObject.initial_scene.objects[0]),

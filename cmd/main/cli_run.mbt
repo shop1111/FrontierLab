@@ -382,6 +382,7 @@ fn execute_cli(
       }
     }
     "profile" => profile_execution(args, now~)
+    "search" => search_execution(args)
     other => fail("Unknown command: \{other}\n\{usage()}")
   }
 }

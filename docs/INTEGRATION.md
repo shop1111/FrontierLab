@@ -11,9 +11,16 @@ For array algorithms, start with automatic tracing and fall back to
   keeping element ids stable. Unchanged snapshots record nothing.
 
 Both take a `TraceLevel` (`Full`, `Count`, or `Off`), expose `counts()`, and
-defer recording errors to `finish()`. Traces with `Update` or `Custom` events
-change element values, so the permutation-based `sequence-transition` and
-`sorted-int-sequence` contracts apply only to swap-based traces.
+defer recording errors to `finish()`. The `sequence-transition` and
+`sorted-int-sequence` contracts accept `Swap` and `Update` steps: an `Update`
+may change only its target, to the recorded value. The sorting contracts also
+require the final values to be a permutation of the initial ones. `Custom`
+insert, remove, and edit steps from `SequenceProbe` still count as violations.
+
+To find a failing input automatically, pass the algorithm to
+`search_sequence_counterexample`. It runs random inputs at `Count` level,
+shrinks the first failure to a minimal input, and diagnoses that input
+against a reference implementation or the default sorted-output property.
 
 To build a trace by hand:
 

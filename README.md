@@ -116,6 +116,40 @@ assert_true(profile.check_bound(Quadratic, factor=0.5).is_empty())
 每一步保存完整快照。可运行示例见 `examples/complexity_profile`，命令行用法见下文
 CLI 一节的 `profile` 命令。
 
+## 自动反例搜索
+
+不需要手写测试用例，FrontierLab 可以自动找出让算法出错的最小输入，并指出出错的
+那一步：
+
+```mbt nocheck
+match @frontierlab.search_sequence_counterexample(
+  generated_bubble_sort,
+  reference=bubble_sort,
+) {
+  Some(found) => println(found.report())
+  None => println("No counterexample found.")
+}
+```
+
+1. 用固定种子生成随机整数数组，在 `Count` 档下运行，只比较输出，开销很小；
+2. 输出和参考实现不同（没有参考实现时，输出不是输入排好序的结果），或者
+   `check` 返回失败原因，就算找到反例；
+3. 把反例缩到最小：先删去整段元素，再把数值换成相对大小的名次，最后逐个调小；
+4. 只对最小输入记录完整轨迹，交给 `diagnose_trace`，给出第一次与参考实现不同的
+   步骤和规则检查结果。
+
+`match_events=true` 时，即使输出相同，只要操作顺序和参考实现不同也算反例，
+可以发现“结果对但做法不对”的实现。`examples/counterexample_search` 中，
+提前退出位置写错的冒泡排序从 `[6, 9, 5, 1]` 缩到 `[0, 1, 0]`，定位到第 1 步：
+参考实现继续比较，生成的代码已经结束。
+
+命令行可以直接搜索内置算法，其中 `faulty-` 和 `lossy-` 开头的版本带有故意埋入的
+错误，找到反例时退出码为 `2`：
+
+```bash
+moon run cmd/main -- search faulty-quick-sort --reference quick-sort --counterexample _build/counterexample.html
+```
+
 ## 内置算法 Adapter
 
 Adapter 把算法输入和执行步骤转换成统一的 `AlgorithmTrace`，因此这些轨迹可以
@@ -178,8 +212,9 @@ moon run cmd/main -- profile heap-sort --bound "O(n log n)" --factor 2
 moon run cmd/main -- profile quick-sort --input sorted --bound "O(n log n)" --factor 2
 ```
 
-- 算法：`bubble-sort`、`insertion-sort`、`selection-sort`、`heap-sort`、
-  `quick-sort`，全部基于 `TracedArray` 编写；
+- 算法：`bubble-sort`、`insertion-sort`、`shift-insertion-sort`、
+  `selection-sort`、`heap-sort`、`quick-sort`，全部基于 `TracedArray` 编写，
+  `profile` 和 `search` 共用；
 - `--input random|sorted|reversed`：输入形态，`random` 是固定种子的洗牌，
   结果可复现；
 - `--sizes`（默认 `64,128,256,512,1024`）和 `--metric`（默认 `compares`）；

@@ -1,120 +1,4 @@
 ///|
-fn profile_bubble_sort(a : @frontierlab.TracedArray[Int32]) -> Unit {
-  for end = a.length() - 1; end > 0; end = end - 1 {
-    for i in 0..<end {
-      if a.less(i + 1, i) {
-        a.swap(i, i + 1)
-      }
-    }
-  }
-}
-
-///|
-fn profile_insertion_sort(a : @frontierlab.TracedArray[Int32]) -> Unit {
-  for i in 1..<a.length() {
-    let mut j = i
-    while j > 0 && a.less(j, j - 1) {
-      a.swap(j, j - 1)
-      j -= 1
-    }
-  }
-}
-
-///|
-fn profile_selection_sort(a : @frontierlab.TracedArray[Int32]) -> Unit {
-  for i in 0..<(a.length() - 1) {
-    let mut smallest = i
-    for j in (i + 1)..<a.length() {
-      if a.less(j, smallest) {
-        smallest = j
-      }
-    }
-    if smallest != i {
-      a.swap(i, smallest)
-    }
-  }
-}
-
-///|
-fn profile_sift_down(
-  a : @frontierlab.TracedArray[Int32],
-  start : Int32,
-  end : Int32,
-) -> Unit {
-  let mut root = start
-  while 2 * root + 1 < end {
-    let mut child = 2 * root + 1
-    if child + 1 < end && a.less(child, child + 1) {
-      child += 1
-    }
-    if !a.less(root, child) {
-      return
-    }
-    a.swap(root, child)
-    root = child
-  }
-}
-
-///|
-fn profile_heap_sort(a : @frontierlab.TracedArray[Int32]) -> Unit {
-  let n = a.length()
-  for start = n / 2 - 1; start >= 0; start = start - 1 {
-    profile_sift_down(a, start, n)
-  }
-  for end = n - 1; end > 0; end = end - 1 {
-    a.swap(0, end)
-    profile_sift_down(a, 0, end)
-  }
-}
-
-///|
-/// Lomuto quicksort with the last element as pivot, so sorted input shows the
-/// quadratic worst case. It recurses into the smaller part to bound the stack.
-fn profile_quick_sort(a : @frontierlab.TracedArray[Int32]) -> Unit {
-  fn sort(lo : Int32, hi : Int32) -> Unit {
-    let mut lo = lo
-    let mut hi = hi
-    while lo < hi {
-      let mut store = lo
-      for j in lo..<hi {
-        if a.less(j, hi) {
-          if j != store {
-            a.swap(j, store)
-          }
-          store += 1
-        }
-      }
-      if store != hi {
-        a.swap(store, hi)
-      }
-      if store - lo < hi - store {
-        sort(lo, store - 1)
-        lo = store + 1
-      } else {
-        sort(store + 1, hi)
-        hi = store - 1
-      }
-    }
-  }
-
-  sort(0, a.length() - 1)
-}
-
-///|
-fn profile_algorithm(
-  name : String,
-) -> ((@frontierlab.TracedArray[Int32]) -> Unit) raise {
-  match name {
-    "bubble-sort" => profile_bubble_sort
-    "insertion-sort" => profile_insertion_sort
-    "selection-sort" => profile_selection_sort
-    "heap-sort" => profile_heap_sort
-    "quick-sort" => profile_quick_sort
-    other => fail("Unknown profile algorithm: \{other}")
-  }
-}
-
-///|
 /// A deterministic Fisher-Yates shuffle of 0..<n.
 fn shuffled_input(n : Int32) -> Array[Int32] {
   let values = Array::makei(n, fn(i) { i })
@@ -178,7 +62,7 @@ fn profile_execution(
     fail("profile requires an algorithm name")
   }
   let algorithm_name = args[2]
-  let algorithm = profile_algorithm(algorithm_name)
+  let algorithm = sort_algorithm(algorithm_name)
   let input_name = option(args, "--input", "random")
   let input = profile_input(input_name)
   let format = debug_format(args)

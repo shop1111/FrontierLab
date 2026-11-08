@@ -224,11 +224,16 @@ fn check_sequence_transitions(
     let current = contract_sequence(step.scene, object_id)
     match (previous, current) {
       (Some(before), Some(after)) => {
+        let updated = match step.event {
+          Update(target, _) if target.object_id == object_id => target.entity_id
+          _ => None
+        }
         check_sequence_identity(
           before,
           after,
           step.index,
           object_id,
+          updated,
           violations,
         )
         match step.event {
@@ -251,6 +256,15 @@ fn check_sequence_transitions(
               after,
               left,
               right,
+              step.index,
+              violations,
+            )
+          Update(target, value) if target.object_id == object_id =>
+            check_update_transition(
+              before,
+              after,
+              target,
+              value,
               step.index,
               violations,
             )
@@ -280,12 +294,13 @@ fn check_sequence_identity(
   after : SequenceState,
   step : Int32,
   object_id : String,
+  updated : String?,
   violations : Array[TraceViolation],
 ) -> Unit {
   for item in before.items {
     match after.items.search_by(fn(value) { value.id == item.id }) {
       Some(index) =>
-        if after.items[index].value != item.value {
+        if after.items[index].value != item.value && updated != Some(item.id) {
           violations.push(
             TraceViolation::new(
               contract="sequence-transition",
@@ -376,6 +391,48 @@ fn check_swap_transition(
 }
 
 ///|
+/// An `Update` may change only its target's value, to the recorded value, and
+/// must keep the order of entities.
+fn check_update_transition(
+  before : SequenceState,
+  after : SequenceState,
+  target : TargetRef,
+  value : String,
+  step : Int32,
+  violations : Array[TraceViolation],
+) -> Unit {
+  if contract_sequence_ids(before) != contract_sequence_ids(after) {
+    violations.push(
+      TraceViolation::new(
+        contract="sequence-transition",
+        code="update-mutated-order",
+        step~,
+        targets=[target],
+        message="Update changed sequence order.",
+      ),
+    )
+  }
+  guard target.entity_id is Some(id) else { return }
+  match after.items.search_by(fn(item) { item.id == id }) {
+    Some(index) if after.items[index].value != value =>
+      violations.push(
+        TraceViolation::new(
+          contract="sequence-transition",
+          code="update-value-mismatch",
+          step~,
+          targets=[target],
+          message="Entity \{id} does not hold the value its Update recorded.",
+          evidence=[
+            TraceAttribute::new(key="recorded", value~),
+            TraceAttribute::new(key="actual", value=after.items[index].value),
+          ],
+        ),
+      )
+    _ => ()
+  }
+}
+
+///|
 fn check_integer_sort_result(
   trace : AlgorithmTrace,
   object_id : String,
@@ -386,6 +443,34 @@ fn check_integer_sort_result(
     trace.initial_scene
   } else {
     trace.steps.last().unwrap().scene
+  }
+  match
+    (
+      contract_sequence(trace.initial_scene, object_id),
+      contract_sequence(final_scene, object_id),
+    ) {
+    (Some(initial), Some(sequence)) if contract_sorted_values(initial) !=
+      contract_sorted_values(sequence) =>
+      violations.push(
+        TraceViolation::new(
+          contract=contract_name,
+          code="result-not-permutation",
+          step=trace.steps.length() - 1,
+          targets=[TargetRef::object(object_id)],
+          message="Final values are not a permutation of the initial values.",
+          evidence=[
+            TraceAttribute::new(
+              key="initial",
+              value=initial.items.map(fn(item) { item.value }).join(","),
+            ),
+            TraceAttribute::new(
+              key="final",
+              value=sequence.items.map(fn(item) { item.value }).join(","),
+            ),
+          ],
+        ),
+      )
+    _ => ()
   }
   match contract_sequence(final_scene, object_id) {
     Some(sequence) =>
@@ -563,6 +648,13 @@ fn contract_grid(scene : Scene, id : String) -> GridState? {
       }
     None => None
   }
+}
+
+///|
+fn contract_sorted_values(sequence : SequenceState) -> Array[String] {
+  let values = sequence.items.map(fn(item) { item.value })
+  values.sort()
+  values
 }
 
 ///|

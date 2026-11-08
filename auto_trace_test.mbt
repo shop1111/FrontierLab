@@ -33,8 +33,8 @@ fn auto_summary_value(
 }
 
 ///|
-/// The sorted-sequence contract also checks permutation semantics (stable
-/// values per id), so it applies to swap-based traces only.
+/// Round-trips the trace and checks it with the sorted-sequence contract,
+/// which accepts both swap and update transitions.
 fn assert_consistent_sequence_trace(
   trace : @frontierlab.AlgorithmTrace,
 ) -> Unit raise {
@@ -82,9 +82,7 @@ test "TracedArray indexing records updates and counts reads" {
     _ => []
   }
   assert_eq(final_values, ["1", "2", "3"])
-  assert_true(
-    @frontierlab.AlgorithmTrace::decode_json(trace.encode_json()) == trace,
-  )
+  assert_consistent_sequence_trace(trace)
 }
 
 ///|

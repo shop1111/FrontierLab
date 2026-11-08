@@ -73,6 +73,8 @@ pub fn render_trace_svg(AlgorithmTrace, step? : Int32, width? : Int32) -> String
 #deprecated
 pub fn render_trace_svg_frames(AlgorithmTrace, width? : Int32) -> Array[String] raise
 
+pub fn search_sequence_counterexample((TracedArray[Int32]) -> Unit, reference? : (TracedArray[Int32]) -> Unit, check? : (Array[Int32], Array[Int32]) -> String?, contract? : TraceContract, match_events? : Bool, cases? : Int32, max_length? : Int32, max_value? : Int32, max_shrinks? : Int32, seed? : UInt64, options? : TraceOptions) -> SequenceCounterexample? raise TraceError
+
 pub fn search_trace_to_algorithm_trace(GridMap, start~ : Position, goal~ : Position, algorithm~ : String, trace~ : SearchTrace) -> AlgorithmTrace raise
 
 pub fn sequence_transition_contract(object_id~ : String) -> TraceContract
@@ -535,6 +537,25 @@ pub fn SearchTrace::new(result~ : PathResult, steps~ : Array[TraceStep]) -> Self
 pub fn SearchTrace::not_equal(Self, Self) -> Bool
 pub fn SearchTrace::to_json(Self) -> Json
 pub fn SearchTrace::to_repr(Self) -> @debug.Repr
+
+pub struct SequenceCounterexample {
+  seed : UInt64
+  cases_tried : Int32
+  original_input : Array[Int32]
+  input : Array[Int32]
+  shrink_steps : Int32
+  reason : String
+  actual_output : Array[Int32]
+  expected_output : Array[Int32]?
+  actual_trace : AlgorithmTrace
+  expected_trace : AlgorithmTrace?
+  diagnosis : TraceDiagnosis
+} derive(Eq, ToJson, @debug.Debug)
+pub fn SequenceCounterexample::equal(Self, Self) -> Bool
+pub fn SequenceCounterexample::not_equal(Self, Self) -> Bool
+pub fn SequenceCounterexample::report(Self) -> String
+pub fn SequenceCounterexample::to_json(Self) -> Json
+pub fn SequenceCounterexample::to_repr(Self) -> @debug.Repr
 
 pub struct SequenceItem {
   id : String
