@@ -1,9 +1,10 @@
 ///|
+#derive(Debug, Eq, ToJson)
 pub(all) enum Heuristic {
   Manhattan
   Chebyshev
   Zero
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend Heuristic with Debug::{to_repr}

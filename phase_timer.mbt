@@ -1,9 +1,10 @@
 ///|
 /// Wall-clock time spent in one named phase.
+#derive(Debug, Eq, ToJson)
 pub struct PhaseTiming {
   name : String
   ms : Double
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend PhaseTiming with Debug::{to_repr}

@@ -21,8 +21,8 @@ moon add shop1111/frontierlab
 
 然后在需要使用 FrontierLab 的包中导入 `shop1111/frontierlab`。
 
-FrontierLab 需要 MoonBit `moonc` 0.10.16 或更新版本，CI 固定在
-`0.10.18+6c83a7f62` 上验证，详见[工具链策略](TOOLCHAIN.md)。
+FrontierLab 需要 MoonBit `moonc` 0.10.20 或更新版本，CI 固定在
+`0.10.20+65efd5b93` 上验证，详见[工具链策略](TOOLCHAIN.md)。
 
 ## 最小示例
 

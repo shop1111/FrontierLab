@@ -1,8 +1,9 @@
 ///|
+#derive(Debug, Eq, ToJson)
 pub struct Position {
   x : Int32
   y : Int32
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend Position with Debug::{to_repr}
@@ -19,10 +20,11 @@ pub fn Position::new(x~ : Int32, y~ : Int32) -> Position {
 }
 
 ///|
+#derive(Debug, Eq, ToJson)
 pub(all) enum MoveRule {
   FourDirections
   EightDirections
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend MoveRule with Debug::{to_repr}
@@ -34,10 +36,11 @@ pub extend MoveRule with Eq::{not_equal, equal}
 pub extend MoveRule with ToJson::{to_json}
 
 ///|
+#derive(Debug, Eq, ToJson)
 struct WeightedCell {
   position : Position
   weight : Int32
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend WeightedCell with Debug::{to_repr}
@@ -49,12 +52,13 @@ pub extend WeightedCell with Eq::{not_equal, equal}
 pub extend WeightedCell with ToJson::{to_json}
 
 ///|
+#derive(Debug, Eq, ToJson)
 pub struct GridMap {
   width : Int32
   height : Int32
   obstacles : Array[Position]
   weights : Array[WeightedCell]
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend GridMap with Debug::{to_repr}

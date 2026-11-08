@@ -3,6 +3,7 @@
 pub let debug_report_version : String = "frontierlab-debug-report/1.0"
 
 ///|
+#derive(Debug, Eq, ToJson)
 pub(all) enum TraceChangeKind {
   Added
   Removed
@@ -10,7 +11,7 @@ pub(all) enum TraceChangeKind {
   Moved
   HighlightAdded
   HighlightRemoved
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TraceChangeKind with Debug::{to_repr}
@@ -22,6 +23,7 @@ pub extend TraceChangeKind with Eq::{not_equal, equal}
 pub extend TraceChangeKind with ToJson::{to_json}
 
 ///|
+#derive(Debug, Eq, ToJson)
 pub struct TraceChange {
   kind : TraceChangeKind
   target : TargetRef
@@ -29,7 +31,7 @@ pub struct TraceChange {
   after_value : String
   before_index : Int32
   after_index : Int32
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TraceChange with Debug::{to_repr}
@@ -53,11 +55,12 @@ pub fn TraceChange::new(
 }
 
 ///|
+#derive(Debug, Eq, ToJson)
 pub struct TraceFrameDiff {
   from_step : Int32
   to_step : Int32
   changes : Array[TraceChange]
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TraceFrameDiff with Debug::{to_repr}
@@ -114,12 +117,13 @@ pub fn AlgorithmTrace::diff(
 }
 
 ///|
+#derive(Debug, Eq, ToJson)
 pub struct TraceBreakpoint {
   event_kind : String
   target : TargetRef?
   role : String
   changed_only : Bool
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TraceBreakpoint with Debug::{to_repr}
@@ -141,13 +145,14 @@ pub fn TraceBreakpoint::new(
 }
 
 ///|
+#derive(Debug, Eq, ToJson)
 pub struct TraceBreakpointHit {
   step : Int32
   event_kind : String
   targets : Array[TargetRef]
   changes : Array[TraceChange]
   reason : String
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TraceBreakpointHit with Debug::{to_repr}
@@ -202,6 +207,7 @@ pub fn AlgorithmTrace::breakpoint_hits(
 }
 
 ///|
+#derive(Debug, Eq, ToJson)
 pub struct TraceCounterexample {
   original_title : String
   original_start : Int32
@@ -209,7 +215,7 @@ pub struct TraceCounterexample {
   original_end : Int32
   focus_step : Int32
   trace : AlgorithmTrace
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TraceCounterexample with Debug::{to_repr}
@@ -278,12 +284,13 @@ pub fn AlgorithmTrace::slice(
 }
 
 ///|
+#derive(Debug, Eq, ToJson)
 pub(all) enum TraceDivergenceKind {
   EventMismatch
   SceneMismatch
   ExpectedEnded
   ActualEnded
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TraceDivergenceKind with Debug::{to_repr}
@@ -295,6 +302,7 @@ pub extend TraceDivergenceKind with Eq::{not_equal, equal}
 pub extend TraceDivergenceKind with ToJson::{to_json}
 
 ///|
+#derive(Debug, Eq, ToJson)
 pub struct TraceDivergence {
   step : Int32
   kind : TraceDivergenceKind
@@ -302,7 +310,7 @@ pub struct TraceDivergence {
   expected_event : String
   actual_event : String
   scene_diff : TraceFrameDiff?
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TraceDivergence with Debug::{to_repr}
@@ -392,11 +400,12 @@ fn debugger_scene_at(
 }
 
 ///|
+#derive(Debug, Eq)
 struct DebugEntity {
   id : String
   value : String
   index : Int32
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend DebugEntity with Debug::{to_repr}

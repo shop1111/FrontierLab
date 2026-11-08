@@ -1,11 +1,12 @@
 ///|
 /// A counted event kind in an `AlgorithmTrace`.
+#derive(Debug, Eq, ToJson)
 pub struct EventCount {
   name : String
   count : Int32
   first_step : Int32
   last_step : Int32
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend EventCount with Debug::{to_repr}
@@ -28,6 +29,7 @@ pub fn EventCount::new(
 
 ///|
 /// Object-level usage collected across the initial scene and every step scene.
+#derive(Debug, Eq, ToJson)
 pub struct ObjectUsage {
   object_id : String
   object_kind : String
@@ -35,7 +37,7 @@ pub struct ObjectUsage {
   max_entities : Int32
   first_step : Int32
   last_step : Int32
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend ObjectUsage with Debug::{to_repr}
@@ -60,6 +62,7 @@ pub fn ObjectUsage::new(
 
 ///|
 /// Target-level references observed in semantic events and visual highlights.
+#derive(Debug, Eq, ToJson)
 pub struct TargetUsage {
   object_id : String
   entity_id : String?
@@ -70,7 +73,7 @@ pub struct TargetUsage {
   last_step : Int32
   event_names : Array[String]
   highlight_roles : Array[String]
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TargetUsage with Debug::{to_repr}
@@ -109,6 +112,7 @@ pub fn TargetUsage::new(
 ///|
 /// Summary of a full trace document, suitable for docs, CLI output, or CI smoke
 /// checks before rendering.
+#derive(Debug, Eq, ToJson)
 pub struct TraceStats {
   title : String
   algorithm : String
@@ -124,7 +128,7 @@ pub struct TraceStats {
   annotation_count : Int32
   custom_event_count : Int32
   highlight_count : Int32
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TraceStats with Debug::{to_repr}

@@ -1,9 +1,10 @@
 ///|
 /// One operation accepted by the red-black-tree trace adapter.
+#derive(Debug, Eq, ToJson)
 pub(all) enum RedBlackTreeOperation {
   Insert(Int32)
   Find(Int32)
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend RedBlackTreeOperation with Debug::{to_repr}
@@ -215,10 +216,11 @@ pub fn red_black_tree_trace(
 }
 
 ///|
+#derive(Eq)
 priv enum RedBlackColor {
   Red
   Black
-} derive(Eq)
+}
 
 ///|
 priv struct RedBlackNode {

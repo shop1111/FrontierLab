@@ -1,8 +1,9 @@
 ///|
+#derive(Debug, Eq)
 struct DemoItem {
   id : String
   value : Int32
-} derive(Debug, Eq)
+}
 
 ///|
 fn selection_scene(
