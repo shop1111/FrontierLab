@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Raised the supported toolchain to MoonBit `moonc` 0.10.20 or newer and moved
+  every type to the `#derive(...)` syntax that 0.10.20 requires under
+  `--deny-warn`; CI now pins `0.10.20+65efd5b93`.
 - Added `search_sequence_counterexample`, which runs seeded random inputs at
   `TraceLevel::Count`, shrinks the first failure, and diagnoses the minimal
   input against a reference algorithm or the sorted-output property.

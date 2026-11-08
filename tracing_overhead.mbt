@@ -5,6 +5,7 @@
 /// `*_runs` fields differ; times are milliseconds per run. The ratios compare
 /// `Count` and `Full` against the untraced `Off` baseline and are 0 when the
 /// baseline stayed below the clock resolution because `max_runs` was reached.
+#derive(Debug, Eq, ToJson)
 pub struct TracingOverhead {
   off_runs : Int32
   count_runs : Int32
@@ -17,7 +18,7 @@ pub struct TracingOverhead {
   steps : Int32
   json_length : Int32
   full_us_per_step : Double
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TracingOverhead with Debug::{to_repr}

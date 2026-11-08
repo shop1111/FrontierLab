@@ -1,8 +1,9 @@
 ///|
+#derive(Debug, Eq, ToJson)
 pub(all) enum TraceViolationSeverity {
   Warning
   Error
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TraceViolationSeverity with Debug::{to_repr}
@@ -14,6 +15,7 @@ pub extend TraceViolationSeverity with Eq::{not_equal, equal}
 pub extend TraceViolationSeverity with ToJson::{to_json}
 
 ///|
+#derive(Debug, Eq, ToJson)
 pub struct TraceViolation {
   contract : String
   code : String
@@ -22,7 +24,7 @@ pub struct TraceViolation {
   targets : Array[TargetRef]
   message : String
   evidence : Array[TraceAttribute]
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TraceViolation with Debug::{to_repr}
@@ -47,6 +49,7 @@ pub fn TraceViolation::new(
 }
 
 ///|
+#derive(Debug, Eq, ToJson)
 pub struct ContractReport {
   report_version : String
   contract_name : String
@@ -54,7 +57,7 @@ pub struct ContractReport {
   violations : Array[TraceViolation]
   first_failure : TraceViolation?
   counterexample : TraceCounterexample?
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend ContractReport with Debug::{to_repr}

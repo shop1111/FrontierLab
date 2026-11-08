@@ -1,6 +1,7 @@
 ///|
 /// A minimal failing input found by `search_sequence_counterexample`, with
 /// full traces and a diagnosis of the minimal case.
+#derive(Debug, Eq, ToJson)
 pub struct SequenceCounterexample {
   seed : UInt64
   cases_tried : Int32
@@ -13,7 +14,7 @@ pub struct SequenceCounterexample {
   actual_trace : AlgorithmTrace
   expected_trace : AlgorithmTrace?
   diagnosis : TraceDiagnosis
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend SequenceCounterexample with Debug::{to_repr}

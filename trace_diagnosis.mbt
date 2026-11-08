@@ -1,6 +1,7 @@
 ///|
 /// The authoritative result of combining a semantic contract with an
 /// optional reference trace.
+#derive(Debug, Eq, ToJson)
 pub struct TraceDiagnosis {
   contract_report : ContractReport
   divergence : TraceDivergence?
@@ -8,7 +9,7 @@ pub struct TraceDiagnosis {
   transition_diff : TraceFrameDiff?
   reference_diff : TraceFrameDiff?
   focused_slice : TraceCounterexample?
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TraceDiagnosis with Debug::{to_repr}

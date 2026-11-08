@@ -1,5 +1,6 @@
 ///|
 /// How much an automatic tracer records while the algorithm runs.
+#derive(Debug, Eq, ToJson)
 pub(all) enum TraceLevel {
   /// Run without counting or recording; the baseline for overhead measurement.
   Off
@@ -7,7 +8,7 @@ pub(all) enum TraceLevel {
   Count
   /// Count operations and record a full replayable trace.
   Full
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TraceLevel with Debug::{to_repr}
@@ -23,13 +24,14 @@ pub extend TraceLevel with ToJson::{to_json}
 ///
 /// `TracedArray` counts the operations the algorithm performs. `SequenceProbe`
 /// infers them from snapshots, so a shift of k elements counts as k writes.
+#derive(Debug, Eq, ToJson)
 pub struct OperationCounts {
   compares : Int32
   swaps : Int32
   reads : Int32
   writes : Int32
   snapshots : Int32
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend OperationCounts with Debug::{to_repr}

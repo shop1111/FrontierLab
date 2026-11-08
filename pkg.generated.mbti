@@ -88,6 +88,7 @@ pub fn union_find_trace(Int32, Array[UnionOperation], title? : String, object_id
 pub fn zero_one_knapsack_dp_trace(Array[Int32], Array[Int32], Int32, title? : String, object_id? : String, label? : String, options? : TraceOptions) -> AlgorithmTrace raise TraceError
 
 // Errors
+#derive(Eq, @debug.Debug)
 pub(all) suberror TraceError {
   JsonSyntax(String)
   UnsupportedSchema(String)
@@ -99,7 +100,7 @@ pub(all) suberror TraceError {
   DuplicateSummaryKey(String)
   AlreadyCompleted
   LimitExceeded(String)
-} derive(Eq, @debug.Debug)
+}
 pub fn TraceError::equal(Self, Self) -> Bool
 pub fn TraceError::message(Self) -> String
 pub fn TraceError::not_equal(Self, Self) -> Bool
@@ -109,19 +110,21 @@ pub fn TraceError::to_string(Self) -> String
 pub impl Show for TraceError
 
 // Types and methods
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct AlgorithmReport {
   algorithm : String
   reachable : Bool
   visited_count : Int32
   path_length : Int32
   total_cost : Int32
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn AlgorithmReport::equal(Self, Self) -> Bool
 pub fn AlgorithmReport::from_result(String, PathResult) -> Self
 pub fn AlgorithmReport::not_equal(Self, Self) -> Bool
-pub fn AlgorithmReport::to_json(Self) -> Json
+pub fn AlgorithmReport::to_json(Self) -> @json.Json
 pub fn AlgorithmReport::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct AlgorithmTrace {
   schema_version : String
   title : String
@@ -130,7 +133,7 @@ pub struct AlgorithmTrace {
   initial_scene : Scene
   steps : Array[AlgorithmTraceStep]
   summary : Array[TraceAttribute]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn AlgorithmTrace::analysis_markdown(Self, target_limit? : Int32) -> String
 pub fn AlgorithmTrace::analyze(Self) -> TraceStats
 pub fn AlgorithmTrace::breakpoint_hits(Self, TraceBreakpoint) -> Array[TraceBreakpointHit]
@@ -153,41 +156,45 @@ pub fn AlgorithmTrace::target_usage(Self) -> Array[TargetUsage]
 pub fn AlgorithmTrace::timeline(Self) -> Array[TraceTimelineEntry]
 pub fn AlgorithmTrace::timeline_report(Self) -> String
 pub fn AlgorithmTrace::timeline_table(Self) -> String
-pub fn AlgorithmTrace::to_json(Self) -> Json
+pub fn AlgorithmTrace::to_json(Self) -> @json.Json
 pub fn AlgorithmTrace::to_json_string(Self) -> String
 pub fn AlgorithmTrace::to_repr(Self) -> @debug.Repr
 pub fn AlgorithmTrace::validate(Self, options? : TraceOptions) -> Unit raise TraceError
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct AlgorithmTraceStep {
   index : Int32
   event : TraceEvent
   scene : Scene
   annotation : Annotation?
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn AlgorithmTraceStep::equal(Self, Self) -> Bool
 pub fn AlgorithmTraceStep::not_equal(Self, Self) -> Bool
-pub fn AlgorithmTraceStep::to_json(Self) -> Json
+pub fn AlgorithmTraceStep::to_json(Self) -> @json.Json
 pub fn AlgorithmTraceStep::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct Annotation {
   title : String
   body : String
   pseudocode_line : Int32?
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn Annotation::equal(Self, Self) -> Bool
 pub fn Annotation::new(title~ : String, body~ : String, pseudocode_line? : Int32) -> Self
 pub fn Annotation::not_equal(Self, Self) -> Bool
-pub fn Annotation::to_json(Self) -> Json
+pub fn Annotation::to_json(Self) -> @json.Json
 pub fn Annotation::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct CompareReport {
   entries : Array[AlgorithmReport]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn CompareReport::equal(Self, Self) -> Bool
 pub fn CompareReport::not_equal(Self, Self) -> Bool
-pub fn CompareReport::to_json(Self) -> Json
+pub fn CompareReport::to_json(Self) -> @json.Json
 pub fn CompareReport::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum ComplexityClass {
   Constant
   Logarithmic
@@ -196,49 +203,53 @@ pub(all) enum ComplexityClass {
   Quadratic
   Cubic
   Exponential
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn ComplexityClass::equal(Self, Self) -> Bool
 pub fn ComplexityClass::evaluate(Self, Int32) -> Double
 pub fn ComplexityClass::label(Self) -> String
 pub fn ComplexityClass::not_equal(Self, Self) -> Bool
 pub fn ComplexityClass::parse(String) -> Self?
-pub fn ComplexityClass::to_json(Self) -> Json
+pub fn ComplexityClass::to_json(Self) -> @json.Json
 pub fn ComplexityClass::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct ComplexityFit {
   class : ComplexityClass
   coefficient : Double
   error : Double
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn ComplexityFit::equal(Self, Self) -> Bool
 pub fn ComplexityFit::not_equal(Self, Self) -> Bool
-pub fn ComplexityFit::to_json(Self) -> Json
+pub fn ComplexityFit::to_json(Self) -> @json.Json
 pub fn ComplexityFit::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct ComplexityProfile {
   metric : CostMetric
   samples : Array[ComplexitySample]
   fits : Array[ComplexityFit]
   best : ComplexityFit
   exponent : Double
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn ComplexityProfile::check_bound(Self, ComplexityClass, factor~ : Double) -> Array[ComplexitySample]
 pub fn ComplexityProfile::equal(Self, Self) -> Bool
 pub fn ComplexityProfile::not_equal(Self, Self) -> Bool
 pub fn ComplexityProfile::report(Self) -> String
-pub fn ComplexityProfile::to_json(Self) -> Json
+pub fn ComplexityProfile::to_json(Self) -> @json.Json
 pub fn ComplexityProfile::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct ComplexitySample {
   size : Int32
   counts : OperationCounts
   cost : Int32
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn ComplexitySample::equal(Self, Self) -> Bool
 pub fn ComplexitySample::not_equal(Self, Self) -> Bool
-pub fn ComplexitySample::to_json(Self) -> Json
+pub fn ComplexitySample::to_json(Self) -> @json.Json
 pub fn ComplexitySample::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct ContractReport {
   report_version : String
   contract_name : String
@@ -246,110 +257,119 @@ pub struct ContractReport {
   violations : Array[TraceViolation]
   first_failure : TraceViolation?
   counterexample : TraceCounterexample?
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn ContractReport::equal(Self, Self) -> Bool
 pub fn ContractReport::not_equal(Self, Self) -> Bool
 pub fn ContractReport::report(Self) -> String
-pub fn ContractReport::to_json(Self) -> Json
+pub fn ContractReport::to_json(Self) -> @json.Json
 pub fn ContractReport::to_json_string(Self) -> String
 pub fn ContractReport::to_markdown(Self) -> String
 pub fn ContractReport::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct CostEntry {
   position : Position
   cost : Int32
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn CostEntry::equal(Self, Self) -> Bool
 pub fn CostEntry::new(position~ : Position, cost~ : Int32) -> Self
 pub fn CostEntry::not_equal(Self, Self) -> Bool
-pub fn CostEntry::to_json(Self) -> Json
+pub fn CostEntry::to_json(Self) -> @json.Json
 pub fn CostEntry::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum CostMetric {
   Compares
   Swaps
   Reads
   Writes
   Total
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn CostMetric::cost(Self, OperationCounts) -> Int32
 pub fn CostMetric::equal(Self, Self) -> Bool
 pub fn CostMetric::name(Self) -> String
 pub fn CostMetric::not_equal(Self, Self) -> Bool
-pub fn CostMetric::to_json(Self) -> Json
+pub fn CostMetric::to_json(Self) -> @json.Json
 pub fn CostMetric::to_repr(Self) -> @debug.Repr
 
-type DebugEntity derive(Eq, @debug.Debug)
+#derive(Eq, @debug.Debug)
+type DebugEntity
 pub fn DebugEntity::equal(Self, Self) -> Bool
 pub fn DebugEntity::not_equal(Self, Self) -> Bool
 pub fn DebugEntity::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct EventCount {
   name : String
   count : Int32
   first_step : Int32
   last_step : Int32
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn EventCount::equal(Self, Self) -> Bool
 pub fn EventCount::new(name~ : String, count? : Int32, first_step? : Int32, last_step? : Int32) -> Self
 pub fn EventCount::not_equal(Self, Self) -> Bool
-pub fn EventCount::to_json(Self) -> Json
+pub fn EventCount::to_json(Self) -> @json.Json
 pub fn EventCount::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct GraphEdge {
   id : String
   from : String
   to : String
   label : String
   directed : Bool
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn GraphEdge::equal(Self, Self) -> Bool
 pub fn GraphEdge::new(id~ : String, from~ : String, to~ : String, label? : String, directed? : Bool) -> Self
 pub fn GraphEdge::not_equal(Self, Self) -> Bool
-pub fn GraphEdge::to_json(Self) -> Json
+pub fn GraphEdge::to_json(Self) -> @json.Json
 pub fn GraphEdge::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct GraphNode {
   id : String
   label : String
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn GraphNode::equal(Self, Self) -> Bool
 pub fn GraphNode::new(id~ : String, label~ : String) -> Self
 pub fn GraphNode::not_equal(Self, Self) -> Bool
-pub fn GraphNode::to_json(Self) -> Json
+pub fn GraphNode::to_json(Self) -> @json.Json
 pub fn GraphNode::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct GraphState {
   id : String
   label : String
   nodes : Array[GraphNode]
   edges : Array[GraphEdge]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn GraphState::equal(Self, Self) -> Bool
 pub fn GraphState::new(id~ : String, label~ : String, nodes~ : Array[GraphNode], edges~ : Array[GraphEdge]) -> Self raise TraceError
 pub fn GraphState::not_equal(Self, Self) -> Bool
-pub fn GraphState::to_json(Self) -> Json
+pub fn GraphState::to_json(Self) -> @json.Json
 pub fn GraphState::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct GridCellState {
   id : String
   x : Int32
   y : Int32
   label : String
   blocked : Bool
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn GridCellState::equal(Self, Self) -> Bool
 pub fn GridCellState::new(id~ : String, x~ : Int32, y~ : Int32, label? : String, blocked? : Bool) -> Self
 pub fn GridCellState::not_equal(Self, Self) -> Bool
-pub fn GridCellState::to_json(Self) -> Json
+pub fn GridCellState::to_json(Self) -> @json.Json
 pub fn GridCellState::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct GridMap {
   width : Int32
   height : Int32
   obstacles : Array[Position]
   weights : Array[WeightedCell]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn GridMap::contains(Self, Position) -> Bool
 pub fn GridMap::equal(Self, Self) -> Bool
 pub fn GridMap::is_obstacle(Self, Position) -> Bool
@@ -357,45 +377,49 @@ pub fn GridMap::is_walkable(Self, Position) -> Bool
 pub fn GridMap::neighbors(Self, Position, MoveRule) -> Array[Position]
 pub fn GridMap::new(width~ : Int32, height~ : Int32) -> Self raise
 pub fn GridMap::not_equal(Self, Self) -> Bool
-pub fn GridMap::to_json(Self) -> Json
+pub fn GridMap::to_json(Self) -> @json.Json
 pub fn GridMap::to_repr(Self) -> @debug.Repr
 pub fn GridMap::weight_at(Self, Position) -> Int32
 pub fn GridMap::with_obstacle(Self, Position) -> Self raise
 pub fn GridMap::with_weight(Self, Position, Int32) -> Self raise
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct GridState {
   id : String
   label : String
   width : Int32
   height : Int32
   cells : Array[GridCellState]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn GridState::equal(Self, Self) -> Bool
 pub fn GridState::new(id~ : String, label~ : String, width~ : Int32, height~ : Int32, cells~ : Array[GridCellState]) -> Self raise TraceError
 pub fn GridState::not_equal(Self, Self) -> Bool
-pub fn GridState::to_json(Self) -> Json
+pub fn GridState::to_json(Self) -> @json.Json
 pub fn GridState::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum Heuristic {
   Manhattan
   Chebyshev
   Zero
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn Heuristic::equal(Self, Self) -> Bool
 pub fn Heuristic::not_equal(Self, Self) -> Bool
-pub fn Heuristic::to_json(Self) -> Json
+pub fn Heuristic::to_json(Self) -> @json.Json
 pub fn Heuristic::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct Highlight {
   target : TargetRef
   role : HighlightRole
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn Highlight::equal(Self, Self) -> Bool
 pub fn Highlight::new(target~ : TargetRef, role~ : HighlightRole) -> Self
 pub fn Highlight::not_equal(Self, Self) -> Bool
-pub fn Highlight::to_json(Self) -> Json
+pub fn Highlight::to_json(Self) -> @json.Json
 pub fn Highlight::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum HighlightRole {
   Current
   Candidate
@@ -405,21 +429,23 @@ pub(all) enum HighlightRole {
   Frontier
   Result
   Error
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn HighlightRole::equal(Self, Self) -> Bool
 pub fn HighlightRole::not_equal(Self, Self) -> Bool
-pub fn HighlightRole::to_json(Self) -> Json
+pub fn HighlightRole::to_json(Self) -> @json.Json
 pub fn HighlightRole::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum MoveRule {
   FourDirections
   EightDirections
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn MoveRule::equal(Self, Self) -> Bool
 pub fn MoveRule::not_equal(Self, Self) -> Bool
-pub fn MoveRule::to_json(Self) -> Json
+pub fn MoveRule::to_json(Self) -> @json.Json
 pub fn MoveRule::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct ObjectUsage {
   object_id : String
   object_kind : String
@@ -427,47 +453,50 @@ pub struct ObjectUsage {
   max_entities : Int32
   first_step : Int32
   last_step : Int32
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn ObjectUsage::equal(Self, Self) -> Bool
 pub fn ObjectUsage::new(object_id~ : String, object_kind~ : String, appearances? : Int32, max_entities? : Int32, first_step? : Int32, last_step? : Int32) -> Self
 pub fn ObjectUsage::not_equal(Self, Self) -> Bool
-pub fn ObjectUsage::to_json(Self) -> Json
+pub fn ObjectUsage::to_json(Self) -> @json.Json
 pub fn ObjectUsage::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct OperationCounts {
   compares : Int32
   swaps : Int32
   reads : Int32
   writes : Int32
   snapshots : Int32
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn OperationCounts::equal(Self, Self) -> Bool
 pub fn OperationCounts::new(compares? : Int32, swaps? : Int32, reads? : Int32, writes? : Int32, snapshots? : Int32) -> Self
 pub fn OperationCounts::not_equal(Self, Self) -> Bool
-pub fn OperationCounts::to_json(Self) -> Json
+pub fn OperationCounts::to_json(Self) -> @json.Json
 pub fn OperationCounts::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct ParentLink {
   child : Position
   parent : Position
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn ParentLink::equal(Self, Self) -> Bool
 pub fn ParentLink::new(child~ : Position, parent~ : Position) -> Self
 pub fn ParentLink::not_equal(Self, Self) -> Bool
-pub fn ParentLink::to_json(Self) -> Json
+pub fn ParentLink::to_json(Self) -> @json.Json
 pub fn ParentLink::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct PathResult {
   reachable : Bool
   path : Array[Position]
   cost : Int32
   visited_count : Int32
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn PathResult::equal(Self, Self) -> Bool
 pub fn PathResult::found(path~ : Array[Position], cost~ : Int32, visited_count~ : Int32) -> Self
 pub fn PathResult::not_equal(Self, Self) -> Bool
 pub fn PathResult::not_found(visited_count~ : Int32) -> Self
-pub fn PathResult::to_json(Self) -> Json
+pub fn PathResult::to_json(Self) -> @json.Json
 pub fn PathResult::to_repr(Self) -> @debug.Repr
 
 pub struct PhaseTimer {
@@ -479,65 +508,72 @@ pub fn PhaseTimer::report(Self) -> String
 pub fn PhaseTimer::timings(Self) -> Array[PhaseTiming]
 pub fn PhaseTimer::total_ms(Self) -> Double
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct PhaseTiming {
   name : String
   ms : Double
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn PhaseTiming::equal(Self, Self) -> Bool
 pub fn PhaseTiming::not_equal(Self, Self) -> Bool
-pub fn PhaseTiming::to_json(Self) -> Json
+pub fn PhaseTiming::to_json(Self) -> @json.Json
 pub fn PhaseTiming::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct Position {
   x : Int32
   y : Int32
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn Position::equal(Self, Self) -> Bool
 pub fn Position::new(x~ : Int32, y~ : Int32) -> Self
 pub fn Position::not_equal(Self, Self) -> Bool
-pub fn Position::to_json(Self) -> Json
+pub fn Position::to_json(Self) -> @json.Json
 pub fn Position::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum RedBlackTreeOperation {
   Insert(Int32)
   Find(Int32)
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn RedBlackTreeOperation::equal(Self, Self) -> Bool
 pub fn RedBlackTreeOperation::not_equal(Self, Self) -> Bool
-pub fn RedBlackTreeOperation::to_json(Self) -> Json
+pub fn RedBlackTreeOperation::to_json(Self) -> @json.Json
 pub fn RedBlackTreeOperation::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct Scene {
   objects : Array[SceneObject]
   highlights : Array[Highlight]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn Scene::equal(Self, Self) -> Bool
 pub fn Scene::new(objects~ : Array[SceneObject], highlights? : Array[Highlight]) -> Self raise TraceError
 pub fn Scene::not_equal(Self, Self) -> Bool
-pub fn Scene::to_json(Self) -> Json
+pub fn Scene::to_json(Self) -> @json.Json
 pub fn Scene::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum SceneObject {
   Sequence(SequenceState)
   Sets(SetState)
   Graph(GraphState)
   Grid(GridState)
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn SceneObject::equal(Self, Self) -> Bool
 pub fn SceneObject::not_equal(Self, Self) -> Bool
-pub fn SceneObject::to_json(Self) -> Json
+pub fn SceneObject::to_json(Self) -> @json.Json
 pub fn SceneObject::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct SearchTrace {
   result : PathResult
   steps : Array[TraceStep]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn SearchTrace::equal(Self, Self) -> Bool
 pub fn SearchTrace::new(result~ : PathResult, steps~ : Array[TraceStep]) -> Self
 pub fn SearchTrace::not_equal(Self, Self) -> Bool
-pub fn SearchTrace::to_json(Self) -> Json
+pub fn SearchTrace::to_json(Self) -> @json.Json
 pub fn SearchTrace::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct SequenceCounterexample {
   seed : UInt64
   cases_tried : Int32
@@ -550,21 +586,22 @@ pub struct SequenceCounterexample {
   actual_trace : AlgorithmTrace
   expected_trace : AlgorithmTrace?
   diagnosis : TraceDiagnosis
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn SequenceCounterexample::equal(Self, Self) -> Bool
 pub fn SequenceCounterexample::not_equal(Self, Self) -> Bool
 pub fn SequenceCounterexample::report(Self) -> String
-pub fn SequenceCounterexample::to_json(Self) -> Json
+pub fn SequenceCounterexample::to_json(Self) -> @json.Json
 pub fn SequenceCounterexample::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct SequenceItem {
   id : String
   value : String
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn SequenceItem::equal(Self, Self) -> Bool
 pub fn SequenceItem::new(id~ : String, value~ : String) -> Self
 pub fn SequenceItem::not_equal(Self, Self) -> Bool
-pub fn SequenceItem::to_json(Self) -> Json
+pub fn SequenceItem::to_json(Self) -> @json.Json
 pub fn SequenceItem::to_repr(Self) -> @debug.Repr
 
 pub struct SequenceProbe[T] {
@@ -576,62 +613,68 @@ pub fn[T] SequenceProbe::finish(Self[T]) -> AlgorithmTrace raise TraceError
 pub fn[T : Show] SequenceProbe::new(Array[T], title? : String, algorithm? : String, object_id? : String, label? : String, level? : TraceLevel, options? : TraceOptions) -> Self[T]
 pub fn[T : Eq + Show] SequenceProbe::observe(Self[T], Array[T], note? : String) -> Unit
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct SequenceState {
   id : String
   label : String
   items : Array[SequenceItem]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn SequenceState::equal(Self, Self) -> Bool
 pub fn SequenceState::new(id~ : String, label~ : String, items~ : Array[SequenceItem]) -> Self
 pub fn SequenceState::not_equal(Self, Self) -> Bool
-pub fn SequenceState::to_json(Self) -> Json
+pub fn SequenceState::to_json(Self) -> @json.Json
 pub fn SequenceState::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct SetGroup {
   id : String
   label : String
   members : Array[String]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn SetGroup::equal(Self, Self) -> Bool
 pub fn SetGroup::new(id~ : String, label~ : String, members~ : Array[String]) -> Self
 pub fn SetGroup::not_equal(Self, Self) -> Bool
-pub fn SetGroup::to_json(Self) -> Json
+pub fn SetGroup::to_json(Self) -> @json.Json
 pub fn SetGroup::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct SetState {
   id : String
   label : String
   groups : Array[SetGroup]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn SetState::equal(Self, Self) -> Bool
 pub fn SetState::new(id~ : String, label~ : String, groups~ : Array[SetGroup]) -> Self
 pub fn SetState::not_equal(Self, Self) -> Bool
-pub fn SetState::to_json(Self) -> Json
+pub fn SetState::to_json(Self) -> @json.Json
 pub fn SetState::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct SortTraceItem {
   id : String
   value : Int32
   label : String
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn SortTraceItem::equal(Self, Self) -> Bool
 pub fn SortTraceItem::new(id~ : String, value~ : Int32, label? : String) -> Self
 pub fn SortTraceItem::not_equal(Self, Self) -> Bool
-pub fn SortTraceItem::to_json(Self) -> Json
+pub fn SortTraceItem::to_json(Self) -> @json.Json
 pub fn SortTraceItem::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.FromJson, @json.ToJson)
 pub struct TargetRef {
   object_id : String
   entity_id : String?
-} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+}
 pub fn TargetRef::entity(String, String) -> Self
 pub fn TargetRef::equal(Self, Self) -> Bool
-pub fn TargetRef::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn TargetRef::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
 pub fn TargetRef::not_equal(Self, Self) -> Bool
 pub fn TargetRef::object(String) -> Self
-pub fn TargetRef::to_json(Self) -> Json
+pub fn TargetRef::to_json(Self) -> @json.Json
 pub fn TargetRef::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct TargetUsage {
   object_id : String
   entity_id : String?
@@ -642,47 +685,51 @@ pub struct TargetUsage {
   last_step : Int32
   event_names : Array[String]
   highlight_roles : Array[String]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TargetUsage::equal(Self, Self) -> Bool
 pub fn TargetUsage::new(object_id~ : String, entity_id? : String, references? : Int32, event_references? : Int32, highlight_references? : Int32, first_step? : Int32, last_step? : Int32, event_names? : Array[String], highlight_roles? : Array[String]) -> Self
 pub fn TargetUsage::not_equal(Self, Self) -> Bool
-pub fn TargetUsage::to_json(Self) -> Json
+pub fn TargetUsage::to_json(Self) -> @json.Json
 pub fn TargetUsage::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct TraceAttribute {
   key : String
   value : String
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceAttribute::equal(Self, Self) -> Bool
 pub fn TraceAttribute::new(key~ : String, value~ : String) -> Self
 pub fn TraceAttribute::not_equal(Self, Self) -> Bool
-pub fn TraceAttribute::to_json(Self) -> Json
+pub fn TraceAttribute::to_json(Self) -> @json.Json
 pub fn TraceAttribute::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct TraceBreakpoint {
   event_kind : String
   target : TargetRef?
   role : String
   changed_only : Bool
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceBreakpoint::equal(Self, Self) -> Bool
 pub fn TraceBreakpoint::new(event_kind? : String, target? : TargetRef, role? : String, changed_only? : Bool) -> Self
 pub fn TraceBreakpoint::not_equal(Self, Self) -> Bool
-pub fn TraceBreakpoint::to_json(Self) -> Json
+pub fn TraceBreakpoint::to_json(Self) -> @json.Json
 pub fn TraceBreakpoint::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct TraceBreakpointHit {
   step : Int32
   event_kind : String
   targets : Array[TargetRef]
   changes : Array[TraceChange]
   reason : String
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceBreakpointHit::equal(Self, Self) -> Bool
 pub fn TraceBreakpointHit::not_equal(Self, Self) -> Bool
-pub fn TraceBreakpointHit::to_json(Self) -> Json
+pub fn TraceBreakpointHit::to_json(Self) -> @json.Json
 pub fn TraceBreakpointHit::to_repr(Self) -> @debug.Repr
 
+#derive(@debug.Debug)
 pub struct TraceBuilder {
   title : String
   algorithm : String
@@ -691,12 +738,13 @@ pub struct TraceBuilder {
   steps : Array[AlgorithmTraceStep]
   options : TraceOptions
   mut completed : Bool
-} derive(@debug.Debug)
+}
 pub fn TraceBuilder::finish(Self, summary? : Array[TraceAttribute]) -> AlgorithmTrace raise TraceError
 pub fn TraceBuilder::new(title~ : String, algorithm~ : String, description? : String, initial_scene~ : Scene, options? : TraceOptions) -> Self raise TraceError
 pub fn TraceBuilder::record(Self, event~ : TraceEvent, scene~ : Scene, annotation? : Annotation) -> Unit raise TraceError
 pub fn TraceBuilder::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct TraceChange {
   kind : TraceChangeKind
   target : TargetRef
@@ -704,13 +752,14 @@ pub struct TraceChange {
   after_value : String
   before_index : Int32
   after_index : Int32
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceChange::equal(Self, Self) -> Bool
 pub fn TraceChange::new(kind~ : TraceChangeKind, target~ : TargetRef, before_value? : String, after_value? : String, before_index? : Int32, after_index? : Int32) -> Self
 pub fn TraceChange::not_equal(Self, Self) -> Bool
-pub fn TraceChange::to_json(Self) -> Json
+pub fn TraceChange::to_json(Self) -> @json.Json
 pub fn TraceChange::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum TraceChangeKind {
   Added
   Removed
@@ -718,10 +767,10 @@ pub(all) enum TraceChangeKind {
   Moved
   HighlightAdded
   HighlightRemoved
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceChangeKind::equal(Self, Self) -> Bool
 pub fn TraceChangeKind::not_equal(Self, Self) -> Bool
-pub fn TraceChangeKind::to_json(Self) -> Json
+pub fn TraceChangeKind::to_json(Self) -> @json.Json
 pub fn TraceChangeKind::to_repr(Self) -> @debug.Repr
 
 pub struct TraceContract {
@@ -732,6 +781,7 @@ pub struct TraceContract {
 pub fn TraceContract::check(Self, AlgorithmTrace) -> ContractReport
 pub fn TraceContract::new(name~ : String, description~ : String, checker~ : (AlgorithmTrace) -> Array[TraceViolation]) -> Self
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct TraceCounterexample {
   original_title : String
   original_start : Int32
@@ -739,13 +789,14 @@ pub struct TraceCounterexample {
   original_end : Int32
   focus_step : Int32
   trace : AlgorithmTrace
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceCounterexample::equal(Self, Self) -> Bool
 pub fn TraceCounterexample::not_equal(Self, Self) -> Bool
-pub fn TraceCounterexample::to_json(Self) -> Json
+pub fn TraceCounterexample::to_json(Self) -> @json.Json
 pub fn TraceCounterexample::to_json_string(Self) -> String
 pub fn TraceCounterexample::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct TraceDiagnosis {
   contract_report : ContractReport
   divergence : TraceDivergence?
@@ -753,13 +804,14 @@ pub struct TraceDiagnosis {
   transition_diff : TraceFrameDiff?
   reference_diff : TraceFrameDiff?
   focused_slice : TraceCounterexample?
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceDiagnosis::equal(Self, Self) -> Bool
 pub fn TraceDiagnosis::not_equal(Self, Self) -> Bool
 pub fn TraceDiagnosis::passed(Self) -> Bool
-pub fn TraceDiagnosis::to_json(Self) -> Json
+pub fn TraceDiagnosis::to_json(Self) -> @json.Json
 pub fn TraceDiagnosis::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct TraceDivergence {
   step : Int32
   kind : TraceDivergenceKind
@@ -767,24 +819,26 @@ pub struct TraceDivergence {
   expected_event : String
   actual_event : String
   scene_diff : TraceFrameDiff?
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceDivergence::equal(Self, Self) -> Bool
 pub fn TraceDivergence::not_equal(Self, Self) -> Bool
-pub fn TraceDivergence::to_json(Self) -> Json
+pub fn TraceDivergence::to_json(Self) -> @json.Json
 pub fn TraceDivergence::to_json_string(Self) -> String
 pub fn TraceDivergence::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum TraceDivergenceKind {
   EventMismatch
   SceneMismatch
   ExpectedEnded
   ActualEnded
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceDivergenceKind::equal(Self, Self) -> Bool
 pub fn TraceDivergenceKind::not_equal(Self, Self) -> Bool
-pub fn TraceDivergenceKind::to_json(Self) -> Json
+pub fn TraceDivergenceKind::to_json(Self) -> @json.Json
 pub fn TraceDivergenceKind::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum TraceEvent {
   Initialize
   Compare(Array[TargetRef])
@@ -795,41 +849,44 @@ pub(all) enum TraceEvent {
   Relax(TargetRef, TargetRef, String)
   Complete
   Custom(String, Array[TraceAttribute])
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceEvent::equal(Self, Self) -> Bool
 pub fn TraceEvent::not_equal(Self, Self) -> Bool
-pub fn TraceEvent::to_json(Self) -> Json
+pub fn TraceEvent::to_json(Self) -> @json.Json
 pub fn TraceEvent::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct TraceFrameDiff {
   from_step : Int32
   to_step : Int32
   changes : Array[TraceChange]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceFrameDiff::equal(Self, Self) -> Bool
 pub fn TraceFrameDiff::is_empty(Self) -> Bool
 pub fn TraceFrameDiff::not_equal(Self, Self) -> Bool
 pub fn TraceFrameDiff::report(Self) -> String
-pub fn TraceFrameDiff::to_json(Self) -> Json
+pub fn TraceFrameDiff::to_json(Self) -> @json.Json
 pub fn TraceFrameDiff::to_json_string(Self) -> String
 pub fn TraceFrameDiff::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum TraceLevel {
   Off
   Count
   Full
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceLevel::equal(Self, Self) -> Bool
 pub fn TraceLevel::not_equal(Self, Self) -> Bool
-pub fn TraceLevel::to_json(Self) -> Json
+pub fn TraceLevel::to_json(Self) -> @json.Json
 pub fn TraceLevel::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct TraceLintIssue {
   severity : TraceLintSeverity
   code : String
   message : String
   step : Int32
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceLintIssue::equal(Self, Self) -> Bool
 pub fn TraceLintIssue::is_error(Self) -> Bool
 pub fn TraceLintIssue::is_info(Self) -> Bool
@@ -839,31 +896,34 @@ pub fn TraceLintIssue::markdown_row(Self) -> String
 pub fn TraceLintIssue::new(severity~ : TraceLintSeverity, code~ : String, message~ : String, step? : Int32) -> Self
 pub fn TraceLintIssue::not_equal(Self, Self) -> Bool
 pub fn TraceLintIssue::severity_name(Self) -> String
-pub fn TraceLintIssue::to_json(Self) -> Json
+pub fn TraceLintIssue::to_json(Self) -> @json.Json
 pub fn TraceLintIssue::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum TraceLintSeverity {
   Info
   Warning
   Error
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceLintSeverity::equal(Self, Self) -> Bool
 pub fn TraceLintSeverity::not_equal(Self, Self) -> Bool
-pub fn TraceLintSeverity::to_json(Self) -> Json
+pub fn TraceLintSeverity::to_json(Self) -> @json.Json
 pub fn TraceLintSeverity::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.FromJson, @json.ToJson)
 pub struct TraceOptions {
   max_steps : Int32
   max_entities_per_scene : Int32
-} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+}
 pub fn TraceOptions::default() -> Self
 pub fn TraceOptions::equal(Self, Self) -> Bool
-pub fn TraceOptions::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn TraceOptions::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
 pub fn TraceOptions::new(max_steps? : Int32, max_entities_per_scene? : Int32) -> Self raise TraceError
 pub fn TraceOptions::not_equal(Self, Self) -> Bool
-pub fn TraceOptions::to_json(Self) -> Json
+pub fn TraceOptions::to_json(Self) -> @json.Json
 pub fn TraceOptions::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct TraceStats {
   title : String
   algorithm : String
@@ -879,7 +939,7 @@ pub struct TraceStats {
   annotation_count : Int32
   custom_event_count : Int32
   highlight_count : Int32
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceStats::equal(Self, Self) -> Bool
 pub fn TraceStats::event_count(Self, String) -> Int32
 pub fn TraceStats::event_table(Self) -> String
@@ -889,24 +949,26 @@ pub fn TraceStats::object_table(Self) -> String
 pub fn TraceStats::summary_report(Self) -> String
 pub fn TraceStats::target_count(Self, String, entity_id? : String) -> Int32
 pub fn TraceStats::target_table(Self, limit? : Int32) -> String
-pub fn TraceStats::to_json(Self) -> Json
+pub fn TraceStats::to_json(Self) -> @json.Json
 pub fn TraceStats::to_markdown(Self, target_limit? : Int32) -> String
 pub fn TraceStats::to_repr(Self) -> @debug.Repr
 pub fn TraceStats::top_targets(Self, limit? : Int32) -> Array[TargetUsage]
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct TraceStep {
   current : Position?
   frontier : Array[Position]
   visited : Array[Position]
   cost : Array[CostEntry]
   parent : Array[ParentLink]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceStep::equal(Self, Self) -> Bool
 pub fn TraceStep::new(current~ : Position?, frontier~ : Array[Position], visited~ : Array[Position], cost~ : Array[CostEntry], parent~ : Array[ParentLink]) -> Self
 pub fn TraceStep::not_equal(Self, Self) -> Bool
-pub fn TraceStep::to_json(Self) -> Json
+pub fn TraceStep::to_json(Self) -> @json.Json
 pub fn TraceStep::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct TraceTimelineEntry {
   step : Int32
   event_name : String
@@ -916,15 +978,16 @@ pub struct TraceTimelineEntry {
   highlight_count : Int32
   annotation_title : String
   completed : Bool
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceTimelineEntry::equal(Self, Self) -> Bool
 pub fn TraceTimelineEntry::label(Self) -> String
 pub fn TraceTimelineEntry::markdown_row(Self) -> String
 pub fn TraceTimelineEntry::new(step~ : Int32, event_name~ : String, target_count~ : Int32, object_count~ : Int32, entity_count~ : Int32, highlight_count~ : Int32, annotation_title? : String, completed? : Bool) -> Self
 pub fn TraceTimelineEntry::not_equal(Self, Self) -> Bool
-pub fn TraceTimelineEntry::to_json(Self) -> Json
+pub fn TraceTimelineEntry::to_json(Self) -> @json.Json
 pub fn TraceTimelineEntry::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct TraceViolation {
   contract : String
   code : String
@@ -933,20 +996,21 @@ pub struct TraceViolation {
   targets : Array[TargetRef]
   message : String
   evidence : Array[TraceAttribute]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceViolation::equal(Self, Self) -> Bool
 pub fn TraceViolation::new(contract~ : String, code~ : String, severity? : TraceViolationSeverity, step? : Int32, targets? : Array[TargetRef], message~ : String, evidence? : Array[TraceAttribute]) -> Self
 pub fn TraceViolation::not_equal(Self, Self) -> Bool
-pub fn TraceViolation::to_json(Self) -> Json
+pub fn TraceViolation::to_json(Self) -> @json.Json
 pub fn TraceViolation::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum TraceViolationSeverity {
   Warning
   Error
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceViolationSeverity::equal(Self, Self) -> Bool
 pub fn TraceViolationSeverity::not_equal(Self, Self) -> Bool
-pub fn TraceViolationSeverity::to_json(Self) -> Json
+pub fn TraceViolationSeverity::to_json(Self) -> @json.Json
 pub fn TraceViolationSeverity::to_repr(Self) -> @debug.Repr
 
 pub struct TracedArray[T] {
@@ -965,6 +1029,7 @@ pub fn[T : Show] TracedArray::set(Self[T], Int32, T) -> Unit
 pub fn[T] TracedArray::swap(Self[T], Int32, Int32) -> Unit
 pub fn[T] TracedArray::to_array(Self[T]) -> Array[T]
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct TracingOverhead {
   off_runs : Int32
   count_runs : Int32
@@ -977,28 +1042,30 @@ pub struct TracingOverhead {
   steps : Int32
   json_length : Int32
   full_us_per_step : Double
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TracingOverhead::equal(Self, Self) -> Bool
 pub fn TracingOverhead::not_equal(Self, Self) -> Bool
 pub fn TracingOverhead::report(Self) -> String
-pub fn TracingOverhead::to_json(Self) -> Json
+pub fn TracingOverhead::to_json(Self) -> @json.Json
 pub fn TracingOverhead::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct UnionOperation {
   left : Int32
   right : Int32
   label : String
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn UnionOperation::equal(Self, Self) -> Bool
 pub fn UnionOperation::new(left~ : Int32, right~ : Int32, label? : String) -> Self
 pub fn UnionOperation::not_equal(Self, Self) -> Bool
-pub fn UnionOperation::to_json(Self) -> Json
+pub fn UnionOperation::to_json(Self) -> @json.Json
 pub fn UnionOperation::to_repr(Self) -> @debug.Repr
 
-type WeightedCell derive(Eq, ToJson, @debug.Debug)
+#derive(Eq, @debug.Debug, @json.ToJson)
+type WeightedCell
 pub fn WeightedCell::equal(Self, Self) -> Bool
 pub fn WeightedCell::not_equal(Self, Self) -> Bool
-pub fn WeightedCell::to_json(Self) -> Json
+pub fn WeightedCell::to_json(Self) -> @json.Json
 pub fn WeightedCell::to_repr(Self) -> @debug.Repr
 
 // Type aliases

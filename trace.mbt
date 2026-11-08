@@ -1,8 +1,9 @@
 ///|
+#derive(Debug, Eq, ToJson)
 pub struct CostEntry {
   position : Position
   cost : Int32
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend CostEntry with Debug::{to_repr}
@@ -14,10 +15,11 @@ pub extend CostEntry with Eq::{not_equal, equal}
 pub extend CostEntry with ToJson::{to_json}
 
 ///|
+#derive(Debug, Eq, ToJson)
 pub struct ParentLink {
   child : Position
   parent : Position
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend ParentLink with Debug::{to_repr}
@@ -29,12 +31,13 @@ pub extend ParentLink with Eq::{not_equal, equal}
 pub extend ParentLink with ToJson::{to_json}
 
 ///|
+#derive(Debug, Eq, ToJson)
 pub struct PathResult {
   reachable : Bool
   path : Array[Position]
   cost : Int32
   visited_count : Int32
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend PathResult with Debug::{to_repr}
@@ -60,13 +63,14 @@ pub fn PathResult::not_found(visited_count~ : Int32) -> PathResult {
 }
 
 ///|
+#derive(Debug, Eq, ToJson)
 pub struct TraceStep {
   current : Position?
   frontier : Array[Position]
   visited : Array[Position]
   cost : Array[CostEntry]
   parent : Array[ParentLink]
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TraceStep with Debug::{to_repr}
@@ -95,10 +99,11 @@ pub fn TraceStep::new(
 }
 
 ///|
+#derive(Debug, Eq, ToJson)
 pub struct SearchTrace {
   result : PathResult
   steps : Array[TraceStep]
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend SearchTrace with Debug::{to_repr}

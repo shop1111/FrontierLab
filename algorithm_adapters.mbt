@@ -1,10 +1,11 @@
 ///|
 /// One stable value in a sortable sequence trace.
+#derive(Debug, Eq, ToJson)
 pub struct SortTraceItem {
   id : String
   value : Int32
   label : String
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend SortTraceItem with Debug::{to_repr}
@@ -26,11 +27,12 @@ pub fn SortTraceItem::new(
 
 ///|
 /// One union operation for the Union-Find trace adapter.
+#derive(Debug, Eq, ToJson)
 pub struct UnionOperation {
   left : Int32
   right : Int32
   label : String
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend UnionOperation with Debug::{to_repr}

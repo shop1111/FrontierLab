@@ -1,5 +1,6 @@
 ///|
 /// A growth class describing how an operation count scales with input size.
+#derive(Debug, Eq, ToJson)
 pub(all) enum ComplexityClass {
   Constant
   Logarithmic
@@ -8,7 +9,7 @@ pub(all) enum ComplexityClass {
   Quadratic
   Cubic
   Exponential
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend ComplexityClass with Debug::{to_repr}
@@ -88,6 +89,7 @@ pub fn ComplexityClass::evaluate(self : ComplexityClass, n : Int32) -> Double {
 
 ///|
 /// The operation count a complexity profile fits.
+#derive(Debug, Eq, ToJson)
 pub(all) enum CostMetric {
   Compares
   Swaps
@@ -95,7 +97,7 @@ pub(all) enum CostMetric {
   Writes
   /// Compares, swaps, reads, and writes together.
   Total
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend CostMetric with Debug::{to_repr}
@@ -130,11 +132,12 @@ pub fn CostMetric::cost(self : CostMetric, counts : OperationCounts) -> Int32 {
 
 ///|
 /// Operation counts measured for one input size.
+#derive(Debug, Eq, ToJson)
 pub struct ComplexitySample {
   size : Int32
   counts : OperationCounts
   cost : Int32
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend ComplexitySample with Debug::{to_repr}
@@ -148,11 +151,12 @@ pub extend ComplexitySample with ToJson::{to_json}
 ///|
 /// `cost ≈ coefficient · class(n)`. `error` is the root-mean-square relative
 /// residual over all samples, so 0.05 means a typical 5% deviation.
+#derive(Debug, Eq, ToJson)
 pub struct ComplexityFit {
   class : ComplexityClass
   coefficient : Double
   error : Double
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend ComplexityFit with Debug::{to_repr}
@@ -167,13 +171,14 @@ pub extend ComplexityFit with ToJson::{to_json}
 /// Measured operation counts over increasing input sizes with every growth
 /// class fitted to them. `fits` is ordered from best to worst; `exponent` is
 /// the least-squares slope of log(cost) against log(n).
+#derive(Debug, Eq, ToJson)
 pub struct ComplexityProfile {
   metric : CostMetric
   samples : Array[ComplexitySample]
   fits : Array[ComplexityFit]
   best : ComplexityFit
   exponent : Double
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend ComplexityProfile with Debug::{to_repr}

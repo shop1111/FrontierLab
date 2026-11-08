@@ -1,10 +1,11 @@
 ///|
 /// Severity for lightweight trace quality checks.
+#derive(Debug, Eq, ToJson)
 pub(all) enum TraceLintSeverity {
   Info
   Warning
   Error
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TraceLintSeverity with Debug::{to_repr}
@@ -17,12 +18,13 @@ pub extend TraceLintSeverity with ToJson::{to_json}
 
 ///|
 /// A non-throwing quality observation for a trace document.
+#derive(Debug, Eq, ToJson)
 pub struct TraceLintIssue {
   severity : TraceLintSeverity
   code : String
   message : String
   step : Int32
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TraceLintIssue with Debug::{to_repr}
@@ -77,6 +79,7 @@ pub fn TraceLintIssue::severity_name(self : TraceLintIssue) -> String {
 
 ///|
 /// A compact row describing one renderable point in a trace timeline.
+#derive(Debug, Eq, ToJson)
 pub struct TraceTimelineEntry {
   step : Int32
   event_name : String
@@ -86,7 +89,7 @@ pub struct TraceTimelineEntry {
   highlight_count : Int32
   annotation_title : String
   completed : Bool
-} derive(Debug, Eq, ToJson)
+}
 
 ///|
 pub extend TraceTimelineEntry with Debug::{to_repr}
