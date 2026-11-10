@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.11.0 - 2026-11-09
 
 - Raised the supported toolchain to MoonBit `moonc` 0.10.20 or newer and moved
   every type to the `#derive(...)` syntax that 0.10.20 requires under
