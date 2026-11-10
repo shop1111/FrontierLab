@@ -7,7 +7,7 @@ HTML 可视化能力。
 [![CI](https://github.com/shop1111/FrontierLab/actions/workflows/ci.yml/badge.svg)](https://github.com/shop1111/FrontierLab/actions/workflows/ci.yml)
 [![Mooncakes](https://img.shields.io/badge/Mooncakes-package-7c3aed)](https://mooncakes.io/docs/shop1111/frontierlab)
 
-[在线打开 AI Trace Clinic](https://shop1111.github.io/FrontierLab/playground.html) ·
+[在线演示](https://shop1111.github.io/FrontierLab/) ·
 [Mooncakes](https://mooncakes.io/docs/shop1111/frontierlab) ·
 [Trace Schema v1](docs/TRACE_SCHEMA.md)
 
@@ -162,7 +162,6 @@ Adapter 把算法输入和执行步骤转换成统一的 `AlgorithmTrace`，因�
 | 一维 DP | `fibonacci_dp_trace`、`coin_change_dp_trace` | `Sequence` | `Update`、依赖高亮 |
 | 二维 DP | `zero_one_knapsack_dp_trace`、`lcs_dp_trace` | `Grid` | `Update`、`Visit` |
 | 平衡树 | `red_black_tree_trace` | `Graph` | 插入、重着色、旋转、查找 |
-| 路径搜索桥接 | `search_trace_to_algorithm_trace` | `Grid` | `Visit`、`Relax` |
 
 Fibonacci 和零钱兑换保留各自简单的算法级入口，但内部共享一维 DP 场景表达。
 红黑树支持 `Insert` 和 `Find` 操作；节点标签中的 `[R]`、`[B]` 在不修改
@@ -201,9 +200,7 @@ step 10。CLI 的退出码含义为：
 - `1`：参数、文件、JSON 或 Schema 无效。
 
 给 `diagnose` 加上 `--timings`，会按阶段输出耗时：读文件、解码和校验两条轨迹、
-规则检查、差异搜索、状态 diff、反例切片和生成报告。`--format json` 时，耗时放在
-`result.timings`。库里的对应接口是 `PhaseTimer`，可以传给 `diagnose_trace`，
-也可以用来给自己的流程分阶段计时。
+诊断和生成报告。`--format json` 时，耗时放在 `result.timings`。
 
 `profile` 命令不需要写代码，直接对内置排序算法做复杂度分析：
 
@@ -254,21 +251,8 @@ moon run cmd/main -- demo red-black-tree --format html --output _build/visual/re
 moon run cmd/main -- render trace.json --format html --output trace.html
 ```
 
-`render_trace_svg` 与 `render_trace_svg_frames` 在 v0.9 仅保留为旧代码兼容入口，
-已经标记弃用，并计划在 v1.0 删除。新项目应选择交互 HTML；需要交换或长期存档
-轨迹数据时选择 Schema v1 JSON。
-
-## 离线浏览器工具
-
-AI Trace Clinic 是一个单文件离线页面，可导入、回放和比较轨迹，不依赖服务器、
-CDN 或外部脚本：
-
-```bash
-moon run cmd/main -- playground --output _build/playground.html
-```
-
-生成后直接用浏览器打开 `_build/playground.html`。页面自带一个错误示例，用于
-展示规则失败、第一次差异、状态变化和聚焦切片。
+可视化选择交互 HTML；需要交换或长期存档轨迹数据时选择 Schema v1 JSON。
+需要定位错误时，`diagnose --report report.html` 会生成离线诊断报告。
 
 ## 核心 API
 
@@ -278,7 +262,7 @@ moon run cmd/main -- playground --output _build/playground.html
 | 统一诊断 | `diagnose_trace`、`TraceDiagnosis::passed` | 同时执行规则检查、参考轨迹比较和聚焦切片 |
 | 调试与比较 | `diff`、`breakpoint_hits`、`slice`、`first_divergence` | 查看步骤变化、命中语义断点并定位第一次差异 |
 | JSON 协议 | `encode_json`、`AlgorithmTrace::decode_json`、`validate` | 读写并校验稳定的 Trace Schema v1 |
-| 输出 | `render_trace_html`、`render_trace_playground` | 生成交互式离线 HTML 或诊断页面；SVG API 仅作弃用兼容 |
+| 输出 | `render_trace_html` | 生成交互式离线 HTML 播放器 |
 
 完整公开接口由 `moon info` 生成在 [pkg.generated.mbti](pkg.generated.mbti) 中。
 
@@ -312,7 +296,6 @@ moon fmt --check
 moon info
 moon test --target all --deny-warn
 python scripts/check_coverage.py
-node scripts/check_playground.mjs
 node scripts/check_renderer.mjs _build/renderer/insertion-sort.html
 python scripts/validate_cli.py
 moon package --list

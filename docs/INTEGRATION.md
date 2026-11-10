@@ -28,7 +28,7 @@ To build a trace by hand:
 2. Build an initial `Scene` from one or more `Sequence`, `Sets`, `Graph`, or `Grid` objects.
 3. Create a `TraceBuilder` with a title and stable algorithm key.
 4. At meaningful algorithm boundaries, call `record` with a semantic event, complete scene, and optional annotation.
-5. Finish and validate the trace, then pass it to the HTML renderer or `encode_json`. Use `AlgorithmTrace::decode_json` to consume an external schema-v1 document. The SVG renderer is deprecated in v0.9 and scheduled for removal in v1.0.
+5. Finish and validate the trace, then pass it to the HTML renderer or `encode_json`. Use `AlgorithmTrace::decode_json` to consume an external schema-v1 document.
 
 Prefer meaningful steps over logging every assignment. A sorting trace normally records comparisons and moves; graph search records visits and relaxations; dynamic programming records cell updates and dependency choices.
 
@@ -36,7 +36,7 @@ Use `Custom` when no built-in event describes the transition. Keep the custom `k
 
 `TraceBuilder` deep-copies every scene, so callers can continue mutating their working arrays after `record` returns.
 
-For existing FrontierLab searches, call `search_trace_to_algorithm_trace` rather than rebuilding grid scenes manually.
+For grid algorithms, build a `Grid` scene and record `Visit` and `Relax` steps; the CLI `pathfinding` demo (`cmd/main/cli_demos.mbt`) is a complete A* example recorded with `TraceBuilder`.
 
 ## Bundled classic adapters
 
@@ -62,7 +62,7 @@ their complete scene tables.
 
 After building a trace, prefer `diagnose_trace(actual, contract=..., expected=...)` for a single authoritative result. It returns the contract report, optional first divergence, focus step, actual transition diff, reference diff, and a portable focused window around the failure. Use `trace.diff(from_step=..., to_step=...)`, `trace.breakpoint_hits(...)`, and `trace.slice(center=...)` when assembling a custom workflow.
 
-`TraceContract` is a rule checker: it reports whether individual steps or the final result violate predefined requirements. Use `sequence_transition_contract`, `sorted_int_sequence_contract`, the backward-compatible `insertion_sort_int_contract`, or `grid_path_contract` for bundled rules. Library authors can create a `TraceContract::new` with a pure MoonBit checker callback that returns stable `TraceViolation` values. Agents and CI should call the CLI with `--format json`; exit code 2 means the trace parsed correctly but violated a rule or differed from its reference.
+`TraceContract` is a rule checker: it reports whether individual steps or the final result violate predefined requirements. Use `sequence_transition_contract`, `sorted_int_sequence_contract`, or `grid_path_contract` for bundled rules (`insertion_sort_int_contract` is a deprecated alias of `sorted_int_sequence_contract`). Library authors can create a `TraceContract::new` with a pure MoonBit checker callback that returns stable `TraceViolation` values. Agents and CI should call the CLI with `--format json`; exit code 2 means the trace parsed correctly but violated a rule or differed from its reference.
 
 ## Three supported integration paths
 
@@ -91,18 +91,8 @@ semantic failure, and 1 means invocation/input failure.
 
 ### 3. Offline browser
 
-Generate AI Trace Clinic with:
-
-```bash
-moon run cmd/main -- playground --output playground.html
-```
-
-Open the resulting file directly. It contains no external scripts or network
-requirements, and includes the same intentionally incorrect selection-sort
-example as the CLI fixtures.
-
-For a focused algorithm demonstration instead of diagnosis, generate the v0.9
-interactive player:
+`diagnose --report report.html` writes an offline diagnostic report. For an
+algorithm demonstration, generate the interactive player:
 
 ```bash
 moon run cmd/main -- demo insertion-sort --format html --output insertion-sort.html

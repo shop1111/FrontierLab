@@ -33,15 +33,13 @@ test "build encode and decode a trace" {
 
 ```mbt check
 ///|
-test "generate an offline trace playground" {
-  let html = @frontierlab.render_trace_playground()
-  assert_true(html.contains("AI Trace Clinic"))
-  assert_true(!html.contains("<script src="))
+test "render an offline HTML trace player" {
   let player = @frontierlab.render_trace_html(
     @frontierlab.insertion_sort_trace([3, 1, 2]),
   )
   assert_true(player.contains("id=\"guide\""))
   assert_true(player.contains("FrontierLabPlayerCore"))
+  assert_true(!player.contains("<script src="))
 }
 ```
 
@@ -72,7 +70,7 @@ test "debug and verify an algorithm trace" {
     @frontierlab.TraceBreakpoint::new(event_kind="swap", changed_only=true),
   )
   assert_true(!hits.is_empty())
-  let report = @frontierlab.insertion_sort_int_contract(object_id="values").check(
+  let report = @frontierlab.sorted_int_sequence_contract(object_id="values").check(
     trace,
   )
   assert_true(report.passed)

@@ -7,31 +7,11 @@ import {
 }
 
 // Values
-pub fn astar(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule, heuristic? : Heuristic) -> PathResult raise
-
-pub fn astar_trace(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule, heuristic? : Heuristic) -> SearchTrace raise
-
-pub fn bfs(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule) -> PathResult raise
-
-pub fn bfs_trace(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule) -> SearchTrace raise
-
 pub fn coin_change_dp_trace(Array[Int32], Int32, title? : String, object_id? : String, label? : String, options? : TraceOptions) -> AlgorithmTrace raise TraceError
-
-pub fn compare_algorithms(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule, heuristic? : Heuristic) -> CompareReport raise
 
 pub let debug_report_version : String
 
-pub fn diagnose_trace(AlgorithmTrace, contract~ : TraceContract, expected? : AlgorithmTrace, timer? : PhaseTimer) -> TraceDiagnosis
-
-pub fn dijkstra(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule) -> PathResult raise
-
-pub fn dijkstra_trace(GridMap, start~ : Position, goal~ : Position, rule? : MoveRule) -> SearchTrace raise
-
-pub fn export_ascii(GridMap, start~ : Position, goal~ : Position, trace? : SearchTrace) -> String
-
-pub fn export_svg(GridMap, start~ : Position, goal~ : Position, trace? : SearchTrace, cell_size? : Int32) -> String
-
-pub fn faulty_insertion_sort_demo_trace() -> AlgorithmTrace raise
+pub fn diagnose_trace(AlgorithmTrace, contract~ : TraceContract, expected? : AlgorithmTrace) -> TraceDiagnosis
 
 pub fn fibonacci_dp_trace(Int32, title? : String, object_id? : String, label? : String, options? : TraceOptions) -> AlgorithmTrace raise TraceError
 
@@ -39,10 +19,7 @@ pub fn first_divergence(AlgorithmTrace, AlgorithmTrace) -> TraceDivergence?
 
 pub fn grid_path_contract(object_id~ : String) -> TraceContract
 
-pub fn heuristic_distance(Heuristic, Position, Position) -> Int32
-
-pub fn insertion_sort_demo_trace(Array[Int32]) -> AlgorithmTrace raise
-
+#deprecated
 pub fn insertion_sort_int_contract(object_id~ : String) -> TraceContract
 
 pub fn insertion_sort_items_trace(Array[SortTraceItem], title? : String, object_id? : String, label? : String) -> AlgorithmTrace raise TraceError
@@ -52,8 +29,6 @@ pub fn insertion_sort_trace(Array[Int32], title? : String, object_id? : String, 
 pub fn lcs_dp_trace(String, String, title? : String, object_id? : String, label? : String, options? : TraceOptions) -> AlgorithmTrace raise TraceError
 
 pub fn[T : Show] measure_tracing_overhead(Array[T], (TracedArray[T]) -> Unit, clock~ : () -> UInt64, min_ms? : Int32, max_runs? : Int32, options? : TraceOptions) -> TracingOverhead raise TraceError
-
-pub fn pathfinding_demo_trace() -> AlgorithmTrace raise
 
 pub fn profile_complexity(Array[Int32], (Int32) -> OperationCounts, metric? : CostMetric) -> ComplexityProfile raise TraceError
 
@@ -65,23 +40,11 @@ pub fn red_black_tree_trace(Array[RedBlackTreeOperation], title? : String, objec
 
 pub fn render_trace_html(AlgorithmTrace) -> String
 
-pub fn render_trace_playground() -> String raise TraceError
-
-#deprecated
-pub fn render_trace_svg(AlgorithmTrace, step? : Int32, width? : Int32) -> String raise
-
-#deprecated
-pub fn render_trace_svg_frames(AlgorithmTrace, width? : Int32) -> Array[String] raise
-
 pub fn search_sequence_counterexample((TracedArray[Int32]) -> Unit, reference? : (TracedArray[Int32]) -> Unit, check? : (Array[Int32], Array[Int32]) -> String?, contract? : TraceContract, match_events? : Bool, cases? : Int32, max_length? : Int32, max_value? : Int32, max_shrinks? : Int32, seed? : UInt64, options? : TraceOptions) -> SequenceCounterexample? raise TraceError
-
-pub fn search_trace_to_algorithm_trace(GridMap, start~ : Position, goal~ : Position, algorithm~ : String, trace~ : SearchTrace) -> AlgorithmTrace raise
 
 pub fn sequence_transition_contract(object_id~ : String) -> TraceContract
 
 pub fn sorted_int_sequence_contract(object_id~ : String) -> TraceContract
-
-pub fn union_find_demo_trace() -> AlgorithmTrace raise
 
 pub fn union_find_trace(Int32, Array[UnionOperation], title? : String, object_id? : String, label? : String, compress_paths? : Bool) -> AlgorithmTrace raise TraceError
 
@@ -111,20 +74,6 @@ pub impl Show for TraceError
 
 // Types and methods
 #derive(Eq, @debug.Debug, @json.ToJson)
-pub struct AlgorithmReport {
-  algorithm : String
-  reachable : Bool
-  visited_count : Int32
-  path_length : Int32
-  total_cost : Int32
-}
-pub fn AlgorithmReport::equal(Self, Self) -> Bool
-pub fn AlgorithmReport::from_result(String, PathResult) -> Self
-pub fn AlgorithmReport::not_equal(Self, Self) -> Bool
-pub fn AlgorithmReport::to_json(Self) -> @json.Json
-pub fn AlgorithmReport::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct AlgorithmTrace {
   schema_version : String
   title : String
@@ -134,7 +83,6 @@ pub struct AlgorithmTrace {
   steps : Array[AlgorithmTraceStep]
   summary : Array[TraceAttribute]
 }
-pub fn AlgorithmTrace::analysis_markdown(Self, target_limit? : Int32) -> String
 pub fn AlgorithmTrace::analyze(Self) -> TraceStats
 pub fn AlgorithmTrace::breakpoint_hits(Self, TraceBreakpoint) -> Array[TraceBreakpointHit]
 pub fn AlgorithmTrace::decode_json(StringView, options? : TraceOptions) -> Self raise TraceError
@@ -142,20 +90,11 @@ pub fn AlgorithmTrace::diff(Self, from_step~ : Int32, to_step~ : Int32) -> Trace
 pub fn AlgorithmTrace::encode_json(Self) -> String
 pub fn AlgorithmTrace::equal(Self, Self) -> Bool
 pub fn AlgorithmTrace::event_counts(Self) -> Array[EventCount]
-pub fn AlgorithmTrace::has_lint_errors(Self) -> Bool
-pub fn AlgorithmTrace::has_lint_warnings(Self) -> Bool
-pub fn AlgorithmTrace::lint(Self) -> Array[TraceLintIssue]
-pub fn AlgorithmTrace::lint_count(Self, TraceLintSeverity) -> Int32
-pub fn AlgorithmTrace::lint_markdown(Self) -> String
-pub fn AlgorithmTrace::lint_report(Self) -> String
 pub fn AlgorithmTrace::not_equal(Self, Self) -> Bool
 pub fn AlgorithmTrace::object_usage(Self) -> Array[ObjectUsage]
 pub fn AlgorithmTrace::slice(Self, center~ : Int32, before? : Int32, after? : Int32) -> TraceCounterexample raise TraceError
 pub fn AlgorithmTrace::summary_report(Self) -> String
 pub fn AlgorithmTrace::target_usage(Self) -> Array[TargetUsage]
-pub fn AlgorithmTrace::timeline(Self) -> Array[TraceTimelineEntry]
-pub fn AlgorithmTrace::timeline_report(Self) -> String
-pub fn AlgorithmTrace::timeline_table(Self) -> String
 pub fn AlgorithmTrace::to_json(Self) -> @json.Json
 pub fn AlgorithmTrace::to_json_string(Self) -> String
 pub fn AlgorithmTrace::to_repr(Self) -> @debug.Repr
@@ -184,15 +123,6 @@ pub fn Annotation::new(title~ : String, body~ : String, pseudocode_line? : Int32
 pub fn Annotation::not_equal(Self, Self) -> Bool
 pub fn Annotation::to_json(Self) -> @json.Json
 pub fn Annotation::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub struct CompareReport {
-  entries : Array[AlgorithmReport]
-}
-pub fn CompareReport::equal(Self, Self) -> Bool
-pub fn CompareReport::not_equal(Self, Self) -> Bool
-pub fn CompareReport::to_json(Self) -> @json.Json
-pub fn CompareReport::to_repr(Self) -> @debug.Repr
 
 #derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum ComplexityClass {
@@ -265,17 +195,6 @@ pub fn ContractReport::to_json(Self) -> @json.Json
 pub fn ContractReport::to_json_string(Self) -> String
 pub fn ContractReport::to_markdown(Self) -> String
 pub fn ContractReport::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub struct CostEntry {
-  position : Position
-  cost : Int32
-}
-pub fn CostEntry::equal(Self, Self) -> Bool
-pub fn CostEntry::new(position~ : Position, cost~ : Int32) -> Self
-pub fn CostEntry::not_equal(Self, Self) -> Bool
-pub fn CostEntry::to_json(Self) -> @json.Json
-pub fn CostEntry::to_repr(Self) -> @debug.Repr
 
 #derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum CostMetric {
@@ -364,26 +283,6 @@ pub fn GridCellState::to_json(Self) -> @json.Json
 pub fn GridCellState::to_repr(Self) -> @debug.Repr
 
 #derive(Eq, @debug.Debug, @json.ToJson)
-pub struct GridMap {
-  width : Int32
-  height : Int32
-  obstacles : Array[Position]
-  weights : Array[WeightedCell]
-}
-pub fn GridMap::contains(Self, Position) -> Bool
-pub fn GridMap::equal(Self, Self) -> Bool
-pub fn GridMap::is_obstacle(Self, Position) -> Bool
-pub fn GridMap::is_walkable(Self, Position) -> Bool
-pub fn GridMap::neighbors(Self, Position, MoveRule) -> Array[Position]
-pub fn GridMap::new(width~ : Int32, height~ : Int32) -> Self raise
-pub fn GridMap::not_equal(Self, Self) -> Bool
-pub fn GridMap::to_json(Self) -> @json.Json
-pub fn GridMap::to_repr(Self) -> @debug.Repr
-pub fn GridMap::weight_at(Self, Position) -> Int32
-pub fn GridMap::with_obstacle(Self, Position) -> Self raise
-pub fn GridMap::with_weight(Self, Position, Int32) -> Self raise
-
-#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct GridState {
   id : String
   label : String
@@ -396,17 +295,6 @@ pub fn GridState::new(id~ : String, label~ : String, width~ : Int32, height~ : I
 pub fn GridState::not_equal(Self, Self) -> Bool
 pub fn GridState::to_json(Self) -> @json.Json
 pub fn GridState::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub(all) enum Heuristic {
-  Manhattan
-  Chebyshev
-  Zero
-}
-pub fn Heuristic::equal(Self, Self) -> Bool
-pub fn Heuristic::not_equal(Self, Self) -> Bool
-pub fn Heuristic::to_json(Self) -> @json.Json
-pub fn Heuristic::to_repr(Self) -> @debug.Repr
 
 #derive(Eq, @debug.Debug, @json.ToJson)
 pub struct Highlight {
@@ -436,16 +324,6 @@ pub fn HighlightRole::to_json(Self) -> @json.Json
 pub fn HighlightRole::to_repr(Self) -> @debug.Repr
 
 #derive(Eq, @debug.Debug, @json.ToJson)
-pub(all) enum MoveRule {
-  FourDirections
-  EightDirections
-}
-pub fn MoveRule::equal(Self, Self) -> Bool
-pub fn MoveRule::not_equal(Self, Self) -> Bool
-pub fn MoveRule::to_json(Self) -> @json.Json
-pub fn MoveRule::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct ObjectUsage {
   object_id : String
   object_kind : String
@@ -473,61 +351,6 @@ pub fn OperationCounts::new(compares? : Int32, swaps? : Int32, reads? : Int32, w
 pub fn OperationCounts::not_equal(Self, Self) -> Bool
 pub fn OperationCounts::to_json(Self) -> @json.Json
 pub fn OperationCounts::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub struct ParentLink {
-  child : Position
-  parent : Position
-}
-pub fn ParentLink::equal(Self, Self) -> Bool
-pub fn ParentLink::new(child~ : Position, parent~ : Position) -> Self
-pub fn ParentLink::not_equal(Self, Self) -> Bool
-pub fn ParentLink::to_json(Self) -> @json.Json
-pub fn ParentLink::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub struct PathResult {
-  reachable : Bool
-  path : Array[Position]
-  cost : Int32
-  visited_count : Int32
-}
-pub fn PathResult::equal(Self, Self) -> Bool
-pub fn PathResult::found(path~ : Array[Position], cost~ : Int32, visited_count~ : Int32) -> Self
-pub fn PathResult::not_equal(Self, Self) -> Bool
-pub fn PathResult::not_found(visited_count~ : Int32) -> Self
-pub fn PathResult::to_json(Self) -> @json.Json
-pub fn PathResult::to_repr(Self) -> @debug.Repr
-
-pub struct PhaseTimer {
-  // private fields
-}
-pub fn[T] PhaseTimer::measure(Self, String, () -> T raise?) -> T raise?
-pub fn PhaseTimer::new(clock~ : () -> Double) -> Self
-pub fn PhaseTimer::report(Self) -> String
-pub fn PhaseTimer::timings(Self) -> Array[PhaseTiming]
-pub fn PhaseTimer::total_ms(Self) -> Double
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub struct PhaseTiming {
-  name : String
-  ms : Double
-}
-pub fn PhaseTiming::equal(Self, Self) -> Bool
-pub fn PhaseTiming::not_equal(Self, Self) -> Bool
-pub fn PhaseTiming::to_json(Self) -> @json.Json
-pub fn PhaseTiming::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub struct Position {
-  x : Int32
-  y : Int32
-}
-pub fn Position::equal(Self, Self) -> Bool
-pub fn Position::new(x~ : Int32, y~ : Int32) -> Self
-pub fn Position::not_equal(Self, Self) -> Bool
-pub fn Position::to_json(Self) -> @json.Json
-pub fn Position::to_repr(Self) -> @debug.Repr
 
 #derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum RedBlackTreeOperation {
@@ -561,17 +384,6 @@ pub fn SceneObject::equal(Self, Self) -> Bool
 pub fn SceneObject::not_equal(Self, Self) -> Bool
 pub fn SceneObject::to_json(Self) -> @json.Json
 pub fn SceneObject::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub struct SearchTrace {
-  result : PathResult
-  steps : Array[TraceStep]
-}
-pub fn SearchTrace::equal(Self, Self) -> Bool
-pub fn SearchTrace::new(result~ : PathResult, steps~ : Array[TraceStep]) -> Self
-pub fn SearchTrace::not_equal(Self, Self) -> Bool
-pub fn SearchTrace::to_json(Self) -> @json.Json
-pub fn SearchTrace::to_repr(Self) -> @debug.Repr
 
 #derive(Eq, @debug.Debug, @json.ToJson)
 pub struct SequenceCounterexample {
@@ -880,36 +692,6 @@ pub fn TraceLevel::not_equal(Self, Self) -> Bool
 pub fn TraceLevel::to_json(Self) -> @json.Json
 pub fn TraceLevel::to_repr(Self) -> @debug.Repr
 
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub struct TraceLintIssue {
-  severity : TraceLintSeverity
-  code : String
-  message : String
-  step : Int32
-}
-pub fn TraceLintIssue::equal(Self, Self) -> Bool
-pub fn TraceLintIssue::is_error(Self) -> Bool
-pub fn TraceLintIssue::is_info(Self) -> Bool
-pub fn TraceLintIssue::is_warning(Self) -> Bool
-pub fn TraceLintIssue::line(Self) -> String
-pub fn TraceLintIssue::markdown_row(Self) -> String
-pub fn TraceLintIssue::new(severity~ : TraceLintSeverity, code~ : String, message~ : String, step? : Int32) -> Self
-pub fn TraceLintIssue::not_equal(Self, Self) -> Bool
-pub fn TraceLintIssue::severity_name(Self) -> String
-pub fn TraceLintIssue::to_json(Self) -> @json.Json
-pub fn TraceLintIssue::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub(all) enum TraceLintSeverity {
-  Info
-  Warning
-  Error
-}
-pub fn TraceLintSeverity::equal(Self, Self) -> Bool
-pub fn TraceLintSeverity::not_equal(Self, Self) -> Bool
-pub fn TraceLintSeverity::to_json(Self) -> @json.Json
-pub fn TraceLintSeverity::to_repr(Self) -> @debug.Repr
-
 #derive(Eq, @debug.Debug, @json.FromJson, @json.ToJson)
 pub struct TraceOptions {
   max_steps : Int32
@@ -942,50 +724,13 @@ pub struct TraceStats {
 }
 pub fn TraceStats::equal(Self, Self) -> Bool
 pub fn TraceStats::event_count(Self, String) -> Int32
-pub fn TraceStats::event_table(Self) -> String
 pub fn TraceStats::not_equal(Self, Self) -> Bool
 pub fn TraceStats::object_count(Self, String) -> Int32
-pub fn TraceStats::object_table(Self) -> String
 pub fn TraceStats::summary_report(Self) -> String
 pub fn TraceStats::target_count(Self, String, entity_id? : String) -> Int32
-pub fn TraceStats::target_table(Self, limit? : Int32) -> String
 pub fn TraceStats::to_json(Self) -> @json.Json
-pub fn TraceStats::to_markdown(Self, target_limit? : Int32) -> String
 pub fn TraceStats::to_repr(Self) -> @debug.Repr
 pub fn TraceStats::top_targets(Self, limit? : Int32) -> Array[TargetUsage]
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub struct TraceStep {
-  current : Position?
-  frontier : Array[Position]
-  visited : Array[Position]
-  cost : Array[CostEntry]
-  parent : Array[ParentLink]
-}
-pub fn TraceStep::equal(Self, Self) -> Bool
-pub fn TraceStep::new(current~ : Position?, frontier~ : Array[Position], visited~ : Array[Position], cost~ : Array[CostEntry], parent~ : Array[ParentLink]) -> Self
-pub fn TraceStep::not_equal(Self, Self) -> Bool
-pub fn TraceStep::to_json(Self) -> @json.Json
-pub fn TraceStep::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub struct TraceTimelineEntry {
-  step : Int32
-  event_name : String
-  target_count : Int32
-  object_count : Int32
-  entity_count : Int32
-  highlight_count : Int32
-  annotation_title : String
-  completed : Bool
-}
-pub fn TraceTimelineEntry::equal(Self, Self) -> Bool
-pub fn TraceTimelineEntry::label(Self) -> String
-pub fn TraceTimelineEntry::markdown_row(Self) -> String
-pub fn TraceTimelineEntry::new(step~ : Int32, event_name~ : String, target_count~ : Int32, object_count~ : Int32, entity_count~ : Int32, highlight_count~ : Int32, annotation_title? : String, completed? : Bool) -> Self
-pub fn TraceTimelineEntry::not_equal(Self, Self) -> Bool
-pub fn TraceTimelineEntry::to_json(Self) -> @json.Json
-pub fn TraceTimelineEntry::to_repr(Self) -> @debug.Repr
 
 #derive(Eq, @debug.Debug, @json.ToJson)
 pub struct TraceViolation {
@@ -1060,13 +805,6 @@ pub fn UnionOperation::new(left~ : Int32, right~ : Int32, label? : String) -> Se
 pub fn UnionOperation::not_equal(Self, Self) -> Bool
 pub fn UnionOperation::to_json(Self) -> @json.Json
 pub fn UnionOperation::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-type WeightedCell
-pub fn WeightedCell::equal(Self, Self) -> Bool
-pub fn WeightedCell::not_equal(Self, Self) -> Bool
-pub fn WeightedCell::to_json(Self) -> @json.Json
-pub fn WeightedCell::to_repr(Self) -> @debug.Repr
 
 // Type aliases
 

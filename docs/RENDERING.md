@@ -58,33 +58,3 @@ Existing Schema v1 JSON can be rendered with:
 ```sh
 moon run cmd/main -- render trace.json --format html --output trace.html
 ```
-
-## SVG compatibility policy
-
-`render_trace_svg` and `render_trace_svg_frames` are deprecated in v0.9. They
-remain callable for compatibility, and CLI `--format svg` is marked legacy.
-Both public APIs and the CLI SVG format are scheduled for removal in v1.0.
-Use interactive HTML for visualization and Schema v1 JSON for interchange.
-
-## AI Trace Clinic
-
-`render_trace_playground()` creates a separate offline diagnostic workbench. It
-accepts Schema v1 JSON by paste, file picker, or drag-and-drop and performs
-browser-side validation, analysis, contracts, first-divergence diagnosis,
-timeline replay, counterexample export, and diagnostic-report export.
-
-The Clinic intentionally does not duplicate the v0.9 player's animation,
-event-guide, or language systems. Its eight highlight roles use readable
-foreground/background pairs, while the former “Export current SVG” title-card
-button has been removed because it did not represent the actual scene.
-
-Generate it with:
-
-```sh
-moon run cmd/main -- playground --output playground.html
-```
-
-Clinic applies a no-network CSP, a 20 MiB import limit, a 10,000-step limit,
-and a 10,000-entity scene limit. It renders at most 101 timeline nodes around
-the current focus while the slider still addresses the complete accepted
-trace. Authoritative automation should use the MoonBit library or JSON CLI.

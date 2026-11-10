@@ -35,10 +35,10 @@ test "CLI parsing validates required values formats and targets" {
 
 ///|
 test "diagnosis combines contract divergence focus and counterexample" {
-  let expected = @frontierlab.insertion_sort_demo_trace([5, 2, 4, 1, 3])
+  let expected = demo("insertion-sort")
   let passing = @frontierlab.diagnose_trace(
     expected,
-    contract=@frontierlab.insertion_sort_int_contract(object_id="values"),
+    contract=@frontierlab.sorted_int_sequence_contract(object_id="values"),
     expected~,
   )
   assert_true(passing.passed())
@@ -58,16 +58,16 @@ test "diagnosis combines contract divergence focus and counterexample" {
   } noraise {
     _ => fail("unknown diagnosis output format must fail")
   }
-  let actual = @frontierlab.faulty_insertion_sort_demo_trace()
+  let actual = demo("faulty-insertion-sort")
   let contract_only = @frontierlab.diagnose_trace(
     actual,
-    contract=@frontierlab.insertion_sort_int_contract(object_id="values"),
+    contract=@frontierlab.sorted_int_sequence_contract(object_id="values"),
   )
   assert_true(contract_only.divergence is None)
   assert_true(contract_only.focus_step >= 0)
   let failing = @frontierlab.diagnose_trace(
     actual,
-    contract=@frontierlab.insertion_sort_int_contract(object_id="values"),
+    contract=@frontierlab.sorted_int_sequence_contract(object_id="values"),
     expected~,
   )
   assert_true(!failing.passed())
@@ -95,7 +95,8 @@ test "diagnosis combines contract divergence focus and counterexample" {
 test "CLI helpers keep report version and command compatibility" {
   assert_true(usage().contains("frontierlab diagnose"))
   assert_true(usage().contains("sorted-int-sequence"))
-  assert_true(usage().contains("SVG output is legacy"))
+  assert_false(usage().contains("svg"))
+  assert_false(usage().contains("playground"))
   assert_true(
     json_envelope("verify", true, "null").contains(
       "\"report_version\":\"frontierlab-debug-report/1.0\"",
@@ -104,7 +105,9 @@ test "CLI helpers keep report version and command compatibility" {
   assert_true(
     json_error_envelope("verify", "bad\ninput").contains("bad\\ninput"),
   )
-  assert_true(render_content(demo("insertion-sort"), "svg", 0).contains("<svg"))
+  assert_true(
+    render_content(demo("insertion-sort"), "json").contains("frontierlab-trace"),
+  )
   assert_eq(cli_input_paths([]), [])
   let no_inputs : Map[String, String] = Map([])
   try input_trace(no_inputs, "missing.json") catch {
@@ -152,18 +155,11 @@ test "CLI dispatch covers commands artifacts and exit semantics" {
   assert_eq(
     run_cli([
       "frontierlab", "render", expected, "--format", "json", "--output", "_build/cli-test-render.json",
-      "--step", "0",
     ]),
     0,
   )
   assert_eq(run_cli(["frontierlab", "analyze", expected]), 0)
   assert_eq(run_cli(["frontierlab", "validate", expected]), 0)
-  assert_eq(
-    run_cli([
-      "frontierlab", "playground", "--output", "_build/cli-test-playground.html",
-    ]),
-    0,
-  )
   assert_eq(
     run_cli([
       "frontierlab", "diff", expected, "--from", "9", "--to", "10", "--format", "json",
@@ -273,7 +269,7 @@ test "CLI dispatch reports malformed invocations" {
   assert_cli_failure(["frontierlab", "verify"])
   assert_cli_failure(["frontierlab", "diverge"])
   assert_cli_failure(["frontierlab", "unknown"])
-  try render_content(demo("faulty-insertion-sort"), "yaml", 0) catch {
+  try render_content(demo("faulty-insertion-sort"), "yaml") catch {
     _ => ()
   } noraise {
     _ => fail("unknown render format must fail")
@@ -311,24 +307,24 @@ test "diagnose --timings reports every phase in text and JSON" {
   ]
   let inputs = read_cli_inputs(args)
   let ticks = Ref(0.0)
-  let timer = @frontierlab.PhaseTimer::new(clock=fn() {
+  let timer = PhaseTimer::new(clock=fn() {
     ticks.val += 1.0
     ticks.val
   })
   let untimed = execute_cli(args, inputs, timer~)
   assert_false(untimed.stdout.contains("Timings:"))
-  assert_eq(timer.timings().length(), 0)
+  assert_eq(timer.timings.length(), 0)
   let text = execute_cli([..args, "--timings"], inputs, timer~)
   assert_eq(text.exit_code, 2)
   assert_true(text.stdout.contains("Timings:\n| phase | ms | share |"))
-  assert_true(text.stdout.contains("| decode expected | 1.000 | 11.1% |"))
-  assert_true(text.stdout.contains("| contract check | 1.000 |"))
+  assert_true(text.stdout.contains("| decode expected | 1.000 | 16.7% |"))
+  assert_true(text.stdout.contains("| diagnose | 1.000 |"))
   assert_true(text.stdout.contains("| render reports | 1.000 |"))
-  assert_true(text.stdout.contains("| total | 9.000 | |"))
+  assert_true(text.stdout.contains("| total | 6.000 | |"))
   let json = execute_cli(
     [..args, "--timings", "--format", "json"],
     inputs,
-    timer=@frontierlab.PhaseTimer::new(clock=fn() { 0.0 }),
+    timer=PhaseTimer::new(clock=fn() { 0.0 }),
   )
   assert_true(
     json.stdout.contains(
@@ -548,4 +544,36 @@ test "search rejects malformed invocations" {
   assert_cli_failure(["frontierlab", "search", "heap-sort", "--cases", "0"])
   assert_cli_failure(["frontierlab", "search", "heap-sort", "--match-events"])
   assert_cli_failure(["frontierlab", "search", "heap-sort", "--seed", "-1"])
+}
+
+///|
+test "pathfinding demo is an A* trace with a valid grid path" {
+  let trace = demo("pathfinding")
+  assert_true(trace.steps.last().unwrap().event is @frontierlab.Complete)
+  assert_true(trace.steps.any(fn(step) { step.event is @frontierlab.Relax(_) }))
+  assert_true(
+    @frontierlab.grid_path_contract(object_id="search-grid").check(trace).passed,
+  )
+  assert_eq(trace.summary.map(fn(item) { "\{item.key}=\{item.value}" }), [
+    "reachable=true",
+    "cost=10",
+    "visited_count=" + trace.summary[2].value,
+  ])
+  assert_true(
+    @frontierlab.AlgorithmTrace::decode_json(trace.encode_json()) == trace,
+  )
+}
+
+///|
+test "phase timer clamps a clock that goes backwards" {
+  let ticks = Ref(0.0)
+  let timer = PhaseTimer::new(clock=fn() {
+    ticks.val -= 1.0
+    ticks.val
+  })
+  assert_eq(timer.measure("backwards", fn() { 42 }), 42)
+  assert_eq(timer.total_ms(), 0.0)
+  assert_true(timer.report().contains("| backwards | 0.000 | 0.0% |"))
+  assert_eq(fixed_decimal(0.0005, 3), "0.001")
+  assert_eq(fixed_decimal(12.0, 0), "12")
 }

@@ -84,5 +84,6 @@ moon run cmd/main --target native -- diagnose \
 | total | 3.89 | 22.43 |
 
 The semantic work (contract, divergence, diffs, slice) takes under 0.1 ms on
-native. On these small inputs, file reading is about half of the native time
+native. This table was measured with 0.11.0; since then `--timings` reports
+those four phases as a single `diagnose` phase. On these small inputs, file reading is about half of the native time
 and three quarters of the wasm-gc time.

@@ -162,26 +162,10 @@ pub fn sequence_transition_contract(object_id~ : String) -> TraceContract {
 }
 
 ///|
-pub fn insertion_sort_int_contract(object_id~ : String) -> TraceContract {
-  TraceContract::new(
-    name="insertion-sort-int",
-    description="Sequence transitions plus a nondecreasing integer result.",
-    checker=fn(trace) {
-      let violations = check_sequence_transitions(trace, object_id)
-      check_integer_sort_result(
-        trace, object_id, "insertion-sort-int", violations,
-      )
-      violations
-    },
-  )
-}
-
-///|
 /// Check stable sequence transitions and a nondecreasing integer result.
 ///
-/// Unlike `insertion_sort_int_contract`, this name is algorithm-neutral and
-/// is suitable for selection sort, merge sort, agent-generated traces, and
-/// other sorting implementations.
+/// The name is algorithm-neutral and suits selection sort, merge sort,
+/// agent-generated traces, and other sorting implementations.
 pub fn sorted_int_sequence_contract(object_id~ : String) -> TraceContract {
   TraceContract::new(
     name="sorted-int-sequence",

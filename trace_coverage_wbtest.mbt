@@ -106,7 +106,7 @@ test "contracts cover malformed swaps integers and object kinds" {
     ]),
   )
   assert_true(ignored_swap.passed)
-  let bad_numbers = insertion_sort_int_contract(object_id="values").check(
+  let bad_numbers = sorted_int_sequence_contract(object_id="values").check(
     coverage_trace(coverage_sequence([("a", "x"), ("b", "y")]), []),
   )
   assert_true(
@@ -115,7 +115,7 @@ test "contracts cover malformed swaps integers and object kinds" {
     .length() >=
     2,
   )
-  let inversion = insertion_sort_int_contract(object_id="values").check(
+  let inversion = sorted_int_sequence_contract(object_id="values").check(
     coverage_trace(coverage_sequence([("a", "2"), ("b", "1")]), []),
   )
   assert_eq(inversion.violations[0].code, "result-not-sorted")
@@ -124,7 +124,7 @@ test "contracts cover malformed swaps integers and object kinds" {
   )
   let wrong_kind : Scene = { objects: [grid], highlights: [], }
   assert_eq(
-    insertion_sort_int_contract(object_id="values").check(
+    sorted_int_sequence_contract(object_id="values").check(
       coverage_trace(wrong_kind, []),
     ).violations[0].code,
     "missing-sequence",
@@ -306,81 +306,9 @@ test "debugger covers invalid slices length endings and add remove changes" {
 }
 
 ///|
-test "quality diagnostics cover empty malformed growing and clean traces" {
-  let empty : Scene = { objects: [], highlights: [], }
-  let malformed : AlgorithmTrace = {
-    schema_version: "1.0",
-    title: " ",
-    algorithm: " ",
-    description: "",
-    initial_scene: empty,
-    steps: [],
-    summary: [],
-  }
-  let malformed_issues = malformed.lint()
-  assert_true(malformed_issues.any(fn(v) { v.code == "empty-title" }))
-  assert_true(malformed_issues.any(fn(v) { v.code == "empty-algorithm" }))
-  assert_true(malformed_issues.any(fn(v) { v.code == "empty-initial-scene" }))
-  assert_true(malformed_issues.any(fn(v) { v.code == "empty-timeline" }))
-  assert_true(malformed.lint_report().contains("at trace"))
-  assert_true(malformed.has_lint_warnings())
-  let info = TraceLintIssue::new(severity=Info, code="info", message="message")
-  let warning = TraceLintIssue::new(
-    severity=Warning,
-    code="warning",
-    message="message",
-    step=1,
-  )
-  assert_true(info.is_info())
-  assert_true(warning.is_warning())
-  assert_eq(warning.severity_name(), "warning")
-  assert_true(warning.line().contains("step 1"))
-  let initial = coverage_sequence([("a", "1")])
-  let large = coverage_sequence([
-    ("a", "1"),
-    ("b", "2"),
-    ("c", "3"),
-    ("d", "4"),
-    ("e", "5"),
-    ("f", "6"),
-    ("g", "7"),
-    ("h", "8"),
-    ("i", "9"),
-  ])
-  let shaped = coverage_trace(initial, [
-    (Compare([]), empty),
-    (Swap(TargetRef::object("values"), TargetRef::object("values")), large),
-  ])
-  let shaped_issues = shaped.lint()
-  assert_true(shaped_issues.any(fn(v) { v.code == "missing-complete" }))
-  assert_true(shaped_issues.any(fn(v) { v.code == "empty-step-scene" }))
-  assert_true(shaped_issues.any(fn(v) { v.code == "event-without-target" }))
-  assert_true(shaped_issues.any(fn(v) { v.code == "large-scene-growth" }))
-  assert_true(shaped.lint_report().contains("missing-complete"))
-  for
-    event in [
-      Initialize,
-      Visit(TargetRef::object("a")),
-      Update(TargetRef::object("a"), "value"),
-      Union(TargetRef::object("a"), TargetRef::object("b")),
-      Swap(TargetRef::object("a"), TargetRef::object("b")),
-      Relax(TargetRef::object("a"), TargetRef::object("b"), "1"),
-    ] {
-    ignore(timeline_event_name(event))
-    ignore(timeline_event_target_count(event))
-  }
-  let clean = insertion_sort_trace([2, 1])
-  assert_true(clean.lint_report().contains("No trace lint issues."))
-  assert_true(clean.lint_markdown().contains("| info | clean |"))
-}
-
-///|
-test "empty analysis report tables are explicit" {
+test "empty analysis reports are explicit" {
   let empty : Scene = { objects: [], highlights: [], }
   let stats = coverage_trace(empty, []).analyze()
-  assert_true(stats.event_table().contains("| none |"))
-  assert_true(stats.object_table().contains("| none |"))
-  assert_true(stats.target_table().contains("| none |"))
   assert_true(stats.summary_report().contains("Objects:\n  none"))
   assert_eq(stats.event_count("missing"), 0)
   assert_eq(stats.object_count("missing"), 0)
@@ -515,48 +443,6 @@ test "adapter and model defensive branches remain explicit" {
   } noraise {
     _ => fail("invalid trace limit must fail")
   }
-}
-
-///|
-test "grid weights and SVG renderer cover replacement and visual variants" {
-  let grid_map = GridMap::new(width=2, height=1)
-  let weighted = grid_map
-    .with_weight(Position::new(x=0, y=0), 2)
-    .with_weight(Position::new(x=0, y=0), 3)
-  assert_eq(weighted.weight_at(Position::new(x=0, y=0)), 3)
-  try grid_map.with_weight(Position::new(x=2, y=0), 1) catch {
-    _ => ()
-  } noraise {
-    _ => fail("out-of-range weighted cells must fail")
-  }
-  let graph = Graph(
-    GraphState::new(
-      id="graph",
-      label="Undirected graph",
-      nodes=[
-        GraphNode::new(id="a", label="A"),
-        GraphNode::new(id="b", label="B"),
-      ],
-      edges=[
-        GraphEdge::new(
-          id="edge",
-          from="a",
-          to="b",
-          label="edge",
-          directed=false,
-        ),
-      ],
-    ),
-  )
-  let grid = Grid(
-    GridState::new(id="grid", label="Blocked grid", width=1, height=1, cells=[
-      GridCellState::new(id="wall", x=0, y=0, label="#", blocked=true),
-    ]),
-  )
-  let scene = Scene::new(objects=[graph, grid])
-  let svg = render_trace_svg(coverage_trace(scene, [(Complete, scene)]), step=0)
-  assert_true(svg.contains("Undirected graph"))
-  assert_true(svg.contains("#f8fafc"))
 }
 
 ///|

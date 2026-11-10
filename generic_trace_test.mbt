@@ -116,8 +116,7 @@ test "Graph and grid validate references and dimensions" {
 }
 
 ///|
-#warnings("-deprecated")
-test "SVG renderer covers sequence sets graph and grid" {
+test "all scene kinds round trip through JSON" {
   let graph = @frontierlab.GraphState::new(
     id="graph",
     label="Graph <safe>",
@@ -186,11 +185,6 @@ test "SVG renderer covers sequence sets graph and grid" {
     annotation=@frontierlab.Annotation::new(title="Done", body="Safe & sound"),
   )
   let trace = builder.finish()
-  let svg = @frontierlab.render_trace_svg(trace, step=0)
-  assert_true(svg.contains("<svg"))
-  assert_true(svg.contains("Graph &lt;safe&gt;"))
-  assert_true(svg.contains("#c084fc"))
-  assert_eq(@frontierlab.render_trace_svg_frames(trace).length(), 1)
   assert_true(
     @frontierlab.AlgorithmTrace::decode_json(trace.encode_json()) == trace,
   )
@@ -223,84 +217,14 @@ test "HTML renderer is standalone interactive and script-safe" {
 }
 
 ///|
-test "search adapter preserves final search result metadata" {
-  let grid = @frontierlab.GridMap::new(width=3, height=1)
-  let start = @frontierlab.Position::new(x=0, y=0)
-  let goal = @frontierlab.Position::new(x=2, y=0)
-  let search = @frontierlab.bfs_trace(grid, start~, goal~)
-  let trace = @frontierlab.search_trace_to_algorithm_trace(
-    grid,
-    start~,
-    goal~,
-    algorithm="BFS",
-    trace=search,
-  )
-  assert_eq(trace.steps.length(), search.steps.length() + 1)
-  assert_true(trace.steps.last().unwrap().event is @frontierlab.Complete)
-  assert_eq(trace.summary[1].value, search.result.cost.to_string())
-}
-
-///|
-#warnings("-deprecated")
-test "empty traces render their initial scene and reject invalid steps" {
+test "empty traces render their initial scene" {
   let scene = sequence_scene(["1"])
   let trace = @frontierlab.TraceBuilder::new(
     title="Empty",
     algorithm="empty",
     initial_scene=scene,
   ).finish()
-  assert_eq(@frontierlab.render_trace_svg_frames(trace).length(), 1)
-  assert_true(@frontierlab.render_trace_svg(trace).contains("Empty"))
-  let builder = @frontierlab.TraceBuilder::new(
-    title="One",
-    algorithm="one",
-    initial_scene=scene,
-  )
-  builder.record(event=@frontierlab.Complete, scene~)
-  let one = builder.finish()
-  try @frontierlab.render_trace_svg(one, step=1) catch {
-    _ => ()
-  } noraise {
-    _ => fail("expected out-of-range frame to fail")
-  }
-}
-
-///|
-#warnings("-deprecated")
-test "all highlight roles have deterministic SVG colors" {
-  let roles = [
-    @frontierlab.Current,
-    @frontierlab.Candidate,
-    @frontierlab.Compared,
-    @frontierlab.Changed,
-    @frontierlab.Visited,
-    @frontierlab.Frontier,
-    @frontierlab.Result,
-    @frontierlab.Error,
-  ]
-  let values = roles.mapi(fn(index, _) { index.to_string() })
-  let highlights = roles.mapi(fn(index, role) {
-    @frontierlab.Highlight::new(
-      target=@frontierlab.TargetRef::entity("sequence", "item-\{index}"),
-      role~,
-    )
-  })
-  let scene = sequence_scene(values, highlights~)
-  let trace = @frontierlab.TraceBuilder::new(
-    title="Roles \" ' & < >",
-    algorithm="roles",
-    initial_scene=scene,
-  ).finish()
-  let svg = @frontierlab.render_trace_svg(trace)
-  for
-    color in [
-      "#f59e0b", "#38bdf8", "#c084fc", "#fb7185", "#93c5fd", "#22d3ee", "#4ade80",
-      "#ef4444",
-    ] {
-    assert_true(svg.contains(color))
-  }
-  assert_true(svg.contains("&quot;"))
-  assert_true(svg.contains("&#39;"))
+  assert_true(@frontierlab.render_trace_html(trace).contains("<!doctype html>"))
 }
 
 ///|
@@ -340,30 +264,27 @@ test "graph and grid reject duplicate entity ids and invalid dimensions" {
 }
 
 ///|
-test "bundled demo factories produce complete portable traces" {
-  let sort = @frontierlab.insertion_sort_demo_trace([3, 1, 2])
-  let union = @frontierlab.union_find_demo_trace()
-  let path = @frontierlab.pathfinding_demo_trace()
+test "bundled adapters produce complete portable traces" {
+  let sort = @frontierlab.insertion_sort_trace([3, 1, 2])
+  let union = @frontierlab.union_find_trace(4, [
+    @frontierlab.UnionOperation::new(left=0, right=1),
+    @frontierlab.UnionOperation::new(left=1, right=3),
+  ])
   assert_true(sort.steps.last().unwrap().event is @frontierlab.Complete)
   assert_true(union.steps.last().unwrap().event is @frontierlab.Complete)
-  assert_true(path.steps.last().unwrap().event is @frontierlab.Complete)
   assert_true(sort.to_json_string().contains("\"type\": \"swap\""))
   assert_true(union.to_json_string().contains("\"type\": \"union\""))
-  assert_true(path.to_json_string().contains("\"type\": \"relax\""))
   assert_true(
     @frontierlab.AlgorithmTrace::decode_json(sort.encode_json()) == sort,
   )
   assert_true(
     @frontierlab.AlgorithmTrace::decode_json(union.encode_json()) == union,
   )
-  assert_true(
-    @frontierlab.AlgorithmTrace::decode_json(path.encode_json()) == path,
-  )
 }
 
 ///|
 test "schema v1 ignores unknown fields and preserves unknown events" {
-  let trace = @frontierlab.insertion_sort_demo_trace([2, 1])
+  let trace = @frontierlab.insertion_sort_trace([2, 1])
   let json = trace
     .encode_json()
     .replace(
@@ -379,7 +300,7 @@ test "schema v1 ignores unknown fields and preserves unknown events" {
 
 ///|
 test "schema v1 rejects unsupported major versions" {
-  let json = @frontierlab.insertion_sort_demo_trace([1])
+  let json = @frontierlab.insertion_sort_trace([1])
     .encode_json()
     .replace(
       old="\"schema_version\": \"1.0\"",
@@ -513,8 +434,7 @@ test "trace validation rejects duplicate summary keys and step gaps" {
 }
 
 ///|
-#warnings("-deprecated")
-test "cyclic graph layout renders self loops parallel edges and arrows" {
+test "cyclic graphs with self loops and parallel edges round trip" {
   let graph = @frontierlab.GraphState::new(
     id="cyclic",
     label="Cyclic graph",
@@ -553,11 +473,10 @@ test "cyclic graph layout renders self loops parallel edges and arrows" {
     algorithm="cycle",
     initial_scene=scene,
   ).finish()
-  let svg = @frontierlab.render_trace_svg(trace)
-  assert_true(svg.contains("frontierlab-arrow"))
-  assert_true(svg.contains("marker-end"))
-  assert_true(svg.contains(">loop<"))
-  assert_true(svg.contains("<path d="))
+  trace.validate()
+  assert_true(
+    @frontierlab.AlgorithmTrace::decode_json(trace.encode_json()) == trace,
+  )
 }
 
 ///|
@@ -611,7 +530,7 @@ test "schema v1 reports malformed JSON fields and roles" {
       _ => fail("expected malformed JSON failure")
     }
   }
-  let bad_role = @frontierlab.insertion_sort_demo_trace([1])
+  let bad_role = @frontierlab.insertion_sort_trace([1])
     .encode_json()
     .replace(
       old="\"highlights\": []",
@@ -686,16 +605,6 @@ test "trace analysis summarizes empty and custom multi-object traces" {
   assert_true(stats.object_count("left") > 0)
   assert_true(stats.target_count("left", entity_id="same") > 0)
   assert_true(stats.summary_report().contains("domain-event: 1"))
-  assert_true(stats.event_table().contains("| compare | 1 | 1 | 1 |"))
-  assert_true(stats.object_table().contains("| left | sequence |"))
-  assert_true(stats.target_table(limit=2).contains("left/same"))
-  assert_true(trace.analysis_markdown().contains("FrontierLab trace analysis"))
-  assert_true(trace.timeline().length() == trace.steps.length() + 1)
-  assert_true(trace.timeline_report().contains("step 1: compare"))
-  assert_true(trace.timeline_table().contains("| Step | Event |"))
-  assert_false(trace.has_lint_errors())
-  assert_true(trace.lint_count(@frontierlab.Info) >= 0)
-  assert_true(trace.lint_markdown().contains("| Severity | Code |"))
 }
 
 ///|
@@ -758,34 +667,4 @@ test "union find adapter records merges compression and validation" {
   } noraise {
     _ => fail("expected invalid union operation failure")
   }
-}
-
-///|
-test "offline playground embeds validation analysis export and safe examples" {
-  let html = @frontierlab.render_trace_playground()
-  assert_true(html.has_prefix("<!doctype html>"))
-  assert_true(html.contains("Semantic Time-Travel Debugger"))
-  assert_true(html.contains("Drop a JSON file"))
-  assert_true(html.contains("Valid example"))
-  assert_true(html.contains("Invalid JSON shape"))
-  assert_true(html.contains("function validate(d)"))
-  assert_true(html.contains("function analyze(d)"))
-  assert_true(html.contains("function lint(d)"))
-  assert_false(html.contains("Export current SVG"))
-  assert_false(html.contains("downloadSvg"))
-  assert_true(html.contains("[data-role=candidate]"))
-  assert_true(html.contains("[data-role=visited]"))
-  assert_true(html.contains("[data-role=frontier]"))
-  assert_true(html.contains("Semantic breakpoints"))
-  assert_true(html.contains("Trace contract"))
-  assert_true(html.contains("First divergence"))
-  assert_true(html.contains("Faulty sort"))
-  assert_true(html.contains("function sceneDiff"))
-  assert_true(html.contains("function firstDivergence"))
-  assert_true(html.contains("FileReader"))
-  assert_true(html.contains("URL.createObjectURL"))
-  assert_true(html.contains("frontierlab-trace"))
-  assert_true(html.contains("schema_version"))
-  assert_true(!html.contains("https://"))
-  assert_true(!html.contains("<script src="))
 }
