@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.12.0 - 2026-11-11
 
 This release turns FrontierLab into a debugger for the user's own data
 structures, splits the module into packages, and narrows the core to trace
