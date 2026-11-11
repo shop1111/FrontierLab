@@ -1,0 +1,66 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "shop1111/frontierlab/classics"
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitlang/core/json",
+  "shop1111/frontierlab",
+}
+
+// Values
+pub fn coin_change_dp_trace(Array[Int32], Int32, title? : String, object_id? : String, label? : String, options? : @frontierlab.TraceOptions) -> @frontierlab.AlgorithmTrace raise @frontierlab.TraceError
+
+pub fn fibonacci_dp_trace(Int32, title? : String, object_id? : String, label? : String, options? : @frontierlab.TraceOptions) -> @frontierlab.AlgorithmTrace raise @frontierlab.TraceError
+
+pub fn insertion_sort_items_trace(Array[SortTraceItem], title? : String, object_id? : String, label? : String) -> @frontierlab.AlgorithmTrace raise @frontierlab.TraceError
+
+pub fn insertion_sort_trace(Array[Int32], title? : String, object_id? : String, label? : String) -> @frontierlab.AlgorithmTrace raise @frontierlab.TraceError
+
+pub fn lcs_dp_trace(String, String, title? : String, object_id? : String, label? : String, options? : @frontierlab.TraceOptions) -> @frontierlab.AlgorithmTrace raise @frontierlab.TraceError
+
+pub fn red_black_tree_trace(Array[RedBlackTreeOperation], title? : String, object_id? : String, label? : String, options? : @frontierlab.TraceOptions) -> @frontierlab.AlgorithmTrace raise @frontierlab.TraceError
+
+pub fn union_find_trace(Int32, Array[UnionOperation], title? : String, object_id? : String, label? : String, compress_paths? : Bool) -> @frontierlab.AlgorithmTrace raise @frontierlab.TraceError
+
+pub fn zero_one_knapsack_dp_trace(Array[Int32], Array[Int32], Int32, title? : String, object_id? : String, label? : String, options? : @frontierlab.TraceOptions) -> @frontierlab.AlgorithmTrace raise @frontierlab.TraceError
+
+// Errors
+
+// Types and methods
+#derive(Eq, @debug.Debug, @json.ToJson)
+pub(all) enum RedBlackTreeOperation {
+  Insert(Int32)
+  Find(Int32)
+}
+pub fn RedBlackTreeOperation::equal(Self, Self) -> Bool
+pub fn RedBlackTreeOperation::not_equal(Self, Self) -> Bool
+pub fn RedBlackTreeOperation::to_json(Self) -> @json.Json
+pub fn RedBlackTreeOperation::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug, @json.ToJson)
+pub struct SortTraceItem {
+  id : String
+  value : Int32
+  label : String
+}
+pub fn SortTraceItem::equal(Self, Self) -> Bool
+pub fn SortTraceItem::new(id~ : String, value~ : Int32, label? : String) -> Self
+pub fn SortTraceItem::not_equal(Self, Self) -> Bool
+pub fn SortTraceItem::to_json(Self) -> @json.Json
+pub fn SortTraceItem::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug, @json.ToJson)
+pub struct UnionOperation {
+  left : Int32
+  right : Int32
+  label : String
+}
+pub fn UnionOperation::equal(Self, Self) -> Bool
+pub fn UnionOperation::new(left~ : Int32, right~ : Int32, label? : String) -> Self
+pub fn UnionOperation::not_equal(Self, Self) -> Bool
+pub fn UnionOperation::to_json(Self) -> @json.Json
+pub fn UnionOperation::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits

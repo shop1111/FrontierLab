@@ -85,7 +85,7 @@ fn faulty_compare_trace() -> @frontierlab.AlgorithmTrace raise {
 
 ///|
 test "time travel diff breakpoints and counterexample preserve stable ids" {
-  let trace = @frontierlab.insertion_sort_trace([3, 1, 2])
+  let trace = @classics.insertion_sort_trace([3, 1, 2])
   let first = trace.diff(from_step=-1, to_step=0)
   assert_true(
     first.changes.any(fn(change) { change.kind is @frontierlab.HighlightAdded }),
@@ -179,7 +179,7 @@ test "scene diff covers set graph grid and identical scenes" {
 
 ///|
 test "contracts locate first semantic failure and valid builtins pass" {
-  let valid = @frontierlab.insertion_sort_trace([3, 1, 2])
+  let valid = @classics.insertion_sort_trace([3, 1, 2])
   let generic_report = @frontierlab.sorted_int_sequence_contract(
     object_id="values",
   ).check(valid)
@@ -201,7 +201,7 @@ test "contracts locate first semantic failure and valid builtins pass" {
 
 ///|
 test "unified diagnosis separates transition and reference evidence" {
-  let expected = @frontierlab.insertion_sort_trace([1, 2])
+  let expected = @classics.insertion_sort_trace([1, 2])
   let actual = faulty_compare_trace()
   let diagnosis = @frontierlab.diagnose_trace(
     actual,
@@ -235,8 +235,8 @@ test "grid path contract and first divergence cover success and failure" {
   )
   assert_true(path_report.passed)
   assert_true(@frontierlab.first_divergence(path, path) is None)
-  let sort = @frontierlab.insertion_sort_trace([2, 1])
-  let other = @frontierlab.insertion_sort_trace([3, 1])
+  let sort = @classics.insertion_sort_trace([2, 1])
+  let other = @classics.insertion_sort_trace([3, 1])
   let divergence = @frontierlab.first_divergence(sort, other)
   assert_true(divergence is Some(_))
   assert_eq(divergence.unwrap().step, 0)

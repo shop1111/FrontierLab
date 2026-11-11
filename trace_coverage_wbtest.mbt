@@ -390,23 +390,7 @@ test "analysis covers graph grid events targets and highlight roles" {
 }
 
 ///|
-test "adapter and model defensive branches remain explicit" {
-  try union_find_trace(0, []) catch {
-    LimitExceeded(_) => ()
-    _ => fail("expected union-find size failure")
-  } noraise {
-    _ => fail("zero-sized union-find must fail")
-  }
-  try insertion_sort_items_trace([SortTraceItem::new(id="", value=1)]) catch {
-    DuplicateId(_) => ()
-    _ => fail("expected empty stable id failure")
-  } noraise {
-    _ => fail("empty stable id must fail")
-  }
-  let parent = [0, 1]
-  let rank = [0, 1]
-  assert_eq(union_find_attach(parent, rank, 0, 1), (1, 0))
-  assert_eq(parent[0], 1)
+test "model defensive branches remain explicit" {
   assert_true(
     TraceError::message(InvalidGraph("bad")).contains("Invalid graph"),
   )
@@ -590,4 +574,34 @@ test "sequence contracts accept recorded updates and reject mismatched ones" {
   )
   assert_eq(lost.violations[0].code, "result-not-permutation")
   assert_eq(lost.violations[0].step, 2)
+}
+
+///|
+test "many highlights are checked against an index of targets" {
+  let sets = Sets(
+    SetState::new(id="sets", label="Sets", groups=[
+      SetGroup::new(id="group", label="Group", members=["a", "b"]),
+    ]),
+  )
+  let targets = [
+    TargetRef::object("sets"),
+    TargetRef::entity("sets", "group"),
+    TargetRef::entity("sets", "a"),
+    TargetRef::entity("sets", "b"),
+    TargetRef::entity("sets", "a"),
+  ]
+  let highlights = targets.map(fn(target) {
+    Highlight::new(target~, role=Current)
+  })
+  ignore(Scene::new(objects=[sets], highlights~))
+  let dangling = highlights +
+    [Highlight::new(target=TargetRef::entity("sets", "missing"), role=Current)]
+  try Scene::new(objects=[sets], highlights=dangling) catch {
+    DanglingReference(_) => ()
+    _ => fail("expected a dangling reference")
+  } noraise {
+    _ => fail("an unknown highlight target must fail")
+  }
+  assert_true(TraceError::message(AlreadyCompleted).contains("Complete"))
+  assert_eq(TraceError::message(LimitExceeded("too many")), "too many")
 }

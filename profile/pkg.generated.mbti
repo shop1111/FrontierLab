@@ -1,0 +1,112 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "shop1111/frontierlab/profile"
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitlang/core/json",
+  "shop1111/frontierlab",
+}
+
+// Values
+pub fn[T : Show] measure_tracing_overhead(Array[T], (@frontierlab.TracedArray[T]) -> Unit, clock~ : () -> UInt64, min_ms? : Int32, max_runs? : Int32, options? : @frontierlab.TraceOptions) -> TracingOverhead raise @frontierlab.TraceError
+
+pub fn profile_complexity(Array[Int32], (Int32) -> @frontierlab.OperationCounts, metric? : CostMetric) -> ComplexityProfile raise @frontierlab.TraceError
+
+pub fn[T : Show] profile_traced_array(Array[Int32], (Int32) -> Array[T], (@frontierlab.TracedArray[T]) -> Unit, metric? : CostMetric) -> ComplexityProfile raise @frontierlab.TraceError
+
+// Errors
+
+// Types and methods
+#derive(Eq, @debug.Debug, @json.ToJson)
+pub(all) enum ComplexityClass {
+  Constant
+  Logarithmic
+  Linear
+  Linearithmic
+  Quadratic
+  Cubic
+  Exponential
+}
+pub fn ComplexityClass::equal(Self, Self) -> Bool
+pub fn ComplexityClass::evaluate(Self, Int32) -> Double
+pub fn ComplexityClass::label(Self) -> String
+pub fn ComplexityClass::not_equal(Self, Self) -> Bool
+pub fn ComplexityClass::parse(String) -> Self?
+pub fn ComplexityClass::to_json(Self) -> @json.Json
+pub fn ComplexityClass::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug, @json.ToJson)
+pub struct ComplexityFit {
+  class : ComplexityClass
+  coefficient : Double
+  error : Double
+}
+pub fn ComplexityFit::equal(Self, Self) -> Bool
+pub fn ComplexityFit::not_equal(Self, Self) -> Bool
+pub fn ComplexityFit::to_json(Self) -> @json.Json
+pub fn ComplexityFit::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug, @json.ToJson)
+pub struct ComplexityProfile {
+  metric : CostMetric
+  samples : Array[ComplexitySample]
+  fits : Array[ComplexityFit]
+  best : ComplexityFit
+  exponent : Double
+}
+pub fn ComplexityProfile::check_bound(Self, ComplexityClass, factor~ : Double) -> Array[ComplexitySample]
+pub fn ComplexityProfile::equal(Self, Self) -> Bool
+pub fn ComplexityProfile::not_equal(Self, Self) -> Bool
+pub fn ComplexityProfile::report(Self) -> String
+pub fn ComplexityProfile::to_json(Self) -> @json.Json
+pub fn ComplexityProfile::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug, @json.ToJson)
+pub struct ComplexitySample {
+  size : Int32
+  counts : @frontierlab.OperationCounts
+  cost : Int32
+}
+pub fn ComplexitySample::equal(Self, Self) -> Bool
+pub fn ComplexitySample::not_equal(Self, Self) -> Bool
+pub fn ComplexitySample::to_json(Self) -> @json.Json
+pub fn ComplexitySample::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug, @json.ToJson)
+pub(all) enum CostMetric {
+  Compares
+  Swaps
+  Reads
+  Writes
+  Total
+}
+pub fn CostMetric::cost(Self, @frontierlab.OperationCounts) -> Int32
+pub fn CostMetric::equal(Self, Self) -> Bool
+pub fn CostMetric::name(Self) -> String
+pub fn CostMetric::not_equal(Self, Self) -> Bool
+pub fn CostMetric::to_json(Self) -> @json.Json
+pub fn CostMetric::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug, @json.ToJson)
+pub struct TracingOverhead {
+  off_runs : Int32
+  count_runs : Int32
+  full_runs : Int32
+  off_ms : Double
+  count_ms : Double
+  full_ms : Double
+  count_ratio : Double
+  full_ratio : Double
+  steps : Int32
+  json_length : Int32
+  full_us_per_step : Double
+}
+pub fn TracingOverhead::equal(Self, Self) -> Bool
+pub fn TracingOverhead::not_equal(Self, Self) -> Bool
+pub fn TracingOverhead::report(Self) -> String
+pub fn TracingOverhead::to_json(Self) -> @json.Json
+pub fn TracingOverhead::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits

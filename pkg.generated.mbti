@@ -7,13 +7,9 @@ import {
 }
 
 // Values
-pub fn coin_change_dp_trace(Array[Int32], Int32, title? : String, object_id? : String, label? : String, options? : TraceOptions) -> AlgorithmTrace raise TraceError
-
 pub let debug_report_version : String
 
 pub fn diagnose_trace(AlgorithmTrace, contract~ : TraceContract, expected? : AlgorithmTrace) -> TraceDiagnosis
-
-pub fn fibonacci_dp_trace(Int32, title? : String, object_id? : String, label? : String, options? : TraceOptions) -> AlgorithmTrace raise TraceError
 
 pub fn first_divergence(AlgorithmTrace, AlgorithmTrace) -> TraceDivergence?
 
@@ -22,21 +18,7 @@ pub fn grid_path_contract(object_id~ : String) -> TraceContract
 #deprecated
 pub fn insertion_sort_int_contract(object_id~ : String) -> TraceContract
 
-pub fn insertion_sort_items_trace(Array[SortTraceItem], title? : String, object_id? : String, label? : String) -> AlgorithmTrace raise TraceError
-
-pub fn insertion_sort_trace(Array[Int32], title? : String, object_id? : String, label? : String) -> AlgorithmTrace raise TraceError
-
-pub fn lcs_dp_trace(String, String, title? : String, object_id? : String, label? : String, options? : TraceOptions) -> AlgorithmTrace raise TraceError
-
-pub fn[T : Show] measure_tracing_overhead(Array[T], (TracedArray[T]) -> Unit, clock~ : () -> UInt64, min_ms? : Int32, max_runs? : Int32, options? : TraceOptions) -> TracingOverhead raise TraceError
-
-pub fn profile_complexity(Array[Int32], (Int32) -> OperationCounts, metric? : CostMetric) -> ComplexityProfile raise TraceError
-
-pub fn[T : Show] profile_traced_array(Array[Int32], (Int32) -> Array[T], (TracedArray[T]) -> Unit, metric? : CostMetric) -> ComplexityProfile raise TraceError
-
 pub let project_name : String
-
-pub fn red_black_tree_trace(Array[RedBlackTreeOperation], title? : String, object_id? : String, label? : String, options? : TraceOptions) -> AlgorithmTrace raise TraceError
 
 pub fn render_trace_html(AlgorithmTrace) -> String
 
@@ -45,10 +27,6 @@ pub fn search_sequence_counterexample((TracedArray[Int32]) -> Unit, reference? :
 pub fn sequence_transition_contract(object_id~ : String) -> TraceContract
 
 pub fn sorted_int_sequence_contract(object_id~ : String) -> TraceContract
-
-pub fn union_find_trace(Int32, Array[UnionOperation], title? : String, object_id? : String, label? : String, compress_paths? : Bool) -> AlgorithmTrace raise TraceError
-
-pub fn zero_one_knapsack_dp_trace(Array[Int32], Array[Int32], Int32, title? : String, object_id? : String, label? : String, options? : TraceOptions) -> AlgorithmTrace raise TraceError
 
 // Errors
 #derive(Eq, @debug.Debug)
@@ -125,61 +103,6 @@ pub fn Annotation::to_json(Self) -> @json.Json
 pub fn Annotation::to_repr(Self) -> @debug.Repr
 
 #derive(Eq, @debug.Debug, @json.ToJson)
-pub(all) enum ComplexityClass {
-  Constant
-  Logarithmic
-  Linear
-  Linearithmic
-  Quadratic
-  Cubic
-  Exponential
-}
-pub fn ComplexityClass::equal(Self, Self) -> Bool
-pub fn ComplexityClass::evaluate(Self, Int32) -> Double
-pub fn ComplexityClass::label(Self) -> String
-pub fn ComplexityClass::not_equal(Self, Self) -> Bool
-pub fn ComplexityClass::parse(String) -> Self?
-pub fn ComplexityClass::to_json(Self) -> @json.Json
-pub fn ComplexityClass::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub struct ComplexityFit {
-  class : ComplexityClass
-  coefficient : Double
-  error : Double
-}
-pub fn ComplexityFit::equal(Self, Self) -> Bool
-pub fn ComplexityFit::not_equal(Self, Self) -> Bool
-pub fn ComplexityFit::to_json(Self) -> @json.Json
-pub fn ComplexityFit::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub struct ComplexityProfile {
-  metric : CostMetric
-  samples : Array[ComplexitySample]
-  fits : Array[ComplexityFit]
-  best : ComplexityFit
-  exponent : Double
-}
-pub fn ComplexityProfile::check_bound(Self, ComplexityClass, factor~ : Double) -> Array[ComplexitySample]
-pub fn ComplexityProfile::equal(Self, Self) -> Bool
-pub fn ComplexityProfile::not_equal(Self, Self) -> Bool
-pub fn ComplexityProfile::report(Self) -> String
-pub fn ComplexityProfile::to_json(Self) -> @json.Json
-pub fn ComplexityProfile::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub struct ComplexitySample {
-  size : Int32
-  counts : OperationCounts
-  cost : Int32
-}
-pub fn ComplexitySample::equal(Self, Self) -> Bool
-pub fn ComplexitySample::not_equal(Self, Self) -> Bool
-pub fn ComplexitySample::to_json(Self) -> @json.Json
-pub fn ComplexitySample::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct ContractReport {
   report_version : String
   contract_name : String
@@ -195,21 +118,6 @@ pub fn ContractReport::to_json(Self) -> @json.Json
 pub fn ContractReport::to_json_string(Self) -> String
 pub fn ContractReport::to_markdown(Self) -> String
 pub fn ContractReport::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub(all) enum CostMetric {
-  Compares
-  Swaps
-  Reads
-  Writes
-  Total
-}
-pub fn CostMetric::cost(Self, OperationCounts) -> Int32
-pub fn CostMetric::equal(Self, Self) -> Bool
-pub fn CostMetric::name(Self) -> String
-pub fn CostMetric::not_equal(Self, Self) -> Bool
-pub fn CostMetric::to_json(Self) -> @json.Json
-pub fn CostMetric::to_repr(Self) -> @debug.Repr
 
 #derive(Eq, @debug.Debug)
 type DebugEntity
@@ -353,16 +261,6 @@ pub fn OperationCounts::to_json(Self) -> @json.Json
 pub fn OperationCounts::to_repr(Self) -> @debug.Repr
 
 #derive(Eq, @debug.Debug, @json.ToJson)
-pub(all) enum RedBlackTreeOperation {
-  Insert(Int32)
-  Find(Int32)
-}
-pub fn RedBlackTreeOperation::equal(Self, Self) -> Bool
-pub fn RedBlackTreeOperation::not_equal(Self, Self) -> Bool
-pub fn RedBlackTreeOperation::to_json(Self) -> @json.Json
-pub fn RedBlackTreeOperation::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct Scene {
   objects : Array[SceneObject]
   highlights : Array[Highlight]
@@ -460,18 +358,6 @@ pub fn SetState::new(id~ : String, label~ : String, groups~ : Array[SetGroup]) -
 pub fn SetState::not_equal(Self, Self) -> Bool
 pub fn SetState::to_json(Self) -> @json.Json
 pub fn SetState::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub struct SortTraceItem {
-  id : String
-  value : Int32
-  label : String
-}
-pub fn SortTraceItem::equal(Self, Self) -> Bool
-pub fn SortTraceItem::new(id~ : String, value~ : Int32, label? : String) -> Self
-pub fn SortTraceItem::not_equal(Self, Self) -> Bool
-pub fn SortTraceItem::to_json(Self) -> @json.Json
-pub fn SortTraceItem::to_repr(Self) -> @debug.Repr
 
 #derive(Eq, @debug.Debug, @json.FromJson, @json.ToJson)
 pub struct TargetRef {
@@ -773,38 +659,6 @@ pub fn[T : Show] TracedArray::new(Array[T], title? : String, algorithm? : String
 pub fn[T : Show] TracedArray::set(Self[T], Int32, T) -> Unit
 pub fn[T] TracedArray::swap(Self[T], Int32, Int32) -> Unit
 pub fn[T] TracedArray::to_array(Self[T]) -> Array[T]
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub struct TracingOverhead {
-  off_runs : Int32
-  count_runs : Int32
-  full_runs : Int32
-  off_ms : Double
-  count_ms : Double
-  full_ms : Double
-  count_ratio : Double
-  full_ratio : Double
-  steps : Int32
-  json_length : Int32
-  full_us_per_step : Double
-}
-pub fn TracingOverhead::equal(Self, Self) -> Bool
-pub fn TracingOverhead::not_equal(Self, Self) -> Bool
-pub fn TracingOverhead::report(Self) -> String
-pub fn TracingOverhead::to_json(Self) -> @json.Json
-pub fn TracingOverhead::to_repr(Self) -> @debug.Repr
-
-#derive(Eq, @debug.Debug, @json.ToJson)
-pub struct UnionOperation {
-  left : Int32
-  right : Int32
-  label : String
-}
-pub fn UnionOperation::equal(Self, Self) -> Bool
-pub fn UnionOperation::new(left~ : Int32, right~ : Int32, label? : String) -> Self
-pub fn UnionOperation::not_equal(Self, Self) -> Bool
-pub fn UnionOperation::to_json(Self) -> @json.Json
-pub fn UnionOperation::to_repr(Self) -> @debug.Repr
 
 // Type aliases
 

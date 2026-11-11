@@ -67,7 +67,7 @@ fn main raise {
       ("Insertion sort", insertion_sort),
       ("Heap sort", heap_sort),
     ] {
-    let profile = @frontierlab.profile_traced_array(
+    let profile = @profile.profile_traced_array(
       sizes,
       scrambled,
       entry.1,
@@ -76,7 +76,7 @@ fn main raise {
     println("# \{entry.0}\n")
     println(profile.report())
   }
-  let overhead = @frontierlab.measure_tracing_overhead(
+  let overhead = @profile.measure_tracing_overhead(
     scrambled(64),
     insertion_sort,
     clock=@env.now,

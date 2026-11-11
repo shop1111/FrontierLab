@@ -37,12 +37,12 @@ fn faulty_insertion_sort_demo_trace() -> @frontierlab.AlgorithmTrace raise {
 ///|
 /// Build the Union-Find trace used by the bundled demo.
 fn union_find_demo_trace() -> @frontierlab.AlgorithmTrace raise {
-  @frontierlab.union_find_trace(6, [
-    @frontierlab.UnionOperation::new(left=0, right=1),
-    @frontierlab.UnionOperation::new(left=2, right=3),
-    @frontierlab.UnionOperation::new(left=1, right=3),
-    @frontierlab.UnionOperation::new(left=4, right=5),
-    @frontierlab.UnionOperation::new(left=3, right=5),
+  @classics.union_find_trace(6, [
+    @classics.UnionOperation::new(left=0, right=1),
+    @classics.UnionOperation::new(left=2, right=3),
+    @classics.UnionOperation::new(left=1, right=3),
+    @classics.UnionOperation::new(left=4, right=5),
+    @classics.UnionOperation::new(left=3, right=5),
   ])
 }
 

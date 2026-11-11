@@ -10,7 +10,7 @@
   ],
   "exemptions": [
     {
-      "pattern": "bench/main.mbt",
+      "pattern": "bench/*main.mbt",
       "reason": "Benchmark-only process entry; correctness is covered by CI smoke runs."
     },
     {

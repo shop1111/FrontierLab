@@ -403,9 +403,12 @@ pub fn GraphState::new(
   edges~ : Array[GraphEdge],
 ) -> GraphState raise TraceError {
   ensure_unique_node_ids(nodes)
+  let node_ids : Map[String, Bool] = Map([])
+  for node in nodes {
+    node_ids[node.id] = true
+  }
   for edge in edges {
-    if !nodes.any(fn(node) { node.id == edge.from }) ||
-      !nodes.any(fn(node) { node.id == edge.to }) {
+    if !node_ids.contains(edge.from) || !node_ids.contains(edge.to) {
       raise InvalidGraph(
         "Graph edge endpoints must reference existing node ids",
       )
@@ -754,11 +757,66 @@ fn Scene::contains_target(self : Scene, target : TargetRef) -> Bool {
 
 ///|
 fn Scene::validate_highlights(self : Scene) -> Unit raise TraceError {
+  if self.highlights.length() <= 4 {
+    for highlight in self.highlights {
+      if !self.contains_target(highlight.target) {
+        raise DanglingReference(highlight.target)
+      }
+    }
+    return
+  }
+  // Many highlights: index every target once instead of scanning per highlight.
+  let targets = self.target_keys()
   for highlight in self.highlights {
-    if !self.contains_target(highlight.target) {
+    if !targets.contains(target_key(highlight.target)) {
       raise DanglingReference(highlight.target)
     }
   }
+}
+
+///|
+fn target_key(target : TargetRef) -> String {
+  match target.entity_id {
+    None => target.object_id
+    Some(id) => "\{target.object_id}\u{0}\{id}"
+  }
+}
+
+///|
+/// Every target that `contains_target` accepts, as `target_key` strings.
+fn Scene::target_keys(self : Scene) -> Map[String, Bool] {
+  let keys : Map[String, Bool] = Map([])
+  for object in self.objects {
+    let object_id = object.id()
+    keys[object_id] = true
+    let add = fn(id : String) { keys["\{object_id}\u{0}\{id}"] = true }
+    match object {
+      Sequence(value) =>
+        for item in value.items {
+          add(item.id)
+        }
+      Sets(value) =>
+        for group in value.groups {
+          add(group.id)
+          for member_id in group.members {
+            add(member_id)
+          }
+        }
+      Graph(value) => {
+        for node in value.nodes {
+          add(node.id)
+        }
+        for edge in value.edges {
+          add(edge.id)
+        }
+      }
+      Grid(value) =>
+        for cell in value.cells {
+          add(cell.id)
+        }
+    }
+  }
+  keys
 }
 
 ///|
@@ -845,25 +903,46 @@ fn ensure_unique_strings(
   values : Array[String],
   kind : String,
 ) -> Unit raise TraceError {
-  for i in 0..<values.length() {
-    for j in (i + 1)..<values.length() {
-      if values[i] == values[j] {
-        raise DuplicateId("Duplicate \{kind} id: \{values[i]}")
-      }
+  match first_duplicate(values) {
+    Some(value) => raise DuplicateId("Duplicate \{kind} id: \{value}")
+    None => ()
+  }
+}
+
+///|
+/// The first value, in order, that occurs more than once. One hash map
+/// replaces comparing every pair, so validating a scene stays linear.
+fn first_duplicate(values : Array[String]) -> String? {
+  if values.length() < 2 {
+    return None
+  }
+  let counts : Map[String, Int32] = Map([])
+  let mut repeated = false
+  for value in values {
+    let count = counts.get(value).unwrap_or(0) + 1
+    counts[value] = count
+    if count > 1 {
+      repeated = true
     }
   }
+  if !repeated {
+    return None
+  }
+  for value in values {
+    if counts.get(value).unwrap_or(0) > 1 {
+      return Some(value)
+    }
+  }
+  None
 }
 
 ///|
 fn ensure_unique_summary_keys(
   values : Array[TraceAttribute],
 ) -> Unit raise TraceError {
-  for i in 0..<values.length() {
-    for j in (i + 1)..<values.length() {
-      if values[i].key == values[j].key {
-        raise DuplicateSummaryKey(values[i].key)
-      }
-    }
+  match first_duplicate(values.map(fn(value) { value.key })) {
+    Some(key) => raise DuplicateSummaryKey(key)
+    None => ()
   }
 }
 
@@ -900,23 +979,17 @@ pub fn AlgorithmTrace::validate(
 fn ensure_unique_object_ids(
   objects : Array[SceneObject],
 ) -> Unit raise TraceError {
-  for i in 0..<objects.length() {
-    for j in (i + 1)..<objects.length() {
-      if objects[i].id() == objects[j].id() {
-        raise DuplicateId("Duplicate scene object id: \{objects[i].id()}")
-      }
-    }
+  match first_duplicate(objects.map(fn(object) { object.id() })) {
+    Some(id) => raise DuplicateId("Duplicate scene object id: \{id}")
+    None => ()
   }
 }
 
 ///|
 fn ensure_unique_node_ids(nodes : Array[GraphNode]) -> Unit raise TraceError {
-  for i in 0..<nodes.length() {
-    for j in (i + 1)..<nodes.length() {
-      if nodes[i].id == nodes[j].id {
-        raise DuplicateId("Duplicate graph node id: \{nodes[i].id}")
-      }
-    }
+  match first_duplicate(nodes.map(fn(node) { node.id })) {
+    Some(id) => raise DuplicateId("Duplicate graph node id: \{id}")
+    None => ()
   }
 }
 
@@ -924,11 +997,8 @@ fn ensure_unique_node_ids(nodes : Array[GraphNode]) -> Unit raise TraceError {
 fn ensure_unique_cell_ids(
   cells : Array[GridCellState],
 ) -> Unit raise TraceError {
-  for i in 0..<cells.length() {
-    for j in (i + 1)..<cells.length() {
-      if cells[i].id == cells[j].id {
-        raise DuplicateId("Duplicate grid cell id: \{cells[i].id}")
-      }
-    }
+  match first_duplicate(cells.map(fn(cell) { cell.id })) {
+    Some(id) => raise DuplicateId("Duplicate grid cell id: \{id}")
+    None => ()
   }
 }

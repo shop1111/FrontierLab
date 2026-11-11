@@ -98,3 +98,23 @@ test "red black invariant checker rejects malformed internal trees" {
   uneven_black_height[0].left = 1
   expect_invalid_red_black_tree(uneven_black_height, 0)
 }
+
+///|
+test "adapter defensive branches remain explicit" {
+  try union_find_trace(0, []) catch {
+    @frontierlab.LimitExceeded(_) => ()
+    _ => fail("expected union-find size failure")
+  } noraise {
+    _ => fail("zero-sized union-find must fail")
+  }
+  try insertion_sort_items_trace([SortTraceItem::new(id="", value=1)]) catch {
+    @frontierlab.DuplicateId(_) => ()
+    _ => fail("expected empty stable id failure")
+  } noraise {
+    _ => fail("empty stable id must fail")
+  }
+  let parent = [0, 1]
+  let rank = [0, 1]
+  assert_eq(union_find_attach(parent, rank, 0, 1), (1, 0))
+  assert_eq(parent[0], 1)
+}
