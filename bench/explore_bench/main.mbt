@@ -126,21 +126,21 @@ fn main raise {
   ]
   println("## replay: one snapshot of the whole tree after every insert")
   println(
-    "| inserts | ops only ms | ops + invariant ms | replay ms | replay window=20 ms | html bytes | window html bytes |",
+    "| inserts | ops only ms | ops + invariant ms | replay ms | replay window=20 ms | to_html ms | html bytes | window html bytes |",
   )
-  println("|---:|---:|---:|---:|---:|---:|---:|")
+  println("|---:|---:|---:|---:|---:|---:|---:|---:|")
   for n in [50, 200, 1000] {
     let steps = script(n)
     let plain = time_ms(() => {
       let mut t = Leaf
       for step in steps {
-        t = insert(t, step.arg.unwrap())
+        t = insert(t, step.int_arg().unwrap())
       }
     })
     let checked = time_ms(() => {
       let mut t = Leaf
       for step in steps {
-        t = insert(t, step.arg.unwrap())
+        t = insert(t, step.int_arg().unwrap())
         ignore(is_bst(t))
       }
     })
@@ -150,13 +150,15 @@ fn main raise {
         @explore.replay(() => Leaf, ops, steps, invariant=is_bst, options~),
       )
     })
-    let html = @explore.replay(
+    let full = @explore.replay(
       () => Leaf,
       ops,
       steps,
       invariant=is_bst,
       options~,
-    ).to_html()
+    )
+    let html = full.to_html()
+    let html_ms = time_ms(() => ignore(full.to_html()))
     let windowed = time_ms(() => {
       ignore(
         @explore.replay(
@@ -178,7 +180,7 @@ fn main raise {
       options~,
     ).to_html()
     println(
-      "| \{n} | \{plain} | \{checked} | \{replayed} | \{windowed} | \{html.length()} | \{window_html.length()} |",
+      "| \{n} | \{plain} | \{checked} | \{replayed} | \{windowed} | \{html_ms} | \{html.length()} | \{window_html.length()} |",
     )
   }
   println("")

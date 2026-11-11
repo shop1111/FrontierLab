@@ -161,8 +161,8 @@ test "a correct tree survives exploration and replays to completion" {
     @explore.Op::new("delete", delete),
   ]
   let removed = fn(t : Tree, step : @explore.Step) -> String? {
-    match step {
-      { op: "delete", arg: Some(k), } if keys(t).contains(k) =>
+    match (step.op, step.int_arg()) {
+      ("delete", Some(k)) if keys(t).contains(k) =>
         Some("\{k} is still present")
       _ => None
     }
@@ -265,8 +265,8 @@ test "mutable structures use a fresh state and the check sees each step" {
     @explore.Op::without_arg("pop", pop),
   ]
   let top_is_pushed = fn(s : Stack, step : @explore.Step) -> String? {
-    match step {
-      { op: "push", arg: Some(x), } if s.items.last() != Some(x) =>
+    match (step.op, step.int_arg()) {
+      ("push", Some(x)) if s.items.last() != Some(x) =>
         Some("push \{x} did not put \{x} on top")
       _ => None
     }

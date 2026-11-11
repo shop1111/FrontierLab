@@ -95,16 +95,21 @@ Windows with `moonc 0.10.20` on 2026-11-11, one local run. The structure is a
 persistent binary search tree; keys are inserted in a scrambled order and the
 invariant is "in-order keys strictly increase".
 
-| inserts | ops only ms | ops + invariant ms | replay ms | `window=20` ms | replay HTML | `window=20` HTML |
-|---:|---:|---:|---:|---:|---:|---:|
-| 50 | 0.014 | 0.032 | 7.6 | 5.0 | 448 KB | 305 KB |
-| 200 | 0.10 | 0.30 | 113 | 23 | 6.1 MB | 1.3 MB |
-| 1000 | 0.95 | 4.7 | 4,059 | 197 | 149 MB | 6.4 MB |
+| inserts | ops only ms | ops + invariant ms | replay ms | `window=20` ms | `to_html` ms | replay HTML | `window=20` HTML |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 50 | 0.0094 | 0.022 | 5.3 | 3.4 | 3.7 | 61 KB | 51 KB |
+| 200 | 0.074 | 0.22 | 77 | 16 | 41 | 130 KB | 67 KB |
+| 1000 | 0.68 | 3.5 | 1,994 | 86 | 929 | 505 KB | 155 KB |
+
+Before scene deltas in the HTML player (0.12.0), the same pages were 448 KB,
+6.1 MB, and 149 MB (305 KB, 1.3 MB, and 6.4 MB with `window=20`), rendering
+them took 7.6 ms, 110 ms, and 2,813 ms, and replay took 7.6 ms, 113 ms, and
+4,059 ms.
 
 `explore` with its defaults (300 cases, up to 12 operations, arguments
 `0..<10`) finds the duplicated-successor bug after 88 sequences, shrinks it to
-4 steps, and replays them in 0.50 ms in total. A correct tree runs all 300
-sequences in 0.78 ms.
+4 steps, and replays them in 0.35 ms in total. A correct tree runs all 300
+sequences in 0.79 ms.
 
 ## Scene validation
 

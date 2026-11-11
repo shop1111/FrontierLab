@@ -11,11 +11,14 @@
 /// - arrays: `[1, 2, 3]`
 priv enum Shape {
   Scalar(String)
-  Ctor(String, Array[Json])
+  Ctor(String, ArrayView[Json])
   Fields(String?, Map[String, Json])
   Items(Array[Json])
   Missing
 }
+
+///|
+let no_args : Array[Json] = []
 
 ///|
 /// Constant constructors with these names are drawn as empty subtrees even
@@ -57,13 +60,13 @@ fn shape(j : Json) -> Shape {
     True => Scalar("true")
     False => Scalar("false")
     Number(n, ..) => Scalar(number_text(n))
-    String(s) => if is_tag(s) { Ctor(s, []) } else { Scalar(s) }
+    String(s) => if is_tag(s) { Ctor(s, no_args[:]) } else { Scalar(s) }
     Array(xs) =>
       if xs.length() >= 2 && xs[0] is String(tag) && is_tag(tag) {
         if xs.length() == 2 && xs[1] is Object(fields) {
           Fields(Some(tag), fields)
         } else {
-          Ctor(tag, xs[1:].to_owned())
+          Ctor(tag, xs[1:])
         }
       } else {
         Items(xs)
@@ -74,11 +77,14 @@ fn shape(j : Json) -> Shape {
 
 ///|
 fn is_composite(j : Json) -> Bool {
-  match shape(j) {
-    Ctor(_, args) => args.length() > 0
-    Fields(_, _) => true
-    Items(xs) => xs.iter().any(is_composite)
-    Scalar(_) | Missing => false
+  // Same answer as matching on `shape(j)`, without building the shape: a
+  // tagged array is a constructor with arguments or a labeled constructor.
+  match j {
+    Object(_) => true
+    Array(xs) =>
+      (xs.length() >= 2 && xs[0] is String(tag) && is_tag(tag)) ||
+      xs.iter().any(is_composite)
+    _ => false
   }
 }
 

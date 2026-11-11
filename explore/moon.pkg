@@ -1,5 +1,8 @@
 import {
-  "moonbitlang/core/string" @strconv,
+  "moonbitlang/core/debug",
+  "moonbitlang/core/json",
+  "moonbitlang/core/quickcheck",
+  "moonbitlang/core/quickcheck/splitmix",
   "moonbitlang/x/fs",
   "shop1111/frontierlab",
 }

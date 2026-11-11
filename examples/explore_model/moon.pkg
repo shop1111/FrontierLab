@@ -1,0 +1,8 @@
+import {
+  "moonbitlang/core/env",
+  "moonbitlang/core/quickcheck",
+  "shop1111/frontierlab",
+  "shop1111/frontierlab/explore",
+}
+
+pkgtype(kind: "executable")
