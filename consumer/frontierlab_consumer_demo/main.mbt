@@ -1,45 +1,39 @@
 ///|
-fn evidence_path(directory : String, name : String) -> String {
-  "\{directory}/\{name}"
-}
-
-///|
 fn write_evidence(directory : String) -> Unit raise {
   @fs.create_dir(directory)
-  let expected = selection_sort_trace(false)
-  let actual = selection_sort_trace(true)
-  let contract = @frontierlab.insertion_sort_int_contract(object_id="values").check(
-    actual,
+
+  // 1. Let FrontierLab search for the smallest failing sequence.
+  match
+    @explore.explore(
+      Heap::empty,
+      heap_ops(pop),
+      invariant=heap_violation,
+      title="Min-heap pop",
+    ) {
+    Some(found) => {
+      println(found.report())
+      found.save_html("\{directory}/heap-explore.html")
+    }
+    None => println("No failing sequence found.")
+  }
+
+  // 2. Replay an input written by hand.
+  let replay = @explore.replay(
+    Heap::empty,
+    heap_ops(pop),
+    @explore.Step::parse("push 1, push 5, push 2, push 6, push 7, pop"),
+    invariant=heap_violation,
+    title="Hand-written input",
   )
-  let divergence = @frontierlab.first_divergence(expected, actual).unwrap()
-  let counterexample = actual.slice(center=divergence.step)
-  @fs.write_string_to_file(
-    evidence_path(directory, "selection-sort-expected.json"),
-    expected.encode_json(),
-  )
-  @fs.write_string_to_file(
-    evidence_path(directory, "selection-sort-actual.json"),
-    actual.encode_json(),
-  )
-  @fs.write_string_to_file(
-    evidence_path(directory, "selection-sort-contract.json"),
-    contract.to_json_string(),
-  )
-  @fs.write_string_to_file(
-    evidence_path(directory, "selection-sort-divergence.json"),
-    divergence.to_json_string(),
-  )
-  @fs.write_string_to_file(
-    evidence_path(directory, "selection-sort-counterexample.json"),
-    counterexample.trace.encode_json(),
-  )
-  @fs.write_string_to_file(
-    evidence_path(directory, "selection-sort-actual.html"),
-    @frontierlab.render_trace_html(actual),
-  )
-  println(
-    "generated: step=\{divergence.step} expected=\{divergence.expected_event} actual=\{divergence.actual_event} contract=\{contract.passed}",
-  )
+  println(replay.report())
+  replay.save_html("\{directory}/heap-replay.html")
+
+  // 3. After fixing pop, the same search finds nothing.
+  match
+    @explore.explore(Heap::empty, heap_ops(pop_fixed), invariant=heap_violation) {
+    Some(found) => println("pop_fixed still fails:\n\{found.report()}")
+    None => println("pop_fixed: no failing sequence found.")
+  }
 }
 
 ///|

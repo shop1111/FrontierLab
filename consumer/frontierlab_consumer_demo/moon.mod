@@ -1,6 +1,6 @@
 import {
   "moonbitlang/x@0.4.45",
-  "shop1111/frontierlab@0.11.0",
+  "shop1111/frontierlab@0.12.0",
 }
 
 name = "frontierlab_consumer_demo"
@@ -11,4 +11,4 @@ readme = "README.md"
 
 license = "MIT"
 
-description = "An independent published-package consumer proving FrontierLab trace diagnosis."
+description = "An independent published-package consumer that uses FrontierLab explore to find a bug in a user-written min-heap."

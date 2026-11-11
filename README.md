@@ -346,7 +346,9 @@ GitHub Release 提供 Windows 可执行文件和 SHA256，也可以本地构建�
 ## 独立 consumer 示例
 
 `consumer/frontierlab_consumer_demo` 是一个单独的 MoonBit 项目，通过 Mooncakes 安装
-已发布的 FrontierLab，用来验证发布包能被外部项目安装和调用。普通用户不需要运行它。
+已发布的 FrontierLab，用来验证发布包能被外部项目安装和调用。它扮演一个外部用户：自己写了
+一个最小堆，`pop` 下沉时漏比较了右孩子，用 `explore` 找出 5 步的最短出错序列，修好后再跑一遍
+确认通过。普通用户不需要运行它。
 
 ## 开发与验证
 

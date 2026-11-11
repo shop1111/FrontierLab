@@ -104,10 +104,12 @@ After building a trace, prefer `diagnose_trace(actual, contract=..., expected=..
 ### 1. MoonBit library
 
 Depend on the published package, construct a `TraceBuilder`, and call the
-checking and debugging APIs directly. `consumer/frontierlab_consumer_demo` is
-a standalone example project that resolves `shop1111/frontierlab@0.7.1` from
-Mooncakes and has no local override. It simulates an external user and verifies
-that the release is installable; ordinary users do not need to run it.
+checking and debugging APIs directly, or hand your own data structure to the
+`explore` package. `consumer/frontierlab_consumer_demo` is a standalone example
+project that resolves the published package from Mooncakes with no local
+override. It plays an external user who uses `explore` to find a bug in their
+own min-heap, and verifies that the release is installable; ordinary users do
+not need to run it.
 
 ### 2. CLI or AI Agent
 
