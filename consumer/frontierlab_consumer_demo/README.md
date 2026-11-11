@@ -1,14 +1,14 @@
 # FrontierLab published-package consumer
 
 This directory is a standalone MoonBit project that depends on
-`shop1111/frontierlab@0.11.0` from Mooncakes. It does not use a local path
+`shop1111/frontierlab@0.12.0` from Mooncakes. It does not use a local path
 override or copy FrontierLab source code.
 
 It exists to simulate a real external user, verify that the published package
 can be resolved and called, and provide a complete integration example. Normal
 library users do not need to run this project.
 
-After v0.11.0 is published, verify it with:
+After v0.12.0 is published, verify it with:
 
 ```sh
 moon tree
@@ -17,7 +17,7 @@ moon test --target all --deny-warn
 moon run . -- evidence
 ```
 
-`moon tree` must resolve exactly `shop1111/frontierlab@0.11.0`. The executable
+`moon tree` must resolve exactly `shop1111/frontierlab@0.12.0`. The executable
 creates an expected and an intentionally incorrect selection-sort trace. The
 first difference is step 10, and the incorrect final sequence fails the sorting
 rule.

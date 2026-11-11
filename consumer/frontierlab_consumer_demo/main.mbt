@@ -8,7 +8,7 @@ fn write_evidence(directory : String) -> Unit raise {
   @fs.create_dir(directory)
   let expected = selection_sort_trace(false)
   let actual = selection_sort_trace(true)
-  let contract = @frontierlab.insertion_sort_int_contract(object_id="values").check(
+  let contract = @frontierlab.sorted_int_sequence_contract(object_id="values").check(
     actual,
   )
   let divergence = @frontierlab.first_divergence(expected, actual).unwrap()

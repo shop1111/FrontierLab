@@ -32,10 +32,10 @@ test "consumer traces pin the stale-index fault to step 10" {
 test "consumer proves contract and counterexample exit semantics" {
   let expected = selection_sort_trace(false)
   let actual = selection_sort_trace(true)
-  let expected_report = @frontierlab.insertion_sort_int_contract(
+  let expected_report = @frontierlab.sorted_int_sequence_contract(
     object_id="values",
   ).check(expected)
-  let actual_report = @frontierlab.insertion_sort_int_contract(
+  let actual_report = @frontierlab.sorted_int_sequence_contract(
     object_id="values",
   ).check(actual)
   assert_true(expected_report.passed)
