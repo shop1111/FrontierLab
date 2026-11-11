@@ -17,7 +17,8 @@ const traceMatch = html.match(
   /<script id="trace-data" type="application\/json">([\s\S]*?)<\/script>/,
 );
 assert.ok(traceMatch, "expected embedded trace JSON");
-const trace = JSON.parse(traceMatch[1]);
+const packed = JSON.parse(traceMatch[1]);
+assert.equal(packed.packing, "scene-delta-v1", "expected packed scenes");
 assert.ok(html.startsWith("<!doctype html>"));
 assert.ok(html.includes('lang="zh-CN"'));
 assert.ok(html.includes('id="guide"'));
@@ -44,6 +45,12 @@ vm.runInNewContext(executableScripts[0][1], context, {
 });
 const core = context.FrontierLabPlayerCore;
 assert.ok(core, "player pure core must be exported");
+const trace = core.unpackTrace(structuredClone(packed));
+assert.equal(trace.packing, undefined);
+assert.ok(
+  trace.steps.every((step) => step.scene && !("scene_delta" in step)),
+  "every step must have its scene restored",
+);
 assert.deepEqual(
   [...core.ROLES],
   [

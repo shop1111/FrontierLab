@@ -239,8 +239,8 @@ test "red black tree adapter records recoloring searches rendering and errors" {
   assert_true(html.contains("查找未命中"))
   assert_true(html.contains("作为节点 10 的左孩子"))
   assert_true(html.contains("作为节点 10 的右孩子"))
-  assert_true(html.contains("\"label\": \"left\""))
-  assert_true(html.contains("\"label\": \"right\""))
+  assert_true(html.contains("\"label\":\"left\""))
+  assert_true(html.contains("\"label\":\"right\""))
   assert_true(html.contains("graph-svg"))
   assert_adapter_round_trip(trace)
   let mirrored_recolor = @classics.red_black_tree_trace([

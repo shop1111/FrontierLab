@@ -639,3 +639,120 @@ pub fn AlgorithmTrace::decode_json(
   trace.validate(options~)
   trace
 }
+
+///|
+/// The change from `before` to `after`, so that a scene that differs from the
+/// previous one in a few nodes is stored as those nodes only:
+///
+/// - `["s"]`: same as `before`
+/// - `["v", value]`: replaced by `value`
+/// - `["o", {key: delta}, [removed keys]]`: object with changed keys
+/// - `["a", prefix, suffix, [delta]]`: array that keeps `prefix` leading and
+///   `suffix` trailing elements of `before`; the middle elements are deltas
+///   against the middle of `before` when both middles have the same length,
+///   and `["v", value]` otherwise.
+fn json_delta(before : Json, after : Json) -> Json {
+  if before == after {
+    return Json::array([Json::string("s")])
+  }
+  match (before, after) {
+    (Object(old), Object(new)) => {
+      let changed : Map[String, Json] = Map([])
+      for key, value in new {
+        match old.get(key) {
+          Some(previous) =>
+            if previous != value {
+              changed[key] = json_delta(previous, value)
+            }
+          None => changed[key] = replaced(value)
+        }
+      }
+      let removed : Array[Json] = []
+      for key, _ in old {
+        if !new.contains(key) {
+          removed.push(Json::string(key))
+        }
+      }
+      Json::array([
+        Json::string("o"),
+        Json::object(changed),
+        Json::array(removed),
+      ])
+    }
+    (Array(old), Array(new)) => {
+      let shorter = if old.length() < new.length() {
+        old.length()
+      } else {
+        new.length()
+      }
+      let mut prefix = 0
+      while prefix < shorter && old[prefix] == new[prefix] {
+        prefix += 1
+      }
+      let mut suffix = 0
+      while suffix < shorter - prefix &&
+            old[old.length() - 1 - suffix] == new[new.length() - 1 - suffix] {
+        suffix += 1
+      }
+      let old_middle = old[prefix:old.length() - suffix]
+      let new_middle = new[prefix:new.length() - suffix]
+      let middle = if old_middle.length() == new_middle.length() {
+        new_middle.mapi(fn(i, value) { json_delta(old_middle[i], value) })
+      } else {
+        new_middle.map(replaced)
+      }
+      Json::array([
+        Json::string("a"),
+        wire_int(prefix),
+        wire_int(suffix),
+        Json::array(middle),
+      ])
+    }
+    _ => replaced(after)
+  }
+}
+
+///|
+fn replaced(value : Json) -> Json {
+  Json::array([Json::string("v"), value])
+}
+
+///|
+/// The wire format with every step scene stored as a delta against the
+/// previous scene (`scene_delta`), for the HTML player. Long replays repeat
+/// almost the whole structure in every step, so this keeps the page small.
+/// The player restores `scene` with `unpackTrace`.
+fn AlgorithmTrace::encode_packed_json(self : AlgorithmTrace) -> String {
+  let mut previous = encode_scene(self.initial_scene)
+  let initial = previous
+  let steps = self.steps.map(fn(step) {
+    let scene = encode_scene(step.scene)
+    let entries : Array[(String, Json)] = [
+      ("index", wire_int(step.index)),
+      ("event", encode_event(step.event)),
+      ("scene_delta", json_delta(previous, scene)),
+    ]
+    match step.annotation {
+      Some(value) => entries.push(("annotation", encode_annotation(value)))
+      None => ()
+    }
+    previous = scene
+    wire_object(entries)
+  })
+  wire_object([
+    ("format", Json::string("frontierlab-trace")),
+    ("schema_version", Json::string(self.schema_version)),
+    ("packing", Json::string("scene-delta-v1")),
+    (
+      "metadata",
+      wire_object([
+        ("title", Json::string(self.title)),
+        ("algorithm", Json::string(self.algorithm)),
+        ("description", Json::string(self.description)),
+      ]),
+    ),
+    ("initial_scene", initial),
+    ("steps", wire_array(steps)),
+    ("summary", encode_attributes(self.summary)),
+  ]).stringify()
+}
