@@ -11,4 +11,4 @@ readme = "README.md"
 
 license = "MIT"
 
-description = "An independent published-package consumer proving FrontierLab trace diagnosis."
+description = "An independent published-package consumer that uses FrontierLab explore to find a bug in a user-written min-heap."
