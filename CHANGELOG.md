@@ -1,5 +1,48 @@
 # Changelog
 
+## Unreleased
+
+`explore` can now compare against a reference implementation and take
+arguments of any type, and HTML players store only what changes between
+steps. `Step.arg` and `Op` change shape; see below.
+
+- Added `Model`, a reference implementation that `explore` and `replay` run
+  alongside the structure under test (`model=`). After every step, results
+  must be equal and an operation must raise exactly when the model raises;
+  a mismatch fails the step with a message such as
+  `returned false, but the model returned true`. When both raise, the step
+  passes and the state is unchanged.
+- Added operations that return a result: `Op::returning`,
+  `Op::returning_without_arg`, and `Op::returning_with_gen` take functions
+  that return `(state, result)`, where the result needs `Debug`. Results are
+  listed in `Replay.outputs` and shown in each step of the replay.
+- Added `Op::with_gen` for arguments of any type with `ToJson` and
+  `FromJson`, drawn from a core `quickcheck` `Generator` that receives
+  `max_arg` as its size. Integer operations made with `Op::new` keep drawing
+  from `0..<max_arg`, so existing searches find the same sequences.
+- Breaking: `Step.arg` is now `Json?` instead of `Int32?`. Use
+  `Step::int_arg()` in checks, `Step::new(op, arg=n)` for integers, and
+  `Step::with_arg(op, value)` for other types. `Op.run` is no longer public;
+  `Op` now has a public `returns` field.
+- `Step::parse` reads arguments as JSON, such as `put ["a", 1], get "a"`, and
+  splits steps only at separators outside brackets and strings. Unquoted
+  words are rejected with a hint to quote them.
+- `replay` now rejects a step whose argument does not fit its operation (for
+  example `insert 1.5` or `insert "x"` for an integer operation) and an
+  argument given to an operation that takes none.
+- Shrinking now also shrinks strings, arrays, and fields of arguments, and
+  shrinks every occurrence of the same argument together, so
+  `insert 4, contains 4` can become `insert 1, contains 1`. The duplicated
+  successor example now shrinks to `insert 1, insert 2, insert 0, delete 1`.
+- `render_trace_html` stores the initial scene and then, for each step, only
+  the change from the previous scene; the player restores full scenes with
+  `unpackTrace` when it loads. The embedded data is also no longer indented.
+  The page for 1000 tree inserts drops from 149 MB to 505 KB and renders in
+  0.93 s instead of 2.8 s. Trace Schema v1 and `encode_json` are unchanged.
+- Snapshots no longer copy constructor arguments while reading `ToJson`
+  output; replaying 1000 inserts drops from about 4.1 s to 2.0 s.
+- Added the `examples/explore_model` example.
+
 ## 0.12.0 - 2026-11-11
 
 This release turns FrontierLab into a debugger for the user's own data

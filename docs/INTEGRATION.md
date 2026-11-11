@@ -16,8 +16,17 @@ match @explore.explore(() => Leaf, ops, invariant=is_bst) {
 
 - `invariant : (S) -> String?` must hold after every operation.
 - `check : (S, Step) -> String?` sees the step that produced the state, for
-  rules such as "after `delete k`, `k` is gone".
-- An operation that raises fails its step.
+  rules such as "after `delete k`, `k` is gone". Read integer arguments with
+  `step.int_arg()`.
+- `model : Model` runs a simple reference implementation alongside, with
+  operations of the same names, and requires equal results. Operations made
+  with `Op::returning`, `Op::returning_without_arg`, or
+  `Op::returning_with_gen` return `(state, result)`; results need `Debug`.
+- Without a model, an operation that raises fails its step. With a model, it
+  fails only when the model does not raise too.
+- `Op::new` draws integer arguments from `0..<max_arg`. `Op::with_gen` takes a
+  core `quickcheck` `Generator` for any argument type with `ToJson` and
+  `FromJson`; scripts write such arguments as JSON, such as `put ["a", 1]`.
 - `init` must return a fresh state on every call; mutable structures update
   the value in place and return it.
 - `replay` runs a script you wrote, such as

@@ -73,17 +73,17 @@ test "找出 delete 的 bug" {
 输出（来自 [examples/explore_bst](examples/explore_bst/main.mbt) 的实际运行结果）：
 
 ```
-Found after 88 random sequences (seed 1); shrunk from 12 to 4 steps in 4 rounds.
-Step 4 of 4 (delete 2) failed: in-order keys 3 and 3 are not increasing
-Steps: insert 2, insert 3, insert 0, delete 2
+Found after 88 random sequences (seed 1); shrunk from 12 to 4 steps in 6 rounds.
+Step 4 of 4 (delete 1) failed: in-order keys 2 and 2 are not increasing
+Steps: insert 1, insert 2, insert 0, delete 1
 ```
 
 FrontierLab 随机生成了 88 串操作，第 88 串让树失效。它把这 12 个操作缩到最短的 4 个，
-然后只对这 4 个操作完整记录。打开 `bst.html`：
+参数也尽量缩小，然后只对这 4 个操作完整记录。打开 `bst.html`：
 
 - 每一步都画出整棵树，左右孩子的位置和你的数据结构一致；
 - 新增或移动过的节点高亮，被删掉的节点写在注释里；
-- 拖到第 4 步，能直接看到根是 3、右孩子也是 3，并标红：后继节点没有被删掉。
+- 拖到第 4 步，能直接看到根是 2、右孩子也是 2，并标红：后继节点没有被删掉。
 
 ### 用自己构建的输入回放
 
@@ -101,15 +101,67 @@ println(replay.report())
 replay.save_html("my-input.html")
 ```
 
-### 两种检查
+### 三种检查
 
 | 参数 | 签名 | 适合检查什么 |
 |---|---|---|
 | `invariant` | `(S) -> String?` | 任何时候都应成立的性质：BST 有序、堆序、红黑树性质、大小不超过容量 |
 | `check` | `(S, Step) -> String?` | 和这一步操作有关的要求：`delete k` 之后不应再有 `k`，`push x` 之后栈顶应是 `x` |
+| `model` | `Model` | 和一个简单、显然正确的参考实现对照：每一步的返回值必须相同 |
 
-返回 `Some(原因)` 表示失败。操作本身抛出错误（例如对空栈 `pop`）也算失败，原因会写成
-`raised ...`。
+`invariant` 和 `check` 返回 `Some(原因)` 表示失败。没有 `model` 时，操作本身抛出错误
+（例如对空栈 `pop`）也算失败，原因会写成 `raised ...`。`check` 里用 `step.int_arg()`
+取整数参数。
+
+### 对照参考实现：结构没坏，但答案错了
+
+有些 bug 不会破坏结构。下面这棵字符串集合树，`contains` 查找更大的词时又去了左子树：
+树始终有序，`invariant` 发现不了，只有返回值是错的。这时给出一个**参考实现**，
+FrontierLab 每一步都同时运行两边，比较返回值：
+
+```mbt nocheck
+// 会返回结果的操作用 Op::returning*，返回 (新状态, 结果)；结果只需要 Debug
+let ops = [
+  @explore.Op::with_gen("add", words(), add),
+  @explore.Op::returning_with_gen("contains", words(), (s, w) => (s, contains(s, w))),
+]
+// 参考实现：一个普通数组，操作同名
+let model = @explore.Model::new(() => ([] : Array[String]), [
+  @explore.Op::with_gen("add", words(), (list, w) => { if !list.contains(w) { list.push(w) }; list }),
+  @explore.Op::returning_with_gen("contains", words(), (list, w) => (list, list.contains(w))),
+])
+@explore.explore(() => Empty, ops, model~)
+```
+
+输出（来自 [examples/explore_model](examples/explore_model/main.mbt)）：
+
+```
+Found after 2 random sequences (seed 1); shrunk from 10 to 3 steps in 5 rounds.
+Step 3 of 3 (contains "p") failed: returned false, but the model returned true
+Steps: add "", add "p", contains "p"
+```
+
+- 返回值按 `Debug` 输出比较，例如 `true`、`Some(1)`。
+- 两边都抛出错误（例如都对空栈 `pop`）算一致；只有一边抛出才算失败。
+- 想比较整个内容时，两边各加一个查询操作，例如
+  `Op::returning_without_arg("keys", t => (t, keys(t)))`。
+- 回放页面每一步都会显示返回值。
+
+### 任意参数类型
+
+`Op::new` 的参数是 `0..<max_arg` 里的整数，故意取小范围让 key 经常重复。其他参数类型用
+`Op::with_gen`，配一个 core `quickcheck` 的生成器：
+
+```mbt nocheck
+let words = @quickcheck.elements(["apple", "fig", "kiwi"])
+let entries = words.flat_map(k => @quickcheck.int_range(0, 3).map(v => (k, v)))
+@explore.Op::with_gen("put", entries, put)        // 参数是 (String, Int)
+@explore.Op::with_gen("add", @quickcheck.spawn(), add)  // 任何实现了 Arbitrary 的类型
+```
+
+参数类型需要 `ToJson` 和 `FromJson`：步骤里按 JSON 记录参数，所以可以显示、写进脚本、
+自动缩小。手写脚本时参数也写成 JSON：`put ["apple", 1], get "apple"`。缩小时数字趋向 0，
+字符串和数组变短，同一个值在多个步骤里出现时会一起缩小。
 
 ### 可变数据结构
 
@@ -143,10 +195,11 @@ FrontierLab 不需要知道你的类型，它读 `derive(ToJson)` 的输出：
 
 ### 限制
 
-- 操作参数目前只支持一个 `Int`（随机生成时取 `0..<max_arg`）。
+- 每个操作最多一个参数；需要多个值时用元组，例如 `(String, Int)`。
 - 带父指针或循环引用的结构无法用 `derive(ToJson)` 序列化，需要自己写不含父指针的
   `ToJson`。
-- 每一步都保存整个结构的快照。长脚本请用 `window`，见下文的优化记录。
+- 每一步仍要把整个结构转换成快照，几千步的脚本请用 `window`，见下文的优化记录。
+  回放页面里只存每一步的变化，所以页面本身不会随步数膨胀。
 - 看到的是每次操作前后的结构，不是函数内部每一行。函数内部的逐行回放需要改写源码，
   在[设计讨论](#后续方向)里。
 
@@ -227,24 +280,40 @@ FrontierLab 就能运行、检查、缩减并画出你自己的代码。
 
 | 情形 | 尝试的操作序列 | 最终步数 | 总耗时 |
 |---|---:|---:|---:|
-| 有 bug 的 `delete`（搜索 + 缩减 + 回放） | 88 | 4 | 0.50 ms |
-| 正确的 `delete`（跑满 300 串都没找到问题） | 300 | — | 0.78 ms |
+| 有 bug 的 `delete`（搜索 + 缩减 + 回放） | 88 | 4 | 0.35 ms |
+| 正确的 `delete`（跑满 300 串都没找到问题） | 300 | — | 0.79 ms |
 
 ### 3. 回放窗口：只画出错前的最后 N 步
 
 `replay(..., window=N)` 先不拍快照跑一遍，找到失败的位置，再只记录失败前的 N 步，
 前面的步骤只执行不记录。失败编号仍然是脚本里的绝对位置。插入 n 个 key 的回放：
 
-| n | 只跑操作 | 操作 + 不变量 | 完整回放 | `window=20` | 完整页面 | `window=20` 页面 |
-|---:|---:|---:|---:|---:|---:|---:|
-| 50 | 0.014 ms | 0.032 ms | 7.6 ms | 5.0 ms | 448 KB | 305 KB |
-| 200 | 0.10 ms | 0.30 ms | 113 ms | 23 ms | 6.1 MB | 1.3 MB |
-| 1000 | 0.95 ms | 4.7 ms | 4,059 ms | 197 ms | 149 MB | 6.4 MB |
+| n | 只跑操作 | 操作 + 不变量 | 完整回放 | `window=20` |
+|---:|---:|---:|---:|---:|
+| 50 | 0.010 ms | 0.023 ms | 5.5 ms | 3.5 ms |
+| 200 | 0.073 ms | 0.22 ms | 80 ms | 16 ms |
+| 1000 | 0.68 ms | 3.6 ms | 1,995 ms | 92 ms |
 
-完整回放的代价主要来自"每一步都保存整个结构"：1000 步、平均 500 个节点，就是 50 万
-个节点的快照。调试时一般只需要出错点附近，所以长脚本建议总是加上 `window`。
+完整回放的代价主要来自"每一步都把整个结构转换成快照"：1000 步、平均 500 个节点，就是
+50 万个节点。调试时一般只需要出错点附近，所以几千步的脚本建议加上 `window`。
 
-### 4. 核心校验从 O(n²) 改为线性
+### 4. 回放页面只存每一步的变化
+
+以前回放页面里每一步都存一份完整的场景，1000 步、平均 500 个节点的回放页面有 149 MB，
+浏览器几乎打不开。现在页面里只存第一个场景，之后每一步只存和上一步相比变化的部分
+（对象里改了哪些字段、数组里中间换了哪几个元素），播放器打开时再还原。轨迹本身的
+JSON 格式（Trace Schema v1）不变，所有使用 HTML 播放器的轨迹都会受益。
+
+| n | 页面（修改前） | 页面（修改后） | `window=20` 页面（修改前 → 后） | 生成页面耗时（修改前 → 后） |
+|---:|---:|---:|---:|---:|
+| 50 | 448 KB | 61 KB | 305 KB → 51 KB | 7.6 ms → 3.7 ms |
+| 200 | 6.1 MB | 130 KB | 1.3 MB → 67 KB | 110 ms → 41 ms |
+| 1000 | 149 MB | 505 KB | 6.4 MB → 155 KB | 2,813 ms → 929 ms |
+
+同时，生成快照时不再反复复制构造器参数，1000 次插入的完整回放从 4,059 ms 降到
+1,995 ms。
+
+### 5. 核心校验从 O(n²) 改为线性
 
 构造场景时，节点 ID 唯一性、边的端点、高亮目标原来都靠两两比较或逐个线性查找，一个
 n 个实体的场景要做 O(n²) 次比较。现在改为哈希表单遍扫描，报错内容不变（仍然报告第
@@ -258,7 +327,7 @@ n 个实体的场景要做 O(n²) 次比较。现在改为哈希表单遍扫描�
 
 `explore` 的完整回放（1000 次插入）因此从 7,756 ms 降到 4,059 ms。
 
-### 5. 拆包，并删掉偏离核心的功能
+### 6. 拆包，并删掉偏离核心的功能
 
 - 原来所有功能都在一个包里。现在按用途拆成 `explore`、核心、`profile`、`classics`
   四个包，只用其中一部分时，公开接口一眼就能看清。
@@ -340,7 +409,6 @@ GitHub Release 提供 Windows 可执行文件和 SHA256，也可以本地构建�
 
 - **函数内部逐行回放**：读取源码，在目标函数的每一步之后自动插入快照，编译临时副本
   运行。不需要改用户代码，但依赖官方仍处于实验阶段的 `moonbitlang/parser`。
-- **任意参数类型**：借助 core 的 `quickcheck` 为操作生成参数。
 - **节点身份**：允许指定用哪个字段识别节点，处理重复 key。
 
 ## 独立 consumer 示例
@@ -360,6 +428,7 @@ moon test --target all --deny-warn
 python scripts/check_coverage.py
 python scripts/validate_cli.py
 moon run examples/explore_bst -- _build/explore.html
+moon run examples/explore_model -- _build/explore-model.html
 moon run bench/explore_bench --target native --release
 moon package
 ```
