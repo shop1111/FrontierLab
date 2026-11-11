@@ -1,5 +1,39 @@
 # Integrating an Algorithm
 
+## Your own data structure: `explore`
+
+If the code under test is a data structure with operations such as `insert`,
+`delete`, `push`, or `pop`, use the `shop1111/frontierlab/explore` package. It
+needs no changes to your code beyond `derive(ToJson)`:
+
+```mbt nocheck
+let ops = [@explore.Op::new("insert", insert), @explore.Op::new("delete", delete)]
+match @explore.explore(() => Leaf, ops, invariant=is_bst) {
+  Some(found) => found.save_html("bst.html")
+  None => ()
+}
+```
+
+- `invariant : (S) -> String?` must hold after every operation.
+- `check : (S, Step) -> String?` sees the step that produced the state, for
+  rules such as "after `delete k`, `k` is gone".
+- An operation that raises fails its step.
+- `init` must return a fresh state on every call; mutable structures update
+  the value in place and return it.
+- `replay` runs a script you wrote, such as
+  `Step::parse("insert 5, insert 3; delete 5")`. Pass `window=N` to draw only
+  the last `N` steps before the failure.
+
+Snapshots are drawn from the `ToJson` output: constructors with exactly two
+subtree positions become left and right children, constant constructors in
+subtree positions (such as `Leaf`) become empty children, values that never
+hold a subtree become the node label, struct fields and map entries become
+named edges, and arrays of plain values become sequences. Nodes are identified
+by label, with repeated labels numbered in pre-order. Types with parent
+pointers or cycles need a hand-written `ToJson` without the back edges.
+
+## Array algorithms
+
 For array algorithms, start with automatic tracing and fall back to
 `TraceBuilder` only when you need custom scenes or events:
 
@@ -40,8 +74,9 @@ For grid algorithms, build a `Grid` scene and record `Visit` and `Relax` steps; 
 
 ## Bundled classic adapters
 
-FrontierLab includes algorithm-level adapters for insertion sort, Union-Find,
-Fibonacci DP, minimum coin change, 0/1 knapsack, longest common subsequence,
+The `shop1111/frontierlab/classics` package includes algorithm-level adapters
+for insertion sort, Union-Find, Fibonacci DP, minimum coin change, 0/1
+knapsack, longest common subsequence,
 and red-black-tree insertion/search. Fibonacci and coin change share the same
 private one-dimensional scene representation while preserving distinct public
 inputs, validation, recurrence annotations, and summaries.

@@ -63,12 +63,18 @@ jobs:
           grep -q "Best fit: O(n log n)" /tmp/complexity-profile.md
           moon run examples/counterexample_search | tee /tmp/counterexample-search.md
           grep -q "Input: \[0, 1, 0\]" /tmp/counterexample-search.md
+          moon run examples/explore_bst -- /tmp/explore-bst.html /tmp/explore-bst-script.html | tee /tmp/explore-bst.txt
+          grep -q "Steps: insert 2, insert 3, insert 0, delete 2" /tmp/explore-bst.txt
+          grep -q "Step 6 of 6 (delete 30) failed" /tmp/explore-bst.txt
+          node scripts/check_renderer.mjs /tmp/explore-bst.html
 
       - name: Benchmark correctness smoke
         run: |
           moon run bench --target native -- 100 1000 | tee /tmp/benchmark-smoke.csv
           grep -q '^100,' /tmp/benchmark-smoke.csv
           grep -q '^1000,' /tmp/benchmark-smoke.csv
+          moon run bench/explore_bench --target native | tee /tmp/explore-bench.md
+          grep -q "| buggy delete | 88 | 4 |" /tmp/explore-bench.md
 
       - name: Verify CLI render/validate flow
         run: |

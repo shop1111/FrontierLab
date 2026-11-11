@@ -1,5 +1,6 @@
 import {
   "shop1111/frontierlab",
+  "shop1111/frontierlab/classics",
 }
 
 pkgtype(kind: "executable")

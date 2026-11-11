@@ -125,23 +125,22 @@ fn contract_by_name(
 ///|
 fn demo(name : String) -> @frontierlab.AlgorithmTrace raise {
   match name {
-    "insertion-sort" => @frontierlab.insertion_sort_trace([5, 2, 4, 1, 3])
+    "insertion-sort" => @classics.insertion_sort_trace([5, 2, 4, 1, 3])
     "faulty-insertion-sort" => faulty_insertion_sort_demo_trace()
     "union-find" => union_find_demo_trace()
     "pathfinding" => pathfinding_demo_trace()
-    "fibonacci" => @frontierlab.fibonacci_dp_trace(10)
-    "coin-change" => @frontierlab.coin_change_dp_trace([1, 3, 4], 6)
-    "knapsack" =>
-      @frontierlab.zero_one_knapsack_dp_trace([2, 3, 4], [4, 5, 6], 5)
-    "lcs" => @frontierlab.lcs_dp_trace("ABCBDAB", "BDCABA")
+    "fibonacci" => @classics.fibonacci_dp_trace(10)
+    "coin-change" => @classics.coin_change_dp_trace([1, 3, 4], 6)
+    "knapsack" => @classics.zero_one_knapsack_dp_trace([2, 3, 4], [4, 5, 6], 5)
+    "lcs" => @classics.lcs_dp_trace("ABCBDAB", "BDCABA")
     "red-black-tree" =>
-      @frontierlab.red_black_tree_trace([
-        @frontierlab.Insert(30),
-        @frontierlab.Insert(10),
-        @frontierlab.Insert(20),
-        @frontierlab.Insert(40),
-        @frontierlab.Find(20),
-        @frontierlab.Find(99),
+      @classics.red_black_tree_trace([
+        @classics.Insert(30),
+        @classics.Insert(10),
+        @classics.Insert(20),
+        @classics.Insert(40),
+        @classics.Find(20),
+        @classics.Find(99),
       ])
     other => fail("Unknown demo: \{other}")
   }

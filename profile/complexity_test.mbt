@@ -74,13 +74,13 @@ fn scrambled(n : Int32) -> Array[Int32] {
 
 ///|
 test "bubble sort profiles as quadratic with an exact bound" {
-  let profile = @frontierlab.profile_traced_array(
+  let profile = @profile.profile_traced_array(
     [16, 32, 64, 128, 256],
     descending,
     traced_bubble_sort,
     metric=Compares,
   )
-  assert_eq(profile.best.class, @frontierlab.Quadratic)
+  assert_eq(profile.best.class, @profile.Quadratic)
   assert_eq(profile.samples[4].cost, 256 * 255 / 2)
   assert_true(profile.exponent > 1.9 && profile.exponent < 2.05)
   assert_true(profile.best.coefficient > 0.45 && profile.best.coefficient < 0.5)
@@ -90,57 +90,55 @@ test "bubble sort profiles as quadratic with an exact bound" {
 
 ///|
 test "heap sort profiles as linearithmic" {
-  let profile = @frontierlab.profile_traced_array(
+  let profile = @profile.profile_traced_array(
     [64, 128, 256, 512, 1024, 2048],
     scrambled,
     traced_heap_sort,
     metric=Compares,
   )
-  assert_eq(profile.best.class, @frontierlab.Linearithmic)
+  assert_eq(profile.best.class, @profile.Linearithmic)
   assert_true(profile.report().contains("Best fit: O(n log n), cost ≈ "))
   assert_true(profile.check_bound(Linearithmic, factor=3.0).is_empty())
   assert_true(profile.check_bound(Linear, factor=3.0).length() > 0)
   // 2^n overflows at these sizes, so the exponential class is not fitted.
   assert_eq(profile.fits.length(), 6)
-  assert_true(
-    profile.fits.all(fn(fit) { fit.class != @frontierlab.Exponential }),
-  )
+  assert_true(profile.fits.all(fn(fit) { fit.class != @profile.Exponential }))
 }
 
 ///|
 test "scans, binary search, and single reads fit linear, log, and constant" {
-  let scan = @frontierlab.profile_traced_array(
+  let scan = @profile.profile_traced_array(
     [10, 100, 1000, 10000],
     scrambled,
     traced_minimum_index,
   )
-  assert_eq(scan.best.class, @frontierlab.Linear)
+  assert_eq(scan.best.class, @profile.Linear)
   assert_true(scan.report().contains("Best fit: O(n), cost ≈ "))
   assert_eq(scan.samples[3].counts.compares, 9999)
-  let search = @frontierlab.profile_traced_array(
+  let search = @profile.profile_traced_array(
     [16, 64, 256, 1024, 4096],
     ascending,
     traced_binary_search_past_end,
     metric=Reads,
   )
-  assert_eq(search.best.class, @frontierlab.Logarithmic)
+  assert_eq(search.best.class, @profile.Logarithmic)
   assert_eq(search.samples.map(fn(sample) { sample.cost }), [4, 6, 8, 10, 12])
-  let first = @frontierlab.profile_traced_array([1, 10, 100], ascending, fn(a) {
+  let first = @profile.profile_traced_array([1, 10, 100], ascending, fn(a) {
     ignore(a[0])
   })
-  assert_eq(first.best.class, @frontierlab.Constant)
+  assert_eq(first.best.class, @profile.Constant)
   assert_eq(first.best.error, 0.0)
 }
 
 ///|
 test "profiles with no measured cost report a zero constant" {
-  let profile = @frontierlab.profile_traced_array(
+  let profile = @profile.profile_traced_array(
     [8, 16, 32],
     ascending,
     traced_bubble_sort,
     metric=Swaps,
   )
-  assert_eq(profile.best.class, @frontierlab.Constant)
+  assert_eq(profile.best.class, @profile.Constant)
   assert_eq(profile.best.coefficient, 0.0)
   assert_eq(profile.best.error, 0.0)
   assert_eq(profile.fits.length(), 1)
@@ -151,22 +149,22 @@ test "profiles with no measured cost report a zero constant" {
 test "profile_complexity validates sizes" {
   let run = fn(n : Int32) { @frontierlab.OperationCounts::new(compares=n) }
   for sizes in [[10], [0, 10], [10, 10], [20, 10]] {
-    try @frontierlab.profile_complexity(sizes, run) catch {
+    try @profile.profile_complexity(sizes, run) catch {
       InvalidStep(_) => ()
       _ => fail("expected InvalidStep")
     } noraise {
       _ => fail("invalid sizes must be rejected")
     }
   }
-  let ok = @frontierlab.profile_complexity([10, 20, 40], run, metric=Compares)
-  assert_eq(ok.best.class, @frontierlab.Linear)
+  let ok = @profile.profile_complexity([10, 20, 40], run, metric=Compares)
+  assert_eq(ok.best.class, @profile.Linear)
   assert_eq(ok.best.coefficient, 1.0)
   assert_eq(ok.metric.name(), "compares")
 }
 
 ///|
 test "complexity report lists samples and fits" {
-  let profile = @frontierlab.profile_traced_array(
+  let profile = @profile.profile_traced_array(
     [8, 16, 32],
     descending,
     traced_bubble_sort,
@@ -176,9 +174,9 @@ test "complexity report lists samples and fits" {
   assert_true(report.contains("| 32 | 496 | 496 | 0 | 0 | 992 |"))
   assert_true(report.contains("Best fit: O(n^2)"))
   assert_true(report.contains("| O(n log n) |"))
-  assert_eq(@frontierlab.Cubic.label(), "O(n^3)")
-  assert_eq(@frontierlab.Exponential.evaluate(10), 1024.0)
-  assert_eq(@frontierlab.Logarithmic.evaluate(1), 1.0)
+  assert_eq(@profile.Cubic.label(), "O(n^3)")
+  assert_eq(@profile.Exponential.evaluate(10), 1024.0)
+  assert_eq(@profile.Logarithmic.evaluate(1), 1.0)
 }
 
 ///|
@@ -188,7 +186,7 @@ test "tracing overhead calibrates runs against the clock" {
     ticks.val += 1UL
     ticks.val
   }
-  let overhead = @frontierlab.measure_tracing_overhead(
+  let overhead = @profile.measure_tracing_overhead(
     [3, 1, 2],
     traced_bubble_sort,
     clock~,
@@ -213,7 +211,7 @@ test "tracing overhead calibrates runs against the clock" {
 
 ///|
 test "tracing overhead reports a zero ratio below clock resolution" {
-  let overhead = @frontierlab.measure_tracing_overhead(
+  let overhead = @profile.measure_tracing_overhead(
     [2, 1],
     traced_bubble_sort,
     clock=fn() { 7UL },
@@ -227,7 +225,7 @@ test "tracing overhead reports a zero ratio below clock resolution" {
 ///|
 test "tracing overhead surfaces trace errors" {
   try
-    @frontierlab.measure_tracing_overhead(
+    @profile.measure_tracing_overhead(
       [5, 4, 3, 2, 1],
       traced_bubble_sort,
       clock=fn() { 0UL },
@@ -245,17 +243,17 @@ test "tracing overhead surfaces trace errors" {
 ///|
 test "indistinguishable fits prefer the slower growth class" {
   // log2(1) is clamped to 1 and log2(2) is 1, so O(1) and O(log n) tie.
-  let profile = @frontierlab.profile_complexity([1, 2], fn(_) {
+  let profile = @profile.profile_complexity([1, 2], fn(_) {
     @frontierlab.OperationCounts::new(reads=3)
   })
-  assert_eq(profile.best.class, @frontierlab.Constant)
-  assert_eq(profile.fits[1].class, @frontierlab.Logarithmic)
+  assert_eq(profile.best.class, @profile.Constant)
+  assert_eq(profile.fits[1].class, @profile.Logarithmic)
   assert_true(profile.report().contains("cost ≈ 3.000 · 1 "))
 }
 
 ///|
 test "zero costs at small sizes still fit and skip the exponent" {
-  let profile = @frontierlab.profile_complexity(
+  let profile = @profile.profile_complexity(
     [1, 2, 4],
     fn(n) {
       @frontierlab.OperationCounts::new(writes=if n == 4 { 5 } else { 0 })
@@ -264,10 +262,10 @@ test "zero costs at small sizes still fit and skip the exponent" {
   )
   assert_eq(profile.samples.map(fn(sample) { sample.cost }), [0, 0, 5])
   assert_eq(profile.exponent, 0.0)
-  let cubic = @frontierlab.profile_complexity([2, 4, 8], fn(n) {
+  let cubic = @profile.profile_complexity([2, 4, 8], fn(n) {
     @frontierlab.OperationCounts::new(swaps=n * n * n)
   })
-  assert_eq(cubic.best.class, @frontierlab.Cubic)
+  assert_eq(cubic.best.class, @profile.Cubic)
   assert_true(cubic.report().contains("· n^3 (relative error 0.0%)"))
 }
 
@@ -280,7 +278,7 @@ test "cost metrics select the matching counter" {
     writes=4,
     snapshots=5,
   )
-  let metrics : Array[@frontierlab.CostMetric] = [
+  let metrics : Array[@profile.CostMetric] = [
     Compares,
     Swaps,
     Reads,
@@ -295,9 +293,9 @@ test "cost metrics select the matching counter" {
 
 ///|
 test "reports name logarithmic and exponential growth" {
-  let logarithmic = @frontierlab.profile_complexity([2, 8, 64], fn(n) {
+  let logarithmic = @profile.profile_complexity([2, 8, 64], fn(n) {
     @frontierlab.OperationCounts::new(
-      reads=@frontierlab.Logarithmic.evaluate(n).to_int(),
+      reads=@profile.Logarithmic.evaluate(n).to_int(),
     )
   })
   assert_true(
@@ -305,10 +303,22 @@ test "reports name logarithmic and exponential growth" {
     .report()
     .contains("Best fit: O(log n), cost ≈ 1.000 · log n "),
   )
-  let exponential = @frontierlab.profile_complexity([2, 4, 8, 16], fn(n) {
+  let exponential = @profile.profile_complexity([2, 4, 8, 16], fn(n) {
     @frontierlab.OperationCounts::new(compares=1 << n)
   })
   assert_true(
     exponential.report().contains("Best fit: O(2^n), cost ≈ 1.000 · 2^n "),
   )
+}
+
+///|
+test "complexity labels parse in their common spellings" {
+  assert_eq(@profile.ComplexityClass::parse("O(1)"), Some(Constant))
+  assert_eq(@profile.ComplexityClass::parse("O(n²)"), Some(Quadratic))
+  assert_eq(@profile.ComplexityClass::parse("n^3"), Some(Cubic))
+  assert_eq(@profile.ComplexityClass::parse("O(n log n)"), Some(Linearithmic))
+  assert_eq(@profile.ComplexityClass::parse("O(n³)"), Some(Cubic))
+  assert_eq(@profile.ComplexityClass::parse("O(log n)"), Some(Logarithmic))
+  assert_eq(@profile.ComplexityClass::parse("2^n"), Some(Exponential))
+  assert_eq(@profile.ComplexityClass::parse("O(n!)"), None)
 }

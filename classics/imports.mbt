@@ -1,0 +1,22 @@
+///|
+using @frontierlab {
+  type AlgorithmTrace,
+  type Annotation,
+  type GraphEdge,
+  type GraphNode,
+  type GraphState,
+  type GridCellState,
+  type GridState,
+  type Highlight,
+  type HighlightRole,
+  type Scene,
+  type SequenceItem,
+  type SequenceState,
+  type SetGroup,
+  type SetState,
+  type TargetRef,
+  type TraceAttribute,
+  type TraceBuilder,
+  type TraceError,
+  type TraceOptions,
+}

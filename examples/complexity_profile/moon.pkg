@@ -1,6 +1,7 @@
 import {
   "moonbitlang/core/env",
   "shop1111/frontierlab",
+  "shop1111/frontierlab/profile",
 }
 
 pkgtype(kind: "executable")

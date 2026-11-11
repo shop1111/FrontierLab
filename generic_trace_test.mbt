@@ -265,10 +265,10 @@ test "graph and grid reject duplicate entity ids and invalid dimensions" {
 
 ///|
 test "bundled adapters produce complete portable traces" {
-  let sort = @frontierlab.insertion_sort_trace([3, 1, 2])
-  let union = @frontierlab.union_find_trace(4, [
-    @frontierlab.UnionOperation::new(left=0, right=1),
-    @frontierlab.UnionOperation::new(left=1, right=3),
+  let sort = @classics.insertion_sort_trace([3, 1, 2])
+  let union = @classics.union_find_trace(4, [
+    @classics.UnionOperation::new(left=0, right=1),
+    @classics.UnionOperation::new(left=1, right=3),
   ])
   assert_true(sort.steps.last().unwrap().event is @frontierlab.Complete)
   assert_true(union.steps.last().unwrap().event is @frontierlab.Complete)
@@ -284,7 +284,7 @@ test "bundled adapters produce complete portable traces" {
 
 ///|
 test "schema v1 ignores unknown fields and preserves unknown events" {
-  let trace = @frontierlab.insertion_sort_trace([2, 1])
+  let trace = @classics.insertion_sort_trace([2, 1])
   let json = trace
     .encode_json()
     .replace(
@@ -300,7 +300,7 @@ test "schema v1 ignores unknown fields and preserves unknown events" {
 
 ///|
 test "schema v1 rejects unsupported major versions" {
-  let json = @frontierlab.insertion_sort_trace([1])
+  let json = @classics.insertion_sort_trace([1])
     .encode_json()
     .replace(
       old="\"schema_version\": \"1.0\"",
@@ -530,7 +530,7 @@ test "schema v1 reports malformed JSON fields and roles" {
       _ => fail("expected malformed JSON failure")
     }
   }
-  let bad_role = @frontierlab.insertion_sort_trace([1])
+  let bad_role = @classics.insertion_sort_trace([1])
     .encode_json()
     .replace(
       old="\"highlights\": []",
@@ -609,7 +609,7 @@ test "trace analysis summarizes empty and custom multi-object traces" {
 
 ///|
 test "insertion sort adapter records reusable sorted traces" {
-  let trace = @frontierlab.insertion_sort_trace([3, 1, 2])
+  let trace = @classics.insertion_sort_trace([3, 1, 2])
   let stats = trace.analyze()
   assert_true(trace.steps.last().unwrap().event is @frontierlab.Complete)
   assert_eq(stats.event_count("compare"), 3)
@@ -621,15 +621,15 @@ test "insertion sort adapter records reusable sorted traces" {
   assert_true(
     @frontierlab.AlgorithmTrace::decode_json(trace.encode_json()) == trace,
   )
-  let custom = @frontierlab.insertion_sort_items_trace([
-    @frontierlab.SortTraceItem::new(id="x", value=2, label="two"),
-    @frontierlab.SortTraceItem::new(id="y", value=1, label="one"),
+  let custom = @classics.insertion_sort_items_trace([
+    @classics.SortTraceItem::new(id="x", value=2, label="two"),
+    @classics.SortTraceItem::new(id="y", value=1, label="one"),
   ])
   assert_eq(custom.summary[3].value, "one,two")
   try
-    @frontierlab.insertion_sort_items_trace([
-      @frontierlab.SortTraceItem::new(id="same", value=2),
-      @frontierlab.SortTraceItem::new(id="same", value=1),
+    @classics.insertion_sort_items_trace([
+      @classics.SortTraceItem::new(id="same", value=2),
+      @classics.SortTraceItem::new(id="same", value=1),
     ])
   catch {
     @frontierlab.DuplicateId(_) => ()
@@ -641,10 +641,10 @@ test "insertion sort adapter records reusable sorted traces" {
 
 ///|
 test "union find adapter records merges compression and validation" {
-  let trace = @frontierlab.union_find_trace(4, [
-    @frontierlab.UnionOperation::new(left=0, right=1),
-    @frontierlab.UnionOperation::new(left=2, right=3),
-    @frontierlab.UnionOperation::new(left=1, right=3),
+  let trace = @classics.union_find_trace(4, [
+    @classics.UnionOperation::new(left=0, right=1),
+    @classics.UnionOperation::new(left=2, right=3),
+    @classics.UnionOperation::new(left=1, right=3),
   ])
   let stats = trace.analyze()
   assert_true(trace.steps.last().unwrap().event is @frontierlab.Complete)
@@ -658,8 +658,8 @@ test "union find adapter records merges compression and validation" {
     @frontierlab.AlgorithmTrace::decode_json(trace.encode_json()) == trace,
   )
   try
-    @frontierlab.union_find_trace(2, [
-      @frontierlab.UnionOperation::new(left=0, right=3),
+    @classics.union_find_trace(2, [
+      @classics.UnionOperation::new(left=0, right=3),
     ])
   catch {
     @frontierlab.InvalidStep(_) => ()

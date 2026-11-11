@@ -6,6 +6,8 @@ import {
   "moonbitlang/x/fs",
   "moonbitlang/x/sys",
   "shop1111/frontierlab",
+  "shop1111/frontierlab/classics",
+  "shop1111/frontierlab/profile",
 }
 
 pkgtype(kind: "executable")

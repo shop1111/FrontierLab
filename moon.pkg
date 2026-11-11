@@ -1,5 +1,8 @@
 import {
   "moonbitlang/core/json",
-  "moonbitlang/core/math",
   "moonbitlang/core/string" @strconv,
 }
+
+import {
+  "shop1111/frontierlab/classics",
+} for "test"

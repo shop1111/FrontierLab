@@ -35,7 +35,7 @@ test "build encode and decode a trace" {
 ///|
 test "render an offline HTML trace player" {
   let player = @frontierlab.render_trace_html(
-    @frontierlab.insertion_sort_trace([3, 1, 2]),
+    @classics.insertion_sort_trace([3, 1, 2]),
   )
   assert_true(player.contains("id=\"guide\""))
   assert_true(player.contains("FrontierLabPlayerCore"))
@@ -46,7 +46,7 @@ test "render an offline HTML trace player" {
 ```mbt check
 ///|
 test "diagnose a trace through the unified facade" {
-  let expected = @frontierlab.insertion_sort_trace([3, 1, 2])
+  let expected = @classics.insertion_sort_trace([3, 1, 2])
   let diagnosis = @frontierlab.diagnose_trace(
     expected,
     contract=@frontierlab.sorted_int_sequence_contract(object_id="values"),
@@ -63,7 +63,7 @@ test "diagnose a trace through the unified facade" {
 ```mbt check
 ///|
 test "debug and verify an algorithm trace" {
-  let trace = @frontierlab.insertion_sort_trace([3, 1, 2])
+  let trace = @classics.insertion_sort_trace([3, 1, 2])
   let diff = trace.diff(from_step=0, to_step=1)
   assert_true(!diff.is_empty())
   let hits = trace.breakpoint_hits(
@@ -80,17 +80,13 @@ test "debug and verify an algorithm trace" {
 ```mbt check
 ///|
 test "build one and two dimensional dynamic programming traces" {
-  let fibonacci = @frontierlab.fibonacci_dp_trace(10)
+  let fibonacci = @classics.fibonacci_dp_trace(10)
   assert_eq(fibonacci.summary[3].value, "55")
-  let coins = @frontierlab.coin_change_dp_trace([1, 3, 4], 6)
+  let coins = @classics.coin_change_dp_trace([1, 3, 4], 6)
   assert_eq(coins.summary[3].value, "2")
-  let knapsack = @frontierlab.zero_one_knapsack_dp_trace(
-    [2, 3, 4],
-    [4, 5, 6],
-    5,
-  )
+  let knapsack = @classics.zero_one_knapsack_dp_trace([2, 3, 4], [4, 5, 6], 5)
   assert_eq(knapsack.summary[4].value, "9")
-  let lcs = @frontierlab.lcs_dp_trace("ABCBDAB", "BDCABA")
+  let lcs = @classics.lcs_dp_trace("ABCBDAB", "BDCABA")
   assert_eq(lcs.summary[3].value, "4")
   assert_eq(lcs.summary[4].value, "BCBA")
 }
@@ -99,12 +95,12 @@ test "build one and two dimensional dynamic programming traces" {
 ```mbt check
 ///|
 test "trace red black tree balancing and lookup" {
-  let trace = @frontierlab.red_black_tree_trace([
-    @frontierlab.Insert(30),
-    @frontierlab.Insert(10),
-    @frontierlab.Insert(20),
-    @frontierlab.Find(20),
-    @frontierlab.Find(99),
+  let trace = @classics.red_black_tree_trace([
+    @classics.Insert(30),
+    @classics.Insert(10),
+    @classics.Insert(20),
+    @classics.Find(20),
+    @classics.Find(99),
   ])
   let stats = trace.analyze()
   assert_true(stats.event_count("rb-rotate-left") > 0)

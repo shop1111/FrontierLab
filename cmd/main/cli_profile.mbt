@@ -24,7 +24,7 @@ fn profile_input(name : String) -> ((Int32) -> Array[Int32]) raise {
 }
 
 ///|
-fn profile_metric(name : String) -> @frontierlab.CostMetric raise {
+fn profile_metric(name : String) -> @profile.CostMetric raise {
   match name {
     "compares" => Compares
     "swaps" => Swaps
@@ -66,7 +66,7 @@ fn profile_execution(
   let input_name = option(args, "--input", "random")
   let input = profile_input(input_name)
   let format = debug_format(args)
-  let profile = @frontierlab.profile_traced_array(
+  let profile = @profile.profile_traced_array(
     profile_sizes(option(args, "--sizes", "64,128,256,512,1024")),
     input,
     algorithm,
@@ -76,7 +76,7 @@ fn profile_execution(
   let bound = if bound_text == "" {
     None
   } else {
-    match @frontierlab.ComplexityClass::parse(bound_text) {
+    match @profile.ComplexityClass::parse(bound_text) {
       Some(value) => Some(value)
       None => fail("Unknown complexity bound: \{bound_text}")
     }
@@ -89,7 +89,7 @@ fn profile_execution(
   let overhead_size = @strconv.parse_int(option(args, "--overhead", "0"))
   let overhead = if overhead_size > 0 {
     Some(
-      @frontierlab.measure_tracing_overhead(
+      @profile.measure_tracing_overhead(
         input(overhead_size),
         algorithm,
         clock=now,

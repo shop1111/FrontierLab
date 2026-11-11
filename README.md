@@ -1,8 +1,8 @@
 # FrontierLab
 
-FrontierLab 是一个 MoonBit 算法轨迹库。它把算法执行过程记录为带稳定实体 ID
-的语义事件和场景快照，并提供检查、对比、调试、JSON 编解码和精修后的离线
-HTML 可视化能力。
+FrontierLab 是 MoonBit 的数据结构与算法调试库。把你写的数据结构和它的操作交给
+FrontierLab，它会自动找出**从哪一步开始出错**，并生成可以前后拖动的离线回放页面。
+你的代码不需要改动，也不需要手动打点。
 
 [![CI](https://github.com/shop1111/FrontierLab/actions/workflows/ci.yml/badge.svg)](https://github.com/shop1111/FrontierLab/actions/workflows/ci.yml)
 [![Mooncakes](https://img.shields.io/badge/Mooncakes-package-7c3aed)](https://mooncakes.io/docs/shop1111/frontierlab)
@@ -13,54 +13,146 @@ HTML 可视化能力。
 
 ## 安装
 
-在 MoonBit 项目中添加依赖：
-
 ```bash
 moon add shop1111/frontierlab
 ```
 
-然后在需要使用 FrontierLab 的包中导入 `shop1111/frontierlab`。
+然后在 `moon.pkg` 里导入需要的包。只在测试里用时，写在 `for "test"` 下即可：
 
-FrontierLab 需要 MoonBit `moonc` 0.10.20 或更新版本，CI 固定在
-`0.10.20+65efd5b93` 上验证，详见[工具链策略](TOOLCHAIN.md)。
-
-## 最小示例
-
-下面的例子生成一条插入排序轨迹，再检查最终序列是否有序：
-
-```mbt nocheck
-let trace = @frontierlab.insertion_sort_trace([3, 1, 2])
-let result = @frontierlab.diagnose_trace(
-  trace,
-  contract=@frontierlab.sorted_int_sequence_contract(object_id="values"),
-  expected=trace,
-)
-assert_true(result.passed())
+```
+import {
+  "shop1111/frontierlab/explore",
+} for "test"
 ```
 
-这里的“轨迹规则”（代码类型为 `TraceContract`）是一个检查器：它检查轨迹中的
-步骤或最终结果是否违反预先定义的要求，并返回具体的失败步骤和原因。
-`sorted_int_sequence_contract` 检查最终整数序列是否有序；
-`sequence_transition_contract` 检查事件描述的变化是否与场景快照一致。
+| 包 | 用途 |
+|---|---|
+| `shop1111/frontierlab/explore` | **调试你自己的数据结构**：自动找出出错的操作序列并生成回放页面 |
+| `shop1111/frontierlab` | 核心：轨迹格式、`TracedArray`、规则检查、逐步 diff、首次分歧、反例搜索、HTML 播放器 |
+| `shop1111/frontierlab/profile` | 复杂度拟合、复杂度上界断言、记录开销测量 |
+| `shop1111/frontierlab/classics` | 内置经典算法的轨迹（排序、并查集、DP、红黑树），用于教学演示 |
 
-自定义算法通常按以下顺序接入：
+需要 MoonBit `moonc` 0.10.20 或更新版本，CI 固定在 `0.10.20+65efd5b93` 上验证，
+详见[工具链策略](TOOLCHAIN.md)。
 
-1. 用稳定 ID 表示元素、节点或网格单元；元素移动后 ID 不变。
-2. 用 `TraceBuilder` 记录 `Compare`、`Swap`、`Visit`、`Union`、`Relax`
-   等有意义的事件和对应场景。
-3. 调用 `finish` 得到 `AlgorithmTrace`。
-4. 将轨迹交给规则检查、差异分析、JSON 编解码或渲染 API。
+## 快速开始：数据结构哪里写错了？
 
-可直接运行的完整代码见 [API 示例](API.mbt.md) 和[集成说明](docs/INTEGRATION.md)。
+假设你写了一棵二叉搜索树，`delete` 有 bug：删除有两个孩子的节点时，后继节点应该从
+右子树删掉，代码却写成了从左子树删。下面这段代码**原样不动**，只需要像平常一样带上
+`derive(ToJson)`：
 
-## 自动适配：不写埋点代码
+```mbt nocheck
+#derive(ToJson)
+enum Tree {
+  Leaf
+  Node(Tree, Int, Tree)
+}
 
-对于数组类算法，不必手动调用 `TraceBuilder`。有两种自动方式：
+fn insert(t : Tree, k : Int) -> Tree { ... }
+fn delete(t : Tree, k : Int) -> Tree { ... } // 有 bug
 
-**追踪容器 `TracedArray`**：把参数类型从 `Array` 换成 `TracedArray`，算法
-正文照常写。`a.less(i, j)`、`a.compare(i, j)` 记录比较，`a.swap(i, j)` 记录
-交换，`a[i] = v` 记录更新，读取 `a[i]` 只计数不生成步骤。直接写
-`a[i] < a[j]` 不会被记录为比较，需要比较时请用 `less` 或 `compare`。
+// 你希望每次操作之后都成立的性质：中序遍历严格递增
+fn is_bst(t : Tree) -> String? { ... }
+```
+
+在测试里把它交给 FrontierLab：
+
+```mbt nocheck
+test "找出 delete 的 bug" {
+  let ops = [@explore.Op::new("insert", insert), @explore.Op::new("delete", delete)]
+  match @explore.explore(() => Leaf, ops, invariant=is_bst) {
+    Some(found) => {
+      found.save_html("bst.html")  // 写到模块根目录
+      fail(found.report())
+    }
+    None => ()
+  }
+}
+```
+
+输出（来自 [examples/explore_bst](examples/explore_bst/main.mbt) 的实际运行结果）：
+
+```
+Found after 88 random sequences (seed 1); shrunk from 12 to 4 steps in 4 rounds.
+Step 4 of 4 (delete 2) failed: in-order keys 3 and 3 are not increasing
+Steps: insert 2, insert 3, insert 0, delete 2
+```
+
+FrontierLab 随机生成了 88 串操作，第 88 串让树失效。它把这 12 个操作缩到最短的 4 个，
+然后只对这 4 个操作完整记录。打开 `bst.html`：
+
+- 每一步都画出整棵树，左右孩子的位置和你的数据结构一致；
+- 新增或移动过的节点高亮，被删掉的节点写在注释里；
+- 拖到第 4 步，能直接看到根是 3、右孩子也是 3，并标红：后继节点没有被删掉。
+
+### 用自己构建的输入回放
+
+想验证某个具体输入时，用 `replay` 加一段操作脚本。脚本用逗号、分号或换行分隔：
+
+```mbt nocheck
+let replay = @explore.replay(
+  () => Leaf,
+  ops,
+  @explore.Step::parse("insert 50, insert 30, insert 70, insert 20, insert 40, delete 30"),
+  invariant=is_bst,
+)
+println(replay.report())
+// Step 6 of 6 (delete 30) failed: in-order keys 40 and 40 are not increasing
+replay.save_html("my-input.html")
+```
+
+### 两种检查
+
+| 参数 | 签名 | 适合检查什么 |
+|---|---|---|
+| `invariant` | `(S) -> String?` | 任何时候都应成立的性质：BST 有序、堆序、红黑树性质、大小不超过容量 |
+| `check` | `(S, Step) -> String?` | 和这一步操作有关的要求：`delete k` 之后不应再有 `k`，`push x` 之后栈顶应是 `x` |
+
+返回 `Some(原因)` 表示失败。操作本身抛出错误（例如对空栈 `pop`）也算失败，原因会写成
+`raised ...`。
+
+### 可变数据结构
+
+`init` 每次调用都要返回一个新的初始状态，因为每串随机操作都从头开始。原地修改的结构
+在操作里返回自身即可：
+
+```mbt nocheck
+let ops = [
+  @explore.Op::new("push", (s : Stack, x) => { s.push(x); s }),
+  @explore.Op::without_arg("pop", (s : Stack) => { ignore(s.pop()); s }),
+]
+@explore.explore(() => Stack::new(), ops, check=top_is_pushed)
+```
+
+### 能画出哪些结构
+
+FrontierLab 不需要知道你的类型，它读 `derive(ToJson)` 的输出：
+
+| 你的类型 | 画成 |
+|---|---|
+| `enum Tree { Leaf; Node(Tree, Int, Tree) }` | 二叉树。恰好两个子树位置时画成左、右孩子；`Leaf` 这类无参构造器是空孩子 |
+| `enum Rb { E; N(Color, Rb, Int, Rb) }` | 二叉树，节点标签 `Black, 2`。从不放子树的位置（如颜色）进入标签 |
+| `enum List { Nil; Cons(head~ : Int, tail~ : List) }` | 链表，边名为 `tail` |
+| `struct Node { key : Int; left : Node?; right : Node? }` | 二叉树，`None` 字段不画 |
+| `struct Trie { word : Bool; kids : Map[String, Trie] }` | 多叉树，边名为 `kids.a` |
+| `struct N { key : Int; children : Array[N] }` | 多叉树，边名为 `children[0]` |
+| `Array[Int]`，或只有数组和标量字段的结构体（如数组实现的堆） | 一行或几行序列，标量字段单独一行 |
+
+节点按标签识别：同一个 key 移动后仍是同一个节点，所以旋转、上移能正确高亮。重复的
+标签会按先序编号为 `40`、`40#2`。
+
+### 限制
+
+- 操作参数目前只支持一个 `Int`（随机生成时取 `0..<max_arg`）。
+- 带父指针或循环引用的结构无法用 `derive(ToJson)` 序列化，需要自己写不含父指针的
+  `ToJson`。
+- 每一步都保存整个结构的快照。长脚本请用 `window`，见下文的优化记录。
+- 看到的是每次操作前后的结构，不是函数内部每一行。函数内部的逐行回放需要改写源码，
+  在[设计讨论](#后续方向)里。
+
+## 数组算法：`TracedArray`
+
+对于排序这类数组算法，把参数类型从 `Array` 换成 `TracedArray`，就能逐次记录比较和交换：
 
 ```mbt nocheck
 fn bubble_sort(a : @frontierlab.TracedArray[Int]) -> Unit {
@@ -78,23 +170,33 @@ bubble_sort(a)
 let html = @frontierlab.render_trace_html(a.finish())
 ```
 
-**快照推断 `SequenceProbe`**：算法继续使用普通 `Array`，每次变化后调用一次
-`probe.observe(values)`。FrontierLab 比较前后快照，自动推断交换、更新、移动、
-插入和删除事件，并保持元素 ID 稳定；比较不会改变数据，需要时用
-`probe.compare(i, j)` 补充。
+`a.less(i, j)`、`a.compare(i, j)` 记录比较，`a.swap(i, j)` 记录交换，`a[i] = v`
+记录更新，读取 `a[i]` 只计数。直接写 `a[i] < a[j]` 不会被记录为比较。
 
-两者都接受 `level` 参数：`Full` 记录完整轨迹，`Count` 只统计比较、交换、读、
-写次数（`counts()`），`Off` 什么都不做，用作测量追踪开销的基准。记录过程中
-的错误（例如超过步数上限）会保留到 `finish()` 时再抛出，因此被追踪的算法
-不需要声明 `raise`。完整示例见 `examples/traced_sort`。
+不想改参数类型时，用 `SequenceProbe`：算法继续用普通 `Array`，每次变化后调用一次
+`probe.observe(values)`，FrontierLab 比较前后快照推断交换、移动、插入和删除。
 
-## 复杂度与开销分析
+两者都接受 `level`：`Full` 记录完整轨迹，`Count` 只计数，`Off` 什么都不做。
 
-`TraceLevel::Count` 下只累加计数器，不记录轨迹，因此可以对大规模输入测量算法
-本身的操作次数，并拟合复杂度量级：
+### 自动找最小反例
 
 ```mbt nocheck
-let profile = @frontierlab.profile_traced_array(
+match @frontierlab.search_sequence_counterexample(my_sort, reference=simple_sort) {
+  Some(found) => println(found.report())
+  None => ()
+}
+```
+
+随机生成整数数组，在 `Count` 档下只比较输出；找到错误后把输入缩到最小，只对最小输入
+记录完整轨迹，并报告第一次与参考实现不同的步骤。`match_events=true` 时，输出相同但
+操作顺序不同也算反例，能发现"结果对但做法不对"的实现。
+
+## 复杂度断言：`profile`
+
+操作次数是确定的，所以可以在 CI 里断言复杂度上界，不受机器快慢影响：
+
+```mbt nocheck
+let profile = @profile.profile_traced_array(
   [128, 256, 512, 1024, 2048],
   fn(n) { Array::makei(n, fn(i) { n - i }) },
   bubble_sort,
@@ -104,212 +206,165 @@ println(profile.report()) // Best fit: O(n^2), cost ≈ 0.5 · n^2 ...
 assert_true(profile.check_bound(Quadratic, factor=0.5).is_empty())
 ```
 
-- `profile_traced_array` / `profile_complexity`：按输入规模统计比较、交换、读、
-  写次数，用相对误差最小二乘拟合 O(1) 到 O(2^n)，并给出对数坐标下的经验指数。
-- `check_bound`：操作计数是确定的，可以在测试或 CI 中断言“比较次数不超过
-  k·n log n”这类复杂度上界，算法退化时测试直接失败。
-- `measure_tracing_overhead`：同一算法分别在 `Off`、`Count`、`Full` 下计时，
-  报告追踪带来的倍率、每步开销和轨迹体积。计时函数由调用方传入（例如
-  `@env.now`），库本身不依赖平台时钟。
+`measure_tracing_overhead` 在 `Off`、`Count`、`Full` 三档下分别计时，报告记录本身
+的开销。可运行示例见 `examples/complexity_profile`。
 
-实测结果见[性能记录](BENCHMARKS.md)：只计数的开销约 14%，完整轨迹的开销主要来自
-每一步保存完整快照。可运行示例见 `examples/complexity_profile`，命令行用法见下文
-CLI 一节的 `profile` 命令。
+## 这一版做了哪些优化
 
-## 自动反例搜索
+下面的数字来自本机 native release 构建的单次运行（Windows，`moonc 0.10.20`），
+换机器请重新测量。复现命令：`moon run bench/explore_bench --target native --release`。
 
-不需要手写测试用例，FrontierLab 可以自动找出让算法出错的最小输入，并指出出错的
-那一步：
+### 1. 零埋点接入：新增 `explore` 包
+
+以前要调试自己的数据结构，只能用 `TraceBuilder` 手写每一步的场景，内置的红黑树
+Adapter 画的也是库作者自己的树，不是你的。现在只要 `derive(ToJson)` 和一张操作表，
+FrontierLab 就能运行、检查、缩减并画出你自己的代码。
+
+### 2. 搜索时不拍快照，只完整记录最短出错序列
+
+`explore` 在搜索阶段只运行操作和检查，不序列化、不画图；找到失败后先截掉失败之后的
+操作，再缩减，最后只对缩减后的序列做一次完整回放：
+
+| 情形 | 尝试的操作序列 | 最终步数 | 总耗时 |
+|---|---:|---:|---:|
+| 有 bug 的 `delete`（搜索 + 缩减 + 回放） | 88 | 4 | 0.50 ms |
+| 正确的 `delete`（跑满 300 串都没找到问题） | 300 | — | 0.78 ms |
+
+### 3. 回放窗口：只画出错前的最后 N 步
+
+`replay(..., window=N)` 先不拍快照跑一遍，找到失败的位置，再只记录失败前的 N 步，
+前面的步骤只执行不记录。失败编号仍然是脚本里的绝对位置。插入 n 个 key 的回放：
+
+| n | 只跑操作 | 操作 + 不变量 | 完整回放 | `window=20` | 完整页面 | `window=20` 页面 |
+|---:|---:|---:|---:|---:|---:|---:|
+| 50 | 0.014 ms | 0.032 ms | 7.6 ms | 5.0 ms | 448 KB | 305 KB |
+| 200 | 0.10 ms | 0.30 ms | 113 ms | 23 ms | 6.1 MB | 1.3 MB |
+| 1000 | 0.95 ms | 4.7 ms | 4,059 ms | 197 ms | 149 MB | 6.4 MB |
+
+完整回放的代价主要来自"每一步都保存整个结构"：1000 步、平均 500 个节点，就是 50 万
+个节点的快照。调试时一般只需要出错点附近，所以长脚本建议总是加上 `window`。
+
+### 4. 核心校验从 O(n²) 改为线性
+
+构造场景时，节点 ID 唯一性、边的端点、高亮目标原来都靠两两比较或逐个线性查找，一个
+n 个实体的场景要做 O(n²) 次比较。现在改为哈希表单遍扫描，报错内容不变（仍然报告第
+一个重复的 ID）。所有使用图、序列、网格的轨迹都会受益。
+
+| 场景（二叉树形状的图，所有节点高亮） | 修改前 | 修改后 |
+|---:|---:|---:|
+| 1,000 个节点 | 6 ms | 4 ms |
+| 5,000 个节点 | 103 ms | 19 ms |
+| 10,000 个节点 | 438 ms | 45 ms |
+
+`explore` 的完整回放（1000 次插入）因此从 7,756 ms 降到 4,059 ms。
+
+### 5. 拆包，并删掉偏离核心的功能
+
+- 原来所有功能都在一个包里。现在按用途拆成 `explore`、核心、`profile`、`classics`
+  四个包，只用其中一部分时，公开接口一眼就能看清。
+- 删除了 AI Trace Clinic：它在浏览器 JavaScript 里重写了一遍校验、规则检查和分歧
+  定位，每改一条规则都要改两处。离线诊断页面改用 `diagnose --report`。
+- 删除了已弃用的 SVG 渲染、早期的网格寻路 API，以及 lint 和多种 Markdown 报告格式。
+
+完整列表见[变更记录](CHANGELOG.md)。
+
+## 内置经典算法：`classics`
+
+用于教学演示的现成轨迹，可以直接交给 JSON、HTML、diff 和诊断 API：
+
+| 类别 | 函数 | 场景 |
+|---|---|---|
+| 排序 | `insertion_sort_trace`、`insertion_sort_items_trace` | `Sequence` |
+| 集合 | `union_find_trace` | `Sets` |
+| 一维 DP | `fibonacci_dp_trace`、`coin_change_dp_trace` | `Sequence` |
+| 二维 DP | `zero_one_knapsack_dp_trace`、`lcs_dp_trace` | `Grid` |
+| 平衡树 | `red_black_tree_trace` | `Graph` |
 
 ```mbt nocheck
-match @frontierlab.search_sequence_counterexample(
-  generated_bubble_sort,
-  reference=bubble_sort,
-) {
-  Some(found) => println(found.report())
-  None => println("No counterexample found.")
-}
-```
-
-1. 用固定种子生成随机整数数组，在 `Count` 档下运行，只比较输出，开销很小；
-2. 输出和参考实现不同（没有参考实现时，输出不是输入排好序的结果），或者
-   `check` 返回失败原因，就算找到反例；
-3. 把反例缩到最小：先删去整段元素，再把数值换成相对大小的名次，最后逐个调小；
-4. 只对最小输入记录完整轨迹，交给 `diagnose_trace`，给出第一次与参考实现不同的
-   步骤和规则检查结果。
-
-`match_events=true` 时，即使输出相同，只要操作顺序和参考实现不同也算反例，
-可以发现“结果对但做法不对”的实现。`examples/counterexample_search` 中，
-提前退出位置写错的冒泡排序从 `[6, 9, 5, 1]` 缩到 `[0, 1, 0]`，定位到第 1 步：
-参考实现继续比较，生成的代码已经结束。
-
-命令行可以直接搜索内置算法，其中 `faulty-` 和 `lossy-` 开头的版本带有故意埋入的
-错误，找到反例时退出码为 `2`：
-
-```bash
-moon run cmd/main -- search faulty-quick-sort --reference quick-sort --counterexample _build/counterexample.html
-```
-
-## 内置算法 Adapter
-
-Adapter 把算法输入和执行步骤转换成统一的 `AlgorithmTrace`，因此这些轨迹可以
-直接交给 JSON、HTML、分析、断点、diff 和诊断 API：
-
-| 类别 | Adapter | 场景 | 主要语义事件 |
-|---|---|---|---|
-| 排序 | `insertion_sort_trace`、`insertion_sort_items_trace` | `Sequence` | `Compare`、`Swap` |
-| 集合 | `union_find_trace` | `Sets` | `Compare`、`Union`、`Update` |
-| 一维 DP | `fibonacci_dp_trace`、`coin_change_dp_trace` | `Sequence` | `Update`、依赖高亮 |
-| 二维 DP | `zero_one_knapsack_dp_trace`、`lcs_dp_trace` | `Grid` | `Update`、`Visit` |
-| 平衡树 | `red_black_tree_trace` | `Graph` | 插入、重着色、旋转、查找 |
-
-Fibonacci 和零钱兑换保留各自简单的算法级入口，但内部共享一维 DP 场景表达。
-红黑树支持 `Insert` 和 `Find` 操作；节点标签中的 `[R]`、`[B]` 在不修改
-Trace Schema v1 的前提下持久表示颜色。
-
-```mbt nocheck
-let lcs = @frontierlab.lcs_dp_trace("ABCBDAB", "BDCABA")
-let tree = @frontierlab.red_black_tree_trace([
-  @frontierlab.Insert(30),
-  @frontierlab.Insert(10),
-  @frontierlab.Insert(20),
-  @frontierlab.Find(20),
+let lcs = @classics.lcs_dp_trace("ABCBDAB", "BDCABA")
+let tree = @classics.red_black_tree_trace([
+  @classics.Insert(30),
+  @classics.Insert(10),
+  @classics.Find(20),
 ])
 ```
 
+## 手写轨迹与诊断
+
+自动方式不够用时，可以用 `TraceBuilder` 手写场景和语义事件，再交给统一诊断：
+
+```mbt nocheck
+let trace = @classics.insertion_sort_trace([3, 1, 2])
+let result = @frontierlab.diagnose_trace(
+  trace,
+  contract=@frontierlab.sorted_int_sequence_contract(object_id="values"),
+  expected=trace,
+)
+assert_true(result.passed())
+```
+
+| 用途 | 主要 API |
+|---|---|
+| 记录轨迹 | `TraceBuilder::new`、`record`、`finish` |
+| 统一诊断 | `diagnose_trace`、`TraceDiagnosis::passed` |
+| 调试与比较 | `diff`、`breakpoint_hits`、`slice`、`first_divergence` |
+| JSON 协议 | `encode_json`、`AlgorithmTrace::decode_json`、`validate` |
+| 输出 | `render_trace_html` |
+
+完整代码见 [API 示例](API.mbt.md) 和[集成说明](docs/INTEGRATION.md)，公开接口见各包的
+`pkg.generated.mbti`。
+
 ## CLI
 
-从源码运行统一诊断命令：
+CLI 处理已经存在的 Schema v1 JSON 轨迹，以及内置算法：
 
 ```bash
 moon run cmd/main -- diagnose \
   fixtures/agent-traces/selection-sort-expected.json \
   fixtures/agent-traces/selection-sort-actual.json \
-  --contract sorted-int-sequence \
-  --object values \
-  --format text \
-  --counterexample _build/counterexample.json \
+  --contract sorted-int-sequence --object values \
   --report _build/diagnosis.html
-```
-
-这组示例输入故意包含错误，所以命令返回退出码 `2`，并报告第一次差异在
-step 10。CLI 的退出码含义为：
-
-- `0`：输入有效，并且轨迹通过检查且与参考轨迹一致；
-- `2`：输入有效，但轨迹违反规则或与参考轨迹不同；
-- `1`：参数、文件、JSON 或 Schema 无效。
-
-给 `diagnose` 加上 `--timings`，会按阶段输出耗时：读文件、解码和校验两条轨迹、
-诊断和生成报告。`--format json` 时，耗时放在 `result.timings`。
-
-`profile` 命令不需要写代码，直接对内置排序算法做复杂度分析：
-
-```bash
-moon run cmd/main -- profile heap-sort --bound "O(n log n)" --factor 2
-moon run cmd/main -- profile quick-sort --input sorted --bound "O(n log n)" --factor 2
-```
-
-- 算法：`bubble-sort`、`insertion-sort`、`shift-insertion-sort`、
-  `selection-sort`、`heap-sort`、`quick-sort`，全部基于 `TracedArray` 编写，
-  `profile` 和 `search` 共用；
-- `--input random|sorted|reversed`：输入形态，`random` 是固定种子的洗牌，
-  结果可复现；
-- `--sizes`（默认 `64,128,256,512,1024`）和 `--metric`（默认 `compares`）；
-- `--bound` 和 `--factor`：检查每个规模的代价不超过 `factor · bound(n)`，
-  超出时退出码为 `2`。上面第二条命令中，快速排序在有序输入上退化成
-  O(n^2)，会被检查出来；
-- `--overhead N`：额外在规模 N 上测量 `Off`、`Count`、`Full` 三档的耗时。
-
-GitHub Release 同时提供 Windows 可执行文件和 SHA256。也可以在本地构建：
-
-```powershell
-python scripts\build_cli.py
-.\_dist\frontierlab.exe --version
-```
-
-## 生成算法可视化
-
-最直接的用法是让 CLI 生成一个完全离线的 HTML 文件，然后双击打开。页面默认
-使用中文，可切换 English，并会显示比较对象、交换方向、旧值到新值、DP 依赖、
-网格坐标、图节点移动、Adapter 注释和伪代码行。
-
-```powershell
-New-Item -ItemType Directory -Force _build\visual | Out-Null
-moon run cmd/main -- demo insertion-sort --format html --output _build/visual/insertion-sort.html
-moon run cmd/main -- demo fibonacci --format html --output _build/visual/fibonacci.html
-moon run cmd/main -- demo coin-change --format html --output _build/visual/coin-change.html
-moon run cmd/main -- demo knapsack --format html --output _build/visual/knapsack.html
-moon run cmd/main -- demo lcs --format html --output _build/visual/lcs.html
-moon run cmd/main -- demo union-find --format html --output _build/visual/union-find.html
-moon run cmd/main -- demo pathfinding --format html --output _build/visual/pathfinding.html
-moon run cmd/main -- demo red-black-tree --format html --output _build/visual/red-black-tree.html
-```
-
-如果已经有 Schema v1 JSON 轨迹，则使用：
-
-```powershell
 moon run cmd/main -- render trace.json --format html --output trace.html
+moon run cmd/main -- demo red-black-tree --format html --output red-black-tree.html
+moon run cmd/main -- profile quick-sort --input sorted --bound "O(n log n)" --factor 2
+moon run cmd/main -- search faulty-quick-sort --reference quick-sort
 ```
 
-可视化选择交互 HTML；需要交换或长期存档轨迹数据时选择 Schema v1 JSON。
-需要定位错误时，`diagnose --report report.html` 会生成离线诊断报告。
+退出码：`0` 通过；`2` 输入有效但违反规则、与参考不同或超出复杂度上界；`1` 参数、
+文件、JSON 或 Schema 无效。`diagnose --timings` 按阶段输出耗时。
 
-## 核心 API
+GitHub Release 提供 Windows 可执行文件和 SHA256，也可以本地构建：
+`python scripts\build_cli.py`。
 
-| 用途 | 主要 API | 说明 |
-|---|---|---|
-| 记录轨迹 | `TraceBuilder::new`、`record`、`finish` | 把算法执行过程记录为语义事件和完整场景快照 |
-| 统一诊断 | `diagnose_trace`、`TraceDiagnosis::passed` | 同时执行规则检查、参考轨迹比较和聚焦切片 |
-| 调试与比较 | `diff`、`breakpoint_hits`、`slice`、`first_divergence` | 查看步骤变化、命中语义断点并定位第一次差异 |
-| JSON 协议 | `encode_json`、`AlgorithmTrace::decode_json`、`validate` | 读写并校验稳定的 Trace Schema v1 |
-| 输出 | `render_trace_html` | 生成交互式离线 HTML 播放器 |
+## 后续方向
 
-完整公开接口由 `moon info` 生成在 [pkg.generated.mbti](pkg.generated.mbti) 中。
+- **函数内部逐行回放**：读取源码，在目标函数的每一步之后自动插入快照，编译临时副本
+  运行。不需要改用户代码，但依赖官方仍处于实验阶段的 `moonbitlang/parser`。
+- **任意参数类型**：借助 core 的 `quickcheck` 为操作生成参数。
+- **节点身份**：允许指定用哪个字段识别节点，处理重复 key。
 
 ## 独立 consumer 示例
 
-`consumer/frontierlab_consumer_demo` 是一个单独的 MoonBit 项目。它通过
-Mooncakes 安装 `shop1111/frontierlab`，不引用当前仓库中的源码，因此可以模拟
-一个真正的外部使用者。
-
-这个项目有两个作用：验证发布包确实能被其他项目安装和调用，以及提供一个完整
-的集成示例。普通用户不需要运行它；安装依赖并调用上面的公开 API 即可。
-
-发布后可用以下命令核验：
-
-```bash
-cd consumer/frontierlab_consumer_demo
-moon tree
-moon check --target all --deny-warn
-moon test --target all --deny-warn
-```
-
-consumer 不会被打入 FrontierLab 的 Mooncakes 源码包，它运行时生成的
-`evidence/` 目录也不会提交到 Git。
+`consumer/frontierlab_consumer_demo` 是一个单独的 MoonBit 项目，通过 Mooncakes 安装
+已发布的 FrontierLab，用来验证发布包能被外部项目安装和调用。普通用户不需要运行它。
 
 ## 开发与验证
 
 ```bash
 moon check --target all --deny-warn
-moon build --target all --deny-warn
 moon fmt --check
 moon info
 moon test --target all --deny-warn
 python scripts/check_coverage.py
-node scripts/check_renderer.mjs _build/renderer/insertion-sort.html
 python scripts/validate_cli.py
-moon package --list
+moon run examples/explore_bst -- _build/explore.html
+moon run bench/explore_bench --target native --release
 moon package
 ```
 
-更多资料：
-
-- [Trace Schema v1](docs/TRACE_SCHEMA.md)
-- [算法集成说明](docs/INTEGRATION.md)
-- [渲染与安全模型](docs/RENDERING.md)
-- [可复现性能记录](BENCHMARKS.md)
-- [变更记录](CHANGELOG.md)
-- [贡献指南](CONTRIBUTING.md)
+更多资料：[Trace Schema v1](docs/TRACE_SCHEMA.md) ·
+[集成说明](docs/INTEGRATION.md) · [渲染与安全模型](docs/RENDERING.md) ·
+[性能记录](BENCHMARKS.md) · [变更记录](CHANGELOG.md) · [贡献指南](CONTRIBUTING.md)
 
 ## License
 

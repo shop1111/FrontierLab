@@ -1,0 +1,74 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "shop1111/frontierlab/explore"
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitlang/core/json",
+  "shop1111/frontierlab",
+}
+
+// Values
+pub fn[S : @json.ToJson] explore(() -> S, Array[Op[S]], invariant? : (S) -> String?, check? : (S, Step) -> String?, cases? : Int32, max_steps? : Int32, max_arg? : Int32, max_shrinks? : Int32, seed? : UInt64, title? : String, options? : @frontierlab.TraceOptions) -> Exploration? raise @frontierlab.TraceError
+
+pub fn[S : @json.ToJson] replay(() -> S, Array[Op[S]], Array[Step], invariant? : (S) -> String?, check? : (S, Step) -> String?, window? : Int32, title? : String, options? : @frontierlab.TraceOptions) -> Replay raise @frontierlab.TraceError
+
+// Errors
+
+// Types and methods
+pub struct Exploration {
+  replay : Replay
+  original : Array[Step]
+  cases_tried : Int32
+  shrink_steps : Int32
+  seed : UInt64
+}
+pub fn Exploration::report(Self) -> String
+pub fn Exploration::save_html(Self, String) -> Unit raise
+
+#derive(Eq, @debug.Debug, @json.ToJson)
+pub struct Failure {
+  index : Int32
+  step : Step
+  message : String
+}
+pub fn Failure::equal(Self, Self) -> Bool
+pub fn Failure::not_equal(Self, Self) -> Bool
+pub fn Failure::to_json(Self) -> @json.Json
+pub fn Failure::to_repr(Self) -> @debug.Repr
+
+pub struct Op[S] {
+  name : String
+  takes_arg : Bool
+  run : (S, Int32) -> S raise
+}
+pub fn[S] Op::new(String, (S, Int32) -> S raise?) -> Self[S]
+pub fn[S] Op::without_arg(String, (S) -> S raise?) -> Self[S]
+
+pub struct Replay {
+  steps : Array[Step]
+  failure : Failure?
+  trace : @frontierlab.AlgorithmTrace
+}
+pub fn Replay::passed(Self) -> Bool
+pub fn Replay::report(Self) -> String
+pub fn Replay::save_html(Self, String) -> Unit raise
+pub fn Replay::to_html(Self) -> String
+
+#derive(Eq, @debug.Debug, @json.ToJson)
+pub struct Step {
+  op : String
+  arg : Int32?
+}
+pub fn Step::equal(Self, Self) -> Bool
+pub fn Step::new(String, arg? : Int32) -> Self
+pub fn Step::not_equal(Self, Self) -> Bool
+pub fn Step::output(Self, &Logger) -> Unit
+pub fn Step::parse(String) -> Array[Self] raise @frontierlab.TraceError
+pub fn Step::to_json(Self) -> @json.Json
+pub fn Step::to_repr(Self) -> @debug.Repr
+pub fn Step::to_string(Self) -> String
+pub impl Show for Step
+
+// Type aliases
+
+// Traits

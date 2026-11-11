@@ -2,9 +2,46 @@
 
 ## Unreleased
 
-This release narrows the library to trace recording, checking, testing tools,
-and the HTML player. Several public APIs are removed without a deprecation
-period; the package is still pre-1.0.
+This release turns FrontierLab into a debugger for the user's own data
+structures, splits the module into packages, and narrows the core to trace
+recording, checking, testing tools, and the HTML player. Several public APIs
+are removed or moved without a deprecation period; the package is still
+pre-1.0.
+
+- Added the `shop1111/frontierlab/explore` package. `explore` runs random
+  operation sequences against any `ToJson` data structure, checks an
+  `invariant` and a per-step `check` after every operation, shrinks the first
+  failing sequence, and replays only that sequence with a snapshot of the whole
+  structure after each step. `replay` runs a sequence written by hand, for
+  example with `Step::parse("insert 5, insert 3; delete 5")`. Both return the
+  trace, a text report, and `save_html`. Operations are plain functions
+  wrapped with `Op::new` or `Op::without_arg`; an operation that raises fails
+  its step.
+- Snapshots are drawn from `derive(ToJson)` output without knowing the user's
+  types: constructors with two subtrees become left and right children,
+  constant constructors in subtree positions become empty children, struct
+  fields and map entries become named edges, and flat values become sequences.
+  Nodes are identified by their labels, so a key keeps its identity when it
+  moves.
+- Added `replay(..., window=N)`, which finds the failing step without
+  snapshots and draws only the last `N` steps before it. Replaying 1000
+  inserts drops from about 4 s and 149 MB of HTML to about 0.2 s and 6.4 MB.
+- Added the `examples/explore_bst` example and the `bench/explore_bench`
+  benchmark.
+- Made scene validation linear. Duplicate-id checks, graph edge endpoints, and
+  highlight targets used pairwise comparison or a linear scan per item;
+  they now use hash maps. Validating a 10,000-node graph with every node
+  highlighted drops from about 438 ms to 45 ms. Error messages still name the
+  first duplicated id.
+- Moved the classic algorithm adapters (`insertion_sort_trace`,
+  `insertion_sort_items_trace`, `SortTraceItem`, `union_find_trace`,
+  `UnionOperation`, `fibonacci_dp_trace`, `coin_change_dp_trace`,
+  `zero_one_knapsack_dp_trace`, `lcs_dp_trace`, `red_black_tree_trace`,
+  `RedBlackTreeOperation`) into `shop1111/frontierlab/classics`.
+- Moved complexity profiling (`profile_complexity`, `profile_traced_array`,
+  `ComplexityClass`, `ComplexityFit`, `ComplexityProfile`,
+  `ComplexitySample`, `CostMetric`, `measure_tracing_overhead`,
+  `TracingOverhead`) into `shop1111/frontierlab/profile`.
 
 - Removed AI Trace Clinic: `render_trace_playground`, the `playground` CLI
   command, `docs/playground.html`, and `scripts/check_playground.mjs`. The
