@@ -32,6 +32,18 @@ match @explore.explore(() => Leaf, ops, invariant=is_bst) {
 - `replay` runs a script you wrote, such as
   `Step::parse("insert 5, insert 3; delete 5")`. Pass `window=N` to draw only
   the last `N` steps before the failure.
+- `views` says how to draw parts that the `ToJson` output does not reveal:
+  `Graph(path)` for adjacency lists, `Buckets(path)` for hash table buckets,
+  `Matrix(path)` for rows of cells, and `NodeId(field)` to identify tree nodes
+  by one field (`"key"`) or constructor position (`"N#2"`), so a recolored
+  node stays the same node. Paths are dotted field names; `""` is the state.
+- `@explore.mark(value, note=...)` inside an operation records `value` with
+  its source line; `replay` shows each mark as a step of its own before the
+  step it belongs to. Marks are ignored outside `replay`.
+- `explain()` on a replay or exploration gives a plain-text, step-by-step
+  account with `+`/`-`/`~` change lines, for terminals and AI agents.
+  `regression_test(init=..., ops=..., checks=...)` prints a MoonBit test that
+  replays the found steps and fails while the bug is there.
 
 Snapshots are drawn from the `ToJson` output: constructors with exactly two
 subtree positions become left and right children, constant constructors in

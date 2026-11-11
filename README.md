@@ -163,6 +163,61 @@ let entries = words.flat_map(k => @quickcheck.int_range(0, 3).map(v => (k, v)))
 自动缩小。手写脚本时参数也写成 JSON：`put ["apple", 1], get "apple"`。缩小时数字趋向 0，
 字符串和数组变短，同一个值在多个步骤里出现时会一起缩小。
 
+### 看操作内部：`mark`
+
+回放默认只拍每次操作前后的结构。想看操作内部某一行的状态，在那一行调用
+`@explore.mark(value)`：
+
+```mbt nocheck
+fn HashMap::grow(self : HashMap) -> Unit {
+  ...
+  self.buckets = wider
+  @explore.mark(self, note="after grow")
+}
+```
+
+`replay` 运行被测操作时，每个 `mark` 都成为播放器里单独的一步，标题带源码位置
+（`examples/explore_views/main.mbt:38`），后一个 mark 会高亮相对前一个的变化。行号由
+编译器自动填入。只有 `replay` 运行被测操作时才记录，搜索和参考实现里的 `mark` 只做一次判断
+就返回，所以可以留在代码里。每一步最多记录 200 个 mark。
+
+### 文字报告和回归测试
+
+`report()` 只有一行结论。`explain()` 给出逐步的文字记录，适合在终端里看，也适合交给
+AI 助手分析：每一步的返回值、`mark` 记录的中间状态、结构的变化（`+` 新增、`-` 删除、
+`~` 移动或改变），以及出错后的完整结构。下面是
+[examples/explore_views](examples/explore_views/main.mbt) 的输出，一个扩容时没有重新哈希的
+哈希表：
+
+```text
+Step 3: put ["f",0]
+  at examples/explore_views/main.mbt:38 (after grow):
+    buckets:
+      0: "": 0, f: 0
+      1: ant: 0
+      2: -
+      3: -
+    fields: [size=3]
+  fields: [size=2] -> [size=3]
+  + f: 0 in bucket 0
+Step 4: get "ant" -> None
+  (no change)
+  FAILED: returned None, but the model returned Some(0)
+```
+
+修 bug 之前，用 `regression_test()` 把最短序列存成测试，粘进自己包的 `_test.mbt`：
+
+```mbt nocheck
+println(found.regression_test(
+  name="get finds every key after a grow",
+  init="HashMap::new",
+  ops="ops()",
+  checks="model=model()",
+))
+```
+
+生成的测试在任何检查失败时都失败，修好之后通过，以后再改坏会重新失败。
+
 ### 可变数据结构
 
 `init` 每次调用都要返回一个新的初始状态，因为每串随机操作都从头开始。原地修改的结构
@@ -193,6 +248,22 @@ FrontierLab 不需要知道你的类型，它读 `derive(ToJson)` 的输出：
 节点按标签识别：同一个 key 移动后仍是同一个节点，所以旋转、上移能正确高亮。重复的
 标签会按先序编号为 `40`、`40#2`。
 
+有些结构从 `ToJson` 的输出看不出是什么：邻接表看起来是一个 map，哈希表看起来是数组
+套数组。用 `views` 告诉 FrontierLab 某个字段该怎么画，字段路径用点分隔，`""` 表示
+整个状态，没被视图画到的其余字段照常画：
+
+| 视图 | 适用的值 | 画成 |
+|---|---|---|
+| `Graph("adj")` | `Map[K, Array[K]]`、`Array[Array[Int]]`，或 `Map[K, Map[K, W]]` | 有向图；邻居写成 `(node, weight)` 或带 `to` 字段的记录时，其余部分作为边的标签 |
+| `Buckets("buckets")` | 桶的数组，每个桶是 `None`/`Some(entry)`、条目数组，或 `Cons(key, value, rest)` 这样的构造器链 | 哈希表，一行一个桶，键值对显示为 `key: value` |
+| `Matrix("cells")` | 行的数组，每行是数组或字符串 | 网格，变化的格子高亮 |
+| `NodeId("N#2")` | 树节点的字段名，或构造器参数位置（从 0 数） | 节点按这个字段识别：红黑树节点变色时仍是同一个节点，而不是删掉旧节点、加一个新节点 |
+
+```mbt nocheck
+@explore.explore(HashMap::new, ops(), model=model(), views=[Buckets("buckets")])
+@explore.replay(() => E, rb_ops, steps, views=[NodeId("N#2")])
+```
+
 ### 限制
 
 - 每个操作最多一个参数；需要多个值时用元组，例如 `(String, Int)`。
@@ -200,8 +271,8 @@ FrontierLab 不需要知道你的类型，它读 `derive(ToJson)` 的输出：
   `ToJson`。
 - 每一步仍要把整个结构转换成快照，几千步的脚本请用 `window`，见下文的优化记录。
   回放页面里只存每一步的变化，所以页面本身不会随步数膨胀。
-- 看到的是每次操作前后的结构，不是函数内部每一行。函数内部的逐行回放需要改写源码，
-  在[设计讨论](#后续方向)里。
+- 默认只看到每次操作前后的结构。操作内部要在关心的行手动加 `mark`；自动在每一行插入
+  快照还没有做，见[后续方向](#后续方向)。
 
 ## 数组算法：`TracedArray`
 
@@ -407,9 +478,9 @@ GitHub Release 提供 Windows 可执行文件和 SHA256，也可以本地构建�
 
 ## 后续方向
 
-- **函数内部逐行回放**：读取源码，在目标函数的每一步之后自动插入快照，编译临时副本
-  运行。不需要改用户代码，但依赖官方仍处于实验阶段的 `moonbitlang/parser`。
-- **节点身份**：允许指定用哪个字段识别节点，处理重复 key。
+- **自动逐行回放**：读取源码，在目标函数的每条语句之后自动插入 `mark`，编译临时副本
+  运行，不需要用户手动加 `mark`。记录和回放部分已经由 `mark` 实现；剩下的是改写源码，
+  依赖官方仍处于实验阶段的 `moonbitlang/parser`，而且要判断每一行该快照哪个变量。
 
 ## 独立 consumer 示例
 
@@ -429,6 +500,7 @@ python scripts/check_coverage.py
 python scripts/validate_cli.py
 moon run examples/explore_bst -- _build/explore.html
 moon run examples/explore_model -- _build/explore-model.html
+moon run examples/explore_views -- _build/explore-views.html
 moon run bench/explore_bench --target native --release
 moon package
 ```

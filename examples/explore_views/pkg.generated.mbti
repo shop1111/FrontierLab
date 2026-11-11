@@ -1,0 +1,18 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "shop1111/frontierlab/examples/explore_views"
+
+import {
+  "moonbitlang/core/json",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+#derive(@json.ToJson)
+type HashMap
+
+// Type aliases
+
+// Traits

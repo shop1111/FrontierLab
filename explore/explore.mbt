@@ -351,6 +351,10 @@ pub struct Replay {
   outputs : Array[String?]
   failure : Failure?
   trace : @frontierlab.AlgorithmTrace
+  /// The plain-text account behind `explain`, one line per entry.
+  priv log : Array[String]
+  /// The checks that were given, in `replay` argument order.
+  priv uses : Array[String]
 }
 
 ///|
@@ -367,6 +371,64 @@ pub fn Replay::report(self : Replay) -> String {
     Some(failure) =>
       "Step \{failure.index + 1} of \{self.steps.length()} (\{failure.step}) failed: \{failure.message}\nSteps: \{script}"
   }
+}
+
+///|
+/// A plain-text account of the replay for terminals and AI agents: the
+/// starting state, then for every step what it returned and what changed
+/// (`+` added, `-` removed, `~` moved or changed), and the final state.
+pub fn Replay::explain(self : Replay) -> String {
+  self.log.join("\n")
+}
+
+///|
+/// MoonBit source for a test that replays these steps and fails while any
+/// check still fails, to keep a found bug fixed.
+///
+/// The test calls `@explore.replay(init, ops, steps, checks)`. Pass the
+/// expressions that give these in the test package: `init` and `ops` default
+/// to `init` and `ops`, and `checks` defaults to `invariant=invariant`,
+/// `check=check` and `model=model` for the checks this replay used.
+pub fn Replay::regression_test(
+  self : Replay,
+  name? : String,
+  init~ : String = "init",
+  ops~ : String = "ops",
+  checks? : String,
+) -> String {
+  let name = match (name, self.failure) {
+    (Some(name), _) => name
+    (None, Some(failure)) => "\{failure.step.op} keeps working after the fix"
+    (None, None) => "replayed steps keep passing"
+  }
+  let checks = match checks {
+    Some(text) => text
+    None => self.uses.map(fn(use_) { "\{use_}=\{use_}" }).join(", ")
+  }
+  let script = self.steps.map(fn(step) { step.to_string() }).join(", ")
+  let lines = ["///|"]
+  if self.failure is Some(failure) {
+    let message = failure.message.replace_all(old="\n", new=" ")
+    lines.push(
+      "/// Found by FrontierLab: step \{failure.index + 1} failed with \"\{message}\".",
+    )
+  }
+  lines.push("test \{Json::string(name).stringify()} {")
+  lines.push("  let script =")
+  lines.push("    #|\{script}")
+  lines.push("  let replay = @explore.replay(")
+  lines.push("    \{init},")
+  lines.push("    \{ops},")
+  lines.push("    @explore.Step::parse(script),")
+  if checks != "" {
+    lines.push("    \{checks},")
+  }
+  lines.push("  )")
+  lines.push("  if replay.failure is Some(_) {")
+  lines.push("    fail(replay.report())")
+  lines.push("  }")
+  lines.push("}")
+  lines.join("\n") + "\n"
 }
 
 ///|
@@ -399,6 +461,26 @@ pub fn Exploration::report(self : Exploration) -> String {
   "Found after \{self.cases_tried} random sequences (seed \{self.seed}); shrunk from \{self.original.length()} to \{self.replay.steps.length()} steps in \{self.shrink_steps} rounds.\n" +
   self.replay.report() +
   "\nOriginal: \{original}"
+}
+
+///|
+/// `Replay::explain` for the smallest failing sequence, after the search
+/// summary.
+pub fn Exploration::explain(self : Exploration) -> String {
+  "Found after \{self.cases_tried} random sequences (seed \{self.seed}); shrunk from \{self.original.length()} to \{self.replay.steps.length()} steps.\n" +
+  self.replay.explain()
+}
+
+///|
+/// `Replay::regression_test` for the smallest failing sequence.
+pub fn Exploration::regression_test(
+  self : Exploration,
+  name? : String,
+  init~ : String = "init",
+  ops~ : String = "ops",
+  checks? : String,
+) -> String {
+  self.replay.regression_test(name?, init~, ops~, checks?)
 }
 
 ///|
@@ -540,12 +622,16 @@ fn[S] apply_step(
   step : Step,
   checks : Checks[S],
   model_step : ((Step) -> Result[String?, String])?,
+  record~ : Bool = false,
 ) -> Outcome[S] {
+  // Only the operation under test records marks, not the model or checks.
+  recorder.on = record
   let ran : Result[(S, String?), Error] = Ok(
     (table[step.op].run)(state, step.arg),
   ) catch {
     error => Err(error)
   }
+  recorder.on = false
   let expected = match model_step {
     Some(f) => Some(f(step))
     None => None
@@ -636,6 +722,7 @@ pub fn[S : ToJson] replay(
   invariant? : (S) -> String?,
   check? : (S, Step) -> String?,
   model? : Model,
+  views~ : Array[View] = [],
   window? : Int32,
   title~ : String = "Data structure replay",
   options~ : @frontierlab.TraceOptions = @frontierlab.TraceOptions::default(),
@@ -675,7 +762,17 @@ pub fn[S : ToJson] replay(
       outputs.push(result)
     }
   }
-  let mut before = snapshot(state.to_json())
+  let mut before = snapshot(state.to_json(), views)
+  let log = [
+    if start == 0 {
+      "Initial state:"
+    } else {
+      "State after step \{start} (earlier steps ran without snapshots):"
+    },
+  ]
+  for line in outline(before.objects) {
+    log.push("  " + line)
+  }
   let description = if start == 0 {
     "Snapshots of the structure after each operation."
   } else {
@@ -692,21 +789,47 @@ pub fn[S : ToJson] replay(
   for offset, step in steps[start:] {
     let index = start + offset
     let (after, result, problem) = match
-      apply_step(table, state, step, checks, model_step) {
+      apply_step(table, state, step, checks, model_step, record=true) {
       Applied(next, result) => {
         state = next
-        (snapshot(state.to_json()), result, None)
+        (snapshot(state.to_json(), views), result, None)
       }
       Rejected(next, result, message) => {
         state = next
-        (snapshot(state.to_json()), result, Some(message))
+        (snapshot(state.to_json(), views), result, Some(message))
       }
       // A step that raised leaves no new state; show the last good one.
       Raised(message) => (before, None, Some(message))
     }
     outputs.push(result)
-    let changed = changed_entities(before, after)
-    let removed = removed_labels(before, after)
+    log.push(
+      match result {
+        Some(text) => "Step \{index + 1}: \{step} -> \{text}"
+        None => "Step \{index + 1}: \{step}"
+      },
+    )
+    let (marks, dropped) = take_marks()
+    record_marks(
+      builder,
+      log,
+      "Step \{index + 1}: \{step}",
+      marks,
+      dropped,
+      views,
+    )
+    let d = diff(before, after)
+    let changes = change_lines(before, after, d)
+    if changes.is_empty() {
+      log.push("  (no change)")
+    }
+    for line in changes {
+      log.push("  " + line)
+    }
+    if problem is Some(message) {
+      log.push("  FAILED: \{message}")
+    }
+    let changed = d.changed.map(fn(pair) { pair.1 })
+    let removed = d.removed.map(fn(entity) { entity.label })
     let removed_text = if removed.is_empty() {
       ""
     } else {
@@ -769,6 +892,26 @@ pub fn[S : ToJson] replay(
       ),
     )
   }
+  log.push(
+    if failure is None {
+      "All \{steps.length()} steps passed. Final state:"
+    } else {
+      "State after the failing step:"
+    },
+  )
+  for line in outline(before.objects) {
+    log.push("  " + line)
+  }
+  let uses = []
+  if invariant is Some(_) {
+    uses.push("invariant")
+  }
+  if check is Some(_) {
+    uses.push("check")
+  }
+  if model is Some(_) {
+    uses.push("model")
+  }
   let summary = [
     @frontierlab.TraceAttribute::new(key="steps", value="\{steps.length()}"),
     @frontierlab.TraceAttribute::new(
@@ -776,7 +919,7 @@ pub fn[S : ToJson] replay(
       value=if failure is None { "passed" } else { "failed" },
     ),
   ]
-  { steps, outputs, failure, trace: builder.finish(summary~), }
+  { steps, outputs, failure, trace: builder.finish(summary~), log, uses, }
 }
 
 ///|
@@ -967,6 +1110,7 @@ pub fn[S : ToJson] explore(
   invariant? : (S) -> String?,
   check? : (S, Step) -> String?,
   model? : Model,
+  views~ : Array[View] = [],
   cases~ : Int32 = 300,
   max_steps~ : Int32 = 12,
   max_arg~ : Int32 = 10,
@@ -1021,6 +1165,7 @@ pub fn[S : ToJson] explore(
         invariant?,
         check?,
         model?,
+        views~,
         title~,
         options~,
       )

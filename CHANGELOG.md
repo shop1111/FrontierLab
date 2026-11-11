@@ -42,6 +42,31 @@ steps. `Step.arg` and `Op` change shape; see below.
 - Snapshots no longer copy constructor arguments while reading `ToJson`
   output; replaying 1000 inserts drops from about 4.1 s to 2.0 s.
 - Added the `examples/explore_model` example.
+- Added `View` and the `views` argument of `explore` and `replay`, for parts
+  of a state that the `ToJson` output does not reveal: `Graph(path)` draws
+  adjacency lists as a directed graph (weights become edge labels),
+  `Buckets(path)` draws a hash table with one row per bucket, `Matrix(path)`
+  draws rows of cells as a grid, and `NodeId(field)` identifies tree nodes by a
+  field or constructor position, so that a node whose other fields change,
+  such as a recolored red-black node, is reported as changed rather than
+  replaced. Views take dotted field paths; the rest of the state is drawn as
+  before.
+- Added `Replay::explain` and `Exploration::explain`: a plain-text account of
+  every step, with what it returned and what changed (`+` added, `-` removed,
+  `~` moved or changed), and the state before and after, for terminals and AI
+  agents.
+- Added `Replay::regression_test` and `Exploration::regression_test`, which
+  print a MoonBit test that replays the found steps and fails while any check
+  still fails.
+- Added `@explore.mark(value, note=...)`, which records a value at that source
+  line while `replay` runs an operation under test. Each mark becomes a step
+  of the replay before the step it belongs to, highlighting what changed since
+  the previous mark. Marks in the model, in checks, and during the search are
+  not recorded; at most 200 are kept per step.
+- Comparing snapshots now builds one map per step instead of two, which pays
+  for the text account.
+- Added the `examples/explore_views` example: a hash map whose `grow` does not
+  rehash, drawn with `Buckets`, with a `mark` inside `grow`.
 
 ## 0.12.0 - 2026-11-11
 
