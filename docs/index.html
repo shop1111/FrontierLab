@@ -5,15 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>FrontierLab Demo</title>
   <style>
-    :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#07111f;color:#f8fafc;font:16px/1.55 system-ui,sans-serif}main{max-width:1050px;margin:auto;padding:42px 22px}h1{font-size:clamp(36px,7vw,72px);line-height:1;margin:.2em 0}.lead{max-width:780px;color:#b6c2d5;font-size:19px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin:38px 0}.card{display:block;background:#0f172a;border:1px solid #334155;border-radius:16px;padding:18px;text-decoration:none;color:inherit;transition:.15s transform}.card:hover{border-color:#60a5fa;transform:translateY(-2px)}.card h2{margin:.1em 0 .35em}.card p{margin:0;color:#b6c2d5}.playground{border-color:#60a5fa;background:linear-gradient(145deg,#0f172a,#172554)}.badge{color:#93c5fd;font-family:monospace}code{background:#1e293b;padding:3px 6px;border-radius:5px}a{color:#93c5fd}
+    :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#07111f;color:#f8fafc;font:16px/1.55 system-ui,sans-serif}main{max-width:1050px;margin:auto;padding:42px 22px}h1{font-size:clamp(36px,7vw,72px);line-height:1;margin:.2em 0}.lead{max-width:780px;color:#b6c2d5;font-size:19px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin:38px 0}.card{display:block;background:#0f172a;border:1px solid #334155;border-radius:16px;padding:18px;text-decoration:none;color:inherit;transition:.15s transform}.card:hover{border-color:#60a5fa;transform:translateY(-2px)}.card h2{margin:.1em 0 .35em}.card p{margin:0;color:#b6c2d5}.badge{color:#93c5fd;font-family:monospace}code{background:#1e293b;padding:3px 6px;border-radius:5px}a{color:#93c5fd}
   </style>
 </head>
 <body><main>
-  <span class="badge">FrontierLab v0.9 HTML Player</span>
+  <span class="badge">FrontierLab HTML Player</span>
   <h1>看清算法每一步为什么发生。</h1>
-  <p class="lead">交互页面会解释比较对象、交换方向、DP 依赖、网格坐标与红黑树旋转；需要定位错误时，再进入 AI Trace Clinic 查看契约失败和第一次差异。</p>
+  <p class="lead">交互页面会解释比较对象、交换方向、DP 依赖、网格坐标与红黑树旋转；需要定位错误时，用 CLI 的 <code>diagnose</code> 命令查看规则失败和第一次差异。</p>
   <div class="grid">
-    <a class="card playground" href="playground.html"><h2>AI Trace Clinic →</h2><p>诊断错误轨迹、第一次差异和聚焦反例。</p></a>
     <a class="card" href="insertion-sort.html"><h2>插入排序</h2><p>观察比较对象、交换方向和元素实际移动。</p></a>
     <a class="card" href="fibonacci.html"><h2>Fibonacci DP</h2><p>查看一维状态递推与依赖来源。</p></a>
     <a class="card" href="coin-change.html"><h2>零钱兑换</h2><p>查看多候选最优化和不可达状态。</p></a>

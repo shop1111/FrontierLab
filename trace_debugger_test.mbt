@@ -18,6 +18,72 @@ fn sequence_scene_for_debugger(
 }
 
 ///|
+/// A three-cell grid whose final step highlights the whole row as the result.
+fn grid_row_path_trace(
+  blocked_middle~ : Bool,
+) -> @frontierlab.AlgorithmTrace raise {
+  let scene = @frontierlab.Scene::new(
+    objects=[
+      @frontierlab.Grid(
+        @frontierlab.GridState::new(
+          id="grid",
+          label="Row path",
+          width=3,
+          height=1,
+          cells=[
+            @frontierlab.GridCellState::new(id="s", x=0, y=0, label="S"),
+            @frontierlab.GridCellState::new(
+              id="middle",
+              x=1,
+              y=0,
+              blocked=blocked_middle,
+            ),
+            @frontierlab.GridCellState::new(id="e", x=2, y=0, label="E"),
+          ],
+        ),
+      ),
+    ],
+    highlights=["s", "middle", "e"].map(fn(id) {
+      @frontierlab.Highlight::new(
+        target=@frontierlab.TargetRef::entity("grid", id),
+        role=@frontierlab.Result,
+      )
+    }),
+  )
+  let builder = @frontierlab.TraceBuilder::new(
+    title="Grid row path",
+    algorithm="path",
+    initial_scene=scene,
+  )
+  builder.record(event=@frontierlab.Complete, scene~)
+  builder.finish()
+}
+
+///|
+/// A trace whose single compare illegally swaps two elements.
+fn faulty_compare_trace() -> @frontierlab.AlgorithmTrace raise {
+  let builder = @frontierlab.TraceBuilder::new(
+    title="Faulty compare",
+    algorithm="faulty-sort",
+    initial_scene=sequence_scene_for_debugger([
+      @frontierlab.SequenceItem::new(id="a", value="2"),
+      @frontierlab.SequenceItem::new(id="b", value="1"),
+    ]),
+  )
+  builder.record(
+    event=@frontierlab.Compare([
+      @frontierlab.TargetRef::entity("values", "a"),
+      @frontierlab.TargetRef::entity("values", "b"),
+    ]),
+    scene=sequence_scene_for_debugger([
+      @frontierlab.SequenceItem::new(id="b", value="1"),
+      @frontierlab.SequenceItem::new(id="a", value="2"),
+    ]),
+  )
+  builder.finish()
+}
+
+///|
 test "time travel diff breakpoints and counterexample preserve stable ids" {
   let trace = @frontierlab.insertion_sort_trace([3, 1, 2])
   let first = trace.diff(from_step=-1, to_step=0)
@@ -114,39 +180,15 @@ test "scene diff covers set graph grid and identical scenes" {
 ///|
 test "contracts locate first semantic failure and valid builtins pass" {
   let valid = @frontierlab.insertion_sort_trace([3, 1, 2])
-  let valid_report = @frontierlab.insertion_sort_int_contract(
-    object_id="values",
-  ).check(valid)
-  assert_true(valid_report.passed)
   let generic_report = @frontierlab.sorted_int_sequence_contract(
     object_id="values",
   ).check(valid)
   assert_true(generic_report.passed)
   assert_eq(generic_report.contract_name, "sorted-int-sequence")
   assert_true(
-    valid_report.to_json_string().contains("frontierlab-debug-report/1.0"),
+    generic_report.to_json_string().contains("frontierlab-debug-report/1.0"),
   )
-  let initial = sequence_scene_for_debugger([
-    @frontierlab.SequenceItem::new(id="a", value="2"),
-    @frontierlab.SequenceItem::new(id="b", value="1"),
-  ])
-  let changed = sequence_scene_for_debugger([
-    @frontierlab.SequenceItem::new(id="b", value="1"),
-    @frontierlab.SequenceItem::new(id="a", value="2"),
-  ])
-  let builder = @frontierlab.TraceBuilder::new(
-    title="Faulty compare",
-    algorithm="faulty-sort",
-    initial_scene=initial,
-  )
-  builder.record(
-    event=@frontierlab.Compare([
-      @frontierlab.TargetRef::entity("values", "a"),
-      @frontierlab.TargetRef::entity("values", "b"),
-    ]),
-    scene=changed,
-  )
-  let faulty = builder.finish()
+  let faulty = faulty_compare_trace()
   let report = @frontierlab.sequence_transition_contract(object_id="values").check(
     faulty,
   )
@@ -159,8 +201,8 @@ test "contracts locate first semantic failure and valid builtins pass" {
 
 ///|
 test "unified diagnosis separates transition and reference evidence" {
-  let expected = @frontierlab.insertion_sort_demo_trace([5, 2, 4, 1, 3])
-  let actual = @frontierlab.faulty_insertion_sort_demo_trace()
+  let expected = @frontierlab.insertion_sort_trace([1, 2])
+  let actual = faulty_compare_trace()
   let diagnosis = @frontierlab.diagnose_trace(
     actual,
     contract=@frontierlab.sorted_int_sequence_contract(object_id="values"),
@@ -187,8 +229,8 @@ test "unified diagnosis separates transition and reference evidence" {
 
 ///|
 test "grid path contract and first divergence cover success and failure" {
-  let path = @frontierlab.pathfinding_demo_trace()
-  let path_report = @frontierlab.grid_path_contract(object_id="search-grid").check(
+  let path = grid_row_path_trace(blocked_middle=false)
+  let path_report = @frontierlab.grid_path_contract(object_id="grid").check(
     path,
   )
   assert_true(path_report.passed)
@@ -217,50 +259,8 @@ test "grid path contract and first divergence cover success and failure" {
 
 ///|
 test "grid path contract reports blocked and discontinuous result cells" {
-  let scene = @frontierlab.Scene::new(
-    objects=[
-      @frontierlab.Grid(
-        @frontierlab.GridState::new(
-          id="grid",
-          label="Faulty path",
-          width=3,
-          height=1,
-          cells=[
-            @frontierlab.GridCellState::new(id="s", x=0, y=0, label="S"),
-            @frontierlab.GridCellState::new(
-              id="blocked",
-              x=1,
-              y=0,
-              blocked=true,
-            ),
-            @frontierlab.GridCellState::new(id="e", x=2, y=0, label="E"),
-          ],
-        ),
-      ),
-    ],
-    highlights=[
-      @frontierlab.Highlight::new(
-        target=@frontierlab.TargetRef::entity("grid", "s"),
-        role=@frontierlab.Result,
-      ),
-      @frontierlab.Highlight::new(
-        target=@frontierlab.TargetRef::entity("grid", "blocked"),
-        role=@frontierlab.Result,
-      ),
-      @frontierlab.Highlight::new(
-        target=@frontierlab.TargetRef::entity("grid", "e"),
-        role=@frontierlab.Result,
-      ),
-    ],
-  )
-  let builder = @frontierlab.TraceBuilder::new(
-    title="Faulty grid path",
-    algorithm="path",
-    initial_scene=scene,
-  )
-  builder.record(event=@frontierlab.Complete, scene~)
   let report = @frontierlab.grid_path_contract(object_id="grid").check(
-    builder.finish(),
+    grid_row_path_trace(blocked_middle=true),
   )
   assert_false(report.passed)
   assert_eq(report.first_failure.unwrap().code, "path-crosses-blocked-cell")

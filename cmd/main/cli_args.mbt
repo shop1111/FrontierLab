@@ -6,17 +6,15 @@ fn usage() -> String {
     #|  frontierlab profile <algorithm> [--input <random|sorted|reversed>] [--sizes N,N,...] [--metric <compares|swaps|reads|writes|total>] [--bound <O(...)>] [--factor K] [--overhead N] --format <text|json>
     #|  frontierlab search <algorithm> [--reference <algorithm>] [--match-events] [--cases N] [--max-length N] [--max-value N] [--seed N] --format <text|json> [--counterexample <path>] [--report <path>]
     #|  Algorithms: bubble-sort, insertion-sort, shift-insertion-sort, selection-sort, heap-sort, quick-sort; faulty-insertion-sort, lossy-insertion-sort, and faulty-quick-sort contain deliberate bugs.
-    #|  frontierlab demo <insertion-sort|faulty-insertion-sort|union-find|pathfinding|fibonacci|coin-change|knapsack|lcs|red-black-tree> --format <html|json|svg> --output <path|->
-    #|  frontierlab render <trace.json> --format <html|json|svg> --output <path|-> [--step N]
+    #|  frontierlab demo <insertion-sort|faulty-insertion-sort|union-find|pathfinding|fibonacci|coin-change|knapsack|lcs|red-black-tree> --format <html|json> --output <path|->
+    #|  frontierlab render <trace.json> --format <html|json> --output <path|->
     #|  frontierlab analyze <trace.json>
     #|  frontierlab validate <trace.json>
-    #|  frontierlab playground --output <path|->
     #|  frontierlab diff <trace.json> --from N --to N --format <text|json>
     #|  frontierlab breakpoints <trace.json> [--event KIND] [--target OBJECT[/ENTITY]] [--role ROLE] [--changed-only] --format <text|json>
-    #|  frontierlab verify <trace.json> --contract <sequence-transition|sorted-int-sequence|insertion-sort-int|grid-path> --object ID --format <text|json> [--counterexample PATH]
+    #|  frontierlab verify <trace.json> --contract <sequence-transition|sorted-int-sequence|grid-path> --object ID --format <text|json> [--counterexample PATH]
     #|  frontierlab diverge <expected.json> <actual.json> --format <text|json> [--counterexample PATH]
     #|  frontierlab --version
-    #|  Note: SVG output is legacy compatibility only and will be removed in v1.0; prefer HTML or JSON.
   )
 }
 

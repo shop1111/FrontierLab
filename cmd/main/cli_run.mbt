@@ -1,13 +1,10 @@
 ///|
-#warnings("-deprecated")
 fn render_content(
   trace : @frontierlab.AlgorithmTrace,
   format : String,
-  step : Int32,
 ) -> String raise {
   match format {
     "html" => @frontierlab.render_trace_html(trace)
-    "svg" => @frontierlab.render_trace_svg(trace, step~)
     "json" => trace.encode_json()
     other => fail("Unknown format: \{other}")
   }
@@ -39,7 +36,7 @@ fn input_trace(
 
 ///|
 fn[T] cli_phase(
-  timer : @frontierlab.PhaseTimer?,
+  timer : PhaseTimer?,
   name : String,
   body : () -> T raise?,
 ) -> T raise? {
@@ -54,7 +51,7 @@ fn timed_input_trace(
   inputs : Map[String, String],
   path : String,
   label : String,
-  timer : @frontierlab.PhaseTimer?,
+  timer : PhaseTimer?,
 ) -> @frontierlab.AlgorithmTrace raise {
   let content = match inputs.get(path) {
     Some(value) => value
@@ -106,6 +103,7 @@ fn read_cli_inputs(args : Array[String]) -> Map[String, String] raise {
 }
 
 ///|
+#warnings("-deprecated")
 fn contract_by_name(
   name : String,
   object_id : String,
@@ -127,10 +125,10 @@ fn contract_by_name(
 ///|
 fn demo(name : String) -> @frontierlab.AlgorithmTrace raise {
   match name {
-    "insertion-sort" => @frontierlab.insertion_sort_demo_trace([5, 2, 4, 1, 3])
-    "faulty-insertion-sort" => @frontierlab.faulty_insertion_sort_demo_trace()
-    "union-find" => @frontierlab.union_find_demo_trace()
-    "pathfinding" => @frontierlab.pathfinding_demo_trace()
+    "insertion-sort" => @frontierlab.insertion_sort_trace([5, 2, 4, 1, 3])
+    "faulty-insertion-sort" => faulty_insertion_sort_demo_trace()
+    "union-find" => union_find_demo_trace()
+    "pathfinding" => pathfinding_demo_trace()
     "fibonacci" => @frontierlab.fibonacci_dp_trace(10)
     "coin-change" => @frontierlab.coin_change_dp_trace([1, 3, 4], 6)
     "knapsack" =>
@@ -153,7 +151,7 @@ fn demo(name : String) -> @frontierlab.AlgorithmTrace raise {
 fn execute_cli(
   args : Array[String],
   inputs : Map[String, String],
-  timer? : @frontierlab.PhaseTimer,
+  timer? : PhaseTimer,
   now~ : () -> UInt64 = @env.now,
 ) -> Diagnosis raise {
   if args.contains("--version") {
@@ -175,12 +173,9 @@ fn execute_cli(
         required_option(args, "--object"),
       )
       let format = debug_format(args)
-      let diagnosis = @frontierlab.diagnose_trace(
-        actual,
-        contract~,
-        expected~,
-        timer?,
-      )
+      let diagnosis = cli_phase(timer, "diagnose", fn() {
+        @frontierlab.diagnose_trace(actual, contract~, expected~)
+      })
       let artifacts : Array[(String, String)] = []
       let (text, json) = cli_phase(timer, "render reports", fn() raise {
         collect_artifact(
@@ -214,11 +209,7 @@ fn execute_cli(
       let trace = demo(args[2])
       output_execution(
         option(args, "--output", "-"),
-        render_content(
-          trace,
-          option(args, "--format", "html"),
-          trace.steps.length() - 1,
-        ),
+        render_content(trace, option(args, "--format", "html")),
         summary=trace.summary_report(),
       )
     }
@@ -229,11 +220,7 @@ fn execute_cli(
       let trace = input_trace(inputs, args[2], validate=false)
       output_execution(
         option(args, "--output", "-"),
-        render_content(
-          trace,
-          option(args, "--format", "html"),
-          @strconv.parse_int(option(args, "--step", "-1")),
-        ),
+        render_content(trace, option(args, "--format", "html")),
       )
     }
     "analyze" => {
@@ -249,11 +236,6 @@ fn execute_cli(
       ignore(input_trace(inputs, args[2]))
       Diagnosis::new(stdout="valid: \{args[2]}")
     }
-    "playground" =>
-      output_execution(
-        option(args, "--output", "-"),
-        @frontierlab.render_trace_playground(),
-      )
     "diff" => {
       if args.length() < 3 {
         fail("diff requires a trace file")
@@ -390,7 +372,7 @@ fn execute_cli(
 ///|
 fn run_cli(args : Array[String]) -> Int32 raise {
   let timer = if args.contains("--timings") {
-    Some(@frontierlab.PhaseTimer::new(clock=monotonic_ms()))
+    Some(PhaseTimer::new(clock=monotonic_ms()))
   } else {
     None
   }

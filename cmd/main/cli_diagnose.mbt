@@ -72,9 +72,9 @@ fn diagnosis_html(value : @frontierlab.TraceDiagnosis) -> String {
 
 ///|
 /// Adds the recorded phases to a diagnosis JSON object.
-fn timings_json(json : String, timer : @frontierlab.PhaseTimer) -> String {
+fn timings_json(json : String, timer : PhaseTimer) -> String {
   let timings : Json = {
-    "phases": Json(timer.timings()),
+    "phases": Json(timer.timings),
     "total_ms": Json(timer.total_ms()),
   }
   "\{json[:json.length() - 1]},\"timings\":\{timings.stringify()}}"

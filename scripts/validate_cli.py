@@ -64,7 +64,7 @@ def main() -> int:
     )
     run_case(
         "invalid number",
-        ["render", str(EXPECTED), "--step", "not-a-number"],
+        ["diff", str(EXPECTED), "--from", "not-a-number"],
         1,
     )
     run_case("missing file", ["validate", str(WORK / "missing.json")], 1)
@@ -72,7 +72,7 @@ def main() -> int:
     run_case("unsupported schema", ["validate", str(unsupported)], 1)
     run_case(
         "unwritable output target",
-        ["playground", "--output", str(WORK)],
+        ["demo", "insertion-sort", "--output", str(WORK)],
         1,
     )
     run_case(

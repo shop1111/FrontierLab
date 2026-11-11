@@ -1,5 +1,46 @@
 # Changelog
 
+## Unreleased
+
+This release narrows the library to trace recording, checking, testing tools,
+and the HTML player. Several public APIs are removed without a deprecation
+period; the package is still pre-1.0.
+
+- Removed AI Trace Clinic: `render_trace_playground`, the `playground` CLI
+  command, `docs/playground.html`, and `scripts/check_playground.mjs`. The
+  Clinic re-implemented validation, contracts, divergence, slicing, and lint
+  in browser JavaScript, so every rule change had to be made twice. Use
+  `diagnose --report report.html` for an offline diagnostic page.
+- Removed the deprecated SVG renderer (`render_trace_svg`,
+  `render_trace_svg_frames`) and the CLI `--format svg` and `render --step`
+  options.
+- Removed the legacy grid path-search API: `GridMap`, `Position`, `MoveRule`,
+  `Heuristic`, `bfs`, `dijkstra`, `astar` and their `*_trace` variants,
+  `SearchTrace`, `TraceStep`, `PathResult`, `CostEntry`, `ParentLink`,
+  `compare_algorithms`, `AlgorithmReport`, `CompareReport`, `export_ascii`,
+  `export_svg`, `heuristic_distance`, and `search_trace_to_algorithm_trace`,
+  together with the `maze_bfs`, `weighted_astar`, `compare`, and
+  `pathfinding_trace` examples. `grid_path_contract` is unchanged. The CLI
+  `pathfinding` demo is now an A* trace recorded directly with
+  `TraceBuilder`, and its final path passes `grid_path_contract`.
+- Removed trace lint and timeline reports (`AlgorithmTrace::lint`,
+  `lint_report`, `lint_markdown`, `lint_count`, `has_lint_errors`,
+  `has_lint_warnings`, `timeline`, `timeline_report`, `timeline_table`,
+  `TraceLintIssue`, `TraceLintSeverity`, `TraceTimelineEntry`) and the
+  Markdown analysis tables (`TraceStats::to_markdown`, `event_table`,
+  `object_table`, `target_table`, `AlgorithmTrace::analysis_markdown`).
+  `analyze` and `summary_report` remain.
+- Moved the demo factories (`insertion_sort_demo_trace`,
+  `faulty_insertion_sort_demo_trace`, `union_find_demo_trace`,
+  `pathfinding_demo_trace`) into the CLI. Call `insertion_sort_trace` and
+  `union_find_trace` directly.
+- Moved `PhaseTimer` and `PhaseTiming` into the CLI and removed the `timer`
+  argument of `diagnose_trace`. `diagnose --timings` now reports the
+  contract check, divergence search, state diffs, and slice as one
+  `diagnose` phase.
+- Deprecated `insertion_sort_int_contract`, an alias of
+  `sorted_int_sequence_contract`; it will be removed in v1.0.
+
 ## 0.11.0 - 2026-11-09
 
 - Raised the supported toolchain to MoonBit `moonc` 0.10.20 or newer and moved
