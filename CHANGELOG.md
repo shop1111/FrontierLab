@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.13.1 - 2026-11-12
+
+- Fixed shrinking, which in 0.13.0 could stop at a longer sequence than
+  0.12.0 found. Removing runs of steps tried only halved run lengths (3, then
+  1) and never removed exactly two steps; together with the new shrinking of
+  equal arguments, the published consumer's heap bug stayed at 7 steps
+  instead of 5. Shrinking now tries every run length, longest first. The
+  duplicated-successor example still shrinks to 4 steps, now in 5 rounds.
+
 ## 0.13.0 - 2026-11-12
 
 This feature-complete release finds where a data structure goes wrong and
