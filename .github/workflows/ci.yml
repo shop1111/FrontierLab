@@ -70,6 +70,10 @@ jobs:
           moon run examples/explore_model -- /tmp/explore-model.html | tee /tmp/explore-model.txt
           grep -q 'returned false, but the model returned true' /tmp/explore-model.txt
           node scripts/check_renderer.mjs /tmp/explore-model.html
+          moon run examples/explore_views -- /tmp/explore-views.html | tee /tmp/explore-views.txt
+          grep -q 'at examples/explore_views/main.mbt:38 (after grow):' /tmp/explore-views.txt
+          grep -q 'test "get finds every key after a grow" {' /tmp/explore-views.txt
+          node scripts/check_renderer.mjs /tmp/explore-views.html
 
       - name: Benchmark correctness smoke
         run: |

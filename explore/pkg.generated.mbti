@@ -9,9 +9,12 @@ import {
 }
 
 // Values
-pub fn[S : @json.ToJson] explore(() -> S, Array[Op[S]], invariant? : (S) -> String?, check? : (S, Step) -> String?, model? : Model, cases? : Int32, max_steps? : Int32, max_arg? : Int32, max_shrinks? : Int32, seed? : UInt64, title? : String, options? : @frontierlab.TraceOptions) -> Exploration? raise @frontierlab.TraceError
+pub fn[S : @json.ToJson] explore(() -> S, Array[Op[S]], invariant? : (S) -> String?, check? : (S, Step) -> String?, model? : Model, views? : Array[View], cases? : Int32, max_steps? : Int32, max_arg? : Int32, max_shrinks? : Int32, seed? : UInt64, title? : String, options? : @frontierlab.TraceOptions) -> Exploration? raise @frontierlab.TraceError
 
-pub fn[S : @json.ToJson] replay(() -> S, Array[Op[S]], Array[Step], invariant? : (S) -> String?, check? : (S, Step) -> String?, model? : Model, window? : Int32, title? : String, options? : @frontierlab.TraceOptions) -> Replay raise @frontierlab.TraceError
+#callsite(autofill(loc))
+pub fn[T : @json.ToJson] mark(T, note? : String, loc~ : SourceLoc) -> Unit
+
+pub fn[S : @json.ToJson] replay(() -> S, Array[Op[S]], Array[Step], invariant? : (S) -> String?, check? : (S, Step) -> String?, model? : Model, views? : Array[View], window? : Int32, title? : String, options? : @frontierlab.TraceOptions) -> Replay raise @frontierlab.TraceError
 
 // Errors
 
@@ -23,6 +26,8 @@ pub struct Exploration {
   shrink_steps : Int32
   seed : UInt64
 }
+pub fn Exploration::explain(Self) -> String
+pub fn Exploration::regression_test(Self, name? : String, init? : String, ops? : String, checks? : String) -> String
 pub fn Exploration::report(Self) -> String
 pub fn Exploration::save_html(Self, String) -> Unit raise
 
@@ -60,8 +65,11 @@ pub struct Replay {
   outputs : Array[String?]
   failure : Failure?
   trace : @frontierlab.AlgorithmTrace
+  // private fields
 }
+pub fn Replay::explain(Self) -> String
 pub fn Replay::passed(Self) -> Bool
+pub fn Replay::regression_test(Self, name? : String, init? : String, ops? : String, checks? : String) -> String
 pub fn Replay::report(Self) -> String
 pub fn Replay::save_html(Self, String) -> Unit raise
 pub fn Replay::to_html(Self) -> String
@@ -82,6 +90,13 @@ pub fn Step::to_repr(Self) -> @debug.Repr
 pub fn Step::to_string(Self) -> String
 pub fn[A : @json.ToJson] Step::with_arg(String, A) -> Self
 pub impl Show for Step
+
+pub(all) enum View {
+  Graph(String)
+  Buckets(String)
+  Matrix(String)
+  NodeId(String)
+}
 
 // Type aliases
 
