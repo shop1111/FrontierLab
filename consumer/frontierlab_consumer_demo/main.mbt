@@ -13,6 +13,15 @@ fn write_evidence(directory : String) -> Unit raise {
     Some(found) => {
       println(found.report())
       found.save_html("\{directory}/heap-explore.html")
+      // A step-by-step text account, and a test that keeps the bug fixed.
+      @fs.write_string_to_file("\{directory}/heap-explain.txt", found.explain())
+      println(
+        found.regression_test(
+          init="Heap::empty",
+          ops="heap_ops(pop_fixed)",
+          checks="invariant=heap_violation",
+        ),
+      )
     }
     None => println("No failing sequence found.")
   }
