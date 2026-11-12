@@ -154,7 +154,7 @@ fn execute_cli(
   now~ : () -> UInt64 = @env.now,
 ) -> Diagnosis raise {
   if args.contains("--version") {
-    return Diagnosis::new(stdout="FrontierLab 0.13.0")
+    return Diagnosis::new(stdout="FrontierLab 0.13.1")
   }
   if args.length() < 2 || args.contains("--help") {
     return Diagnosis::new(stdout=usage())

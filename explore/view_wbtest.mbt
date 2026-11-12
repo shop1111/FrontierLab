@@ -291,3 +291,22 @@ test "weighted edges, plain buckets, missing matrices and wrapped states" {
     ),
   )
 }
+
+///|
+test "shrinking removes runs of any length" {
+  // Fails while it has an even, non-zero number of `a`s, an even number of
+  // `b`s, and a `y`. From `a a a a b b y`, removing three steps or one step
+  // breaks a parity; only removing two does not, which halving the run length
+  // (3, then 1) never tries.
+  let count = fn(steps : Array[Step], op : String) {
+    steps.filter(fn(step) { step.op == op }).length()
+  }
+  let fails = fn(steps : Array[Step]) {
+    let a = count(steps, "a")
+    a > 0 && a % 2 == 0 && count(steps, "b") % 2 == 0 && count(steps, "y") > 0
+  }
+  let steps = ["a", "a", "a", "a", "b", "b", "y"].map(fn(op) { Step::new(op) })
+  let (smallest, rounds) = shrink(steps, fails, fn(_) { true }, 10)
+  assert_eq(smallest.map(fn(step) { step.op }), ["a", "a", "y"])
+  assert_eq(rounds, 1)
+}

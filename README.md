@@ -73,7 +73,7 @@ test "找出 delete 的 bug" {
 输出（来自 [examples/explore_bst](examples/explore_bst/main.mbt) 的实际运行结果）：
 
 ```
-Found after 88 random sequences (seed 1); shrunk from 12 to 4 steps in 6 rounds.
+Found after 88 random sequences (seed 1); shrunk from 12 to 4 steps in 5 rounds.
 Step 4 of 4 (delete 1) failed: in-order keys 2 and 2 are not increasing
 Steps: insert 1, insert 2, insert 0, delete 1
 ```
@@ -521,7 +521,7 @@ GitHub Release 提供 Windows 可执行文件 `frontierlab.exe` 和
   `self` 和局部变量需要把它们画进同一个场景。
 - **跟随调用**：自动插入目前只处理点名的函数，它调用的辅助函数要另外点名。
 
-0.13.0 是功能完整的版本。Mooncakes 目前只接受 0.x 版本号，等它开放 1.x 后会以 1.0.0
+0.13 是功能完整的版本。Mooncakes 目前只接受 0.x 版本号，等它开放 1.x 后会以 1.0.0
 发布，之后遵循语义化版本：公开 API 的不兼容改动只在主版本号变化时出现。
 
 ## 独立 consumer 示例

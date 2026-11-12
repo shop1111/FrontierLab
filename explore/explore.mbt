@@ -1018,7 +1018,9 @@ fn shrink(
   let mut progress = true
   while progress && rounds < max_rounds {
     progress = false
-    let mut size = best.length() / 2
+    // Every run length, longest first: halving the length (3, then 1) never
+    // tries removing two steps, which can leave a needless pair behind.
+    let mut size = best.length() - 1
     while size >= 1 && !progress {
       let mut start = 0
       while start + size <= best.length() {
@@ -1031,7 +1033,7 @@ fn shrink(
         }
         start += 1
       }
-      size /= 2
+      size -= 1
     }
     if !progress {
       // Shrink every occurrence of an argument together first: in
