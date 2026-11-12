@@ -19,3 +19,7 @@ DEFENSE_PPT_*.md
 
 # Standalone consumer project; it installs FrontierLab from Mooncakes.
 consumer/frontierlab_consumer_demo/
+
+# Separate tool module, shipped as frontierlab-instrument.exe; it depends on
+# moonbitlang/parser, which the library must not.
+instrument/

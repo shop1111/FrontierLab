@@ -181,6 +181,45 @@ fn HashMap::grow(self : HashMap) -> Unit {
 编译器自动填入。只有 `replay` 运行被测操作时才记录，搜索和参考实现里的 `mark` 只做一次判断
 就返回，所以可以留在代码里。每一步最多记录 200 个 mark。
 
+### 自动逐行回放：`frontierlab-instrument`
+
+不想手写 `mark` 时，让工具在函数的每条语句前自动插入：
+
+```bash
+frontierlab-instrument examples/explore_views/main.mbt --fn HashMap::grow --watch wider
+moon run examples/explore_views          # grow 的每一行都成了回放里的一步
+frontierlab-instrument --remove examples/explore_views/main.mbt
+```
+
+工具用官方的 `moonbitlang/parser` 解析源码，在 `HashMap::grow` 的每条语句前插入
+`@explore.auto_mark(wider, 32, "for i, bucket in self.buckets {")`，回放时每一行都显示
+`wider` 在这一行执行前的样子：
+
+```text
+Step 3: put ["f",0]
+  at examples/explore_views/main.mbt:32 (before: for i, bucket in self.buckets {):
+    State:
+      0: -
+      1: -
+      2: -
+      3: -
+  at examples/explore_views/main.mbt:34 (before: wider[i].push(entry)):
+    + "": 0 in bucket 0
+  ...
+```
+
+- `--watch` 默认是函数的第一个参数。局部变量只在它的作用域里记录：`let` 之后，或绑定它的
+  循环体内。被记录的部分如果正好是某个视图画的那一块（这里 `wider` 就是 `buckets`），
+  也按那个视图画。
+- 标记插在语句所在的那一行，并带着原来的行号，所以文件行号不变；即使 `moon fmt` 把标记
+  挪到单独的行，回放里显示的仍是原来的行号，`--remove` 也能把整行删掉，文件逐字节恢复。
+- 闭包和局部函数的函数体不插。插入后会重新解析一遍，解析失败就不写文件。
+- 被测函数所在包的 `moon.pkg` 要导入 `shop1111/frontierlab/explore`，没导入时工具会提示。
+
+工具在单独的 [instrument](instrument/README.md) 模块里，FrontierLab 库本身不依赖解析器。
+GitHub Release 提供 `frontierlab-instrument.exe`，也可以在 `instrument/` 目录里
+`moon run main -- ...` 运行。
+
 ### 文字报告和回归测试
 
 `report()` 只有一行结论。`explain()` 给出逐步的文字记录，适合在终端里看，也适合交给
@@ -271,8 +310,8 @@ FrontierLab 不需要知道你的类型，它读 `derive(ToJson)` 的输出：
   `ToJson`。
 - 每一步仍要把整个结构转换成快照，几千步的脚本请用 `window`，见下文的优化记录。
   回放页面里只存每一步的变化，所以页面本身不会随步数膨胀。
-- 默认只看到每次操作前后的结构。操作内部要在关心的行手动加 `mark`；自动在每一行插入
-  快照还没有做，见[后续方向](#后续方向)。
+- 默认只看到每次操作前后的结构。操作内部要手动加 `mark`，或用 `frontierlab-instrument`
+  自动插入；自动插入只记录一个变量，这个变量需要实现 `ToJson`。
 
 ## 数组算法：`TracedArray`
 
@@ -473,14 +512,16 @@ moon run cmd/main -- search faulty-quick-sort --reference quick-sort
 退出码：`0` 通过；`2` 输入有效但违反规则、与参考不同或超出复杂度上界；`1` 参数、
 文件、JSON 或 Schema 无效。`diagnose --timings` 按阶段输出耗时。
 
-GitHub Release 提供 Windows 可执行文件和 SHA256，也可以本地构建：
-`python scripts\build_cli.py`。
+GitHub Release 提供 Windows 可执行文件 `frontierlab.exe` 和
+`frontierlab-instrument.exe` 及各自的 SHA256，也可以本地构建：`python scripts\build_cli.py`。
 
 ## 后续方向
 
-- **自动逐行回放**：读取源码，在目标函数的每条语句之后自动插入 `mark`，编译临时副本
-  运行，不需要用户手动加 `mark`。记录和回放部分已经由 `mark` 实现；剩下的是改写源码，
-  依赖官方仍处于实验阶段的 `moonbitlang/parser`，而且要判断每一行该快照哪个变量。
+- **一行记录多个变量**：`frontierlab-instrument` 现在每行只记录一个变量；同时看
+  `self` 和局部变量需要把它们画进同一个场景。
+- **跟随调用**：自动插入目前只处理点名的函数，它调用的辅助函数要另外点名。
+
+从 1.0.0 起遵循语义化版本：公开 API 的不兼容改动只在主版本号变化时出现。
 
 ## 独立 consumer 示例
 
@@ -501,6 +542,7 @@ python scripts/validate_cli.py
 moon run examples/explore_bst -- _build/explore.html
 moon run examples/explore_model -- _build/explore-model.html
 moon run examples/explore_views -- _build/explore-views.html
+(cd instrument && moon test --deny-warn)
 moon run bench/explore_bench --target native --release
 moon package
 ```

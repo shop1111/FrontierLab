@@ -1,0 +1,35 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "shop1111/frontierlab_instrument/lib"
+
+// Values
+pub fn instrument(String, Array[Target], pkg? : String) -> (String, Array[Instrumented]) raise InstrumentError
+
+pub fn remove(String, pkg? : String) -> (String, Int32)
+
+// Errors
+pub suberror InstrumentError {
+  Unparsable(String)
+  NotFound(String)
+  NothingToWatch(String)
+  AlreadyInstrumented
+}
+pub fn InstrumentError::output(Self, &Logger) -> Unit
+pub fn InstrumentError::to_string(Self) -> String
+pub impl Show for InstrumentError
+
+// Types and methods
+pub struct Instrumented {
+  name : String
+  watch : String
+  lines : Array[Int32]
+}
+
+pub struct Target {
+  name : String
+  watch : String?
+}
+pub fn Target::new(String, watch? : String) -> Self
+
+// Type aliases
+
+// Traits

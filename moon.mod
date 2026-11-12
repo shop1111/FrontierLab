@@ -15,7 +15,7 @@ import {
 
 name = "shop1111/frontierlab"
 
-version = "0.12.0"
+version = "1.0.0"
 
 readme = "README.md"
 
@@ -32,4 +32,4 @@ keywords = [
   "debugger",
 ]
 
-description = "A MoonBit algorithm trace protocol and polished offline HTML visualization kit."
+description = "Finds where a MoonBit data structure goes wrong and replays it step by step, down to single lines, in an offline HTML player."

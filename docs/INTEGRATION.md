@@ -40,6 +40,10 @@ match @explore.explore(() => Leaf, ops, invariant=is_bst) {
 - `@explore.mark(value, note=...)` inside an operation records `value` with
   its source line; `replay` shows each mark as a step of its own before the
   step it belongs to. Marks are ignored outside `replay`.
+- `frontierlab-instrument FILE --fn NAME [--watch VAR]` inserts
+  `@explore.auto_mark(VAR, LINE, "code")` before every statement of `NAME`, so
+  that each line becomes a step of the replay; `--remove` restores the file.
+  See [instrument/README.md](../instrument/README.md).
 - `explain()` on a replay or exploration gives a plain-text, step-by-step
   account with `+`/`-`/`~` change lines, for terminals and AI agents.
   `regression_test(init=..., ops=..., checks=...)` prints a MoonBit test that

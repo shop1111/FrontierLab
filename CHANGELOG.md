@@ -1,10 +1,30 @@
 # Changelog
 
-## Unreleased
+## 1.0.0 - 2026-11-12
 
-`explore` can now compare against a reference implementation and take
-arguments of any type, and HTML players store only what changes between
-steps. `Step.arg` and `Op` change shape; see below.
+FrontierLab 1.0 finds where a data structure goes wrong and shows it step by
+step, down to single lines inside an operation. `explore` now compares
+against a reference implementation, takes arguments of any type, draws
+graphs, hash tables, and matrices, explains every step in plain text, turns a
+found bug into a regression test, and records states inside operations, by
+hand with `mark` or automatically with the new `frontierlab-instrument` tool.
+From this release on the public API follows semantic versioning. `Step.arg`
+and `Op` change shape in this release; see below.
+
+- Added `frontierlab-instrument`, a separate tool in the `instrument/`
+  module. It parses a MoonBit file with `moonbitlang/parser` and inserts
+  `@explore.auto_mark(VAR, LINE, "code")` before every statement of the named
+  functions, so that every line becomes a step of the replay; `--remove`
+  restores the file byte for byte, also after `moon fmt`. `--watch` chooses
+  the variable; a local is recorded only where it is in scope. The library
+  does not depend on the parser. Release builds ship
+  `frontierlab-instrument.exe`.
+- Added `@explore.auto_mark`, the call that the tool inserts. It carries the
+  original line number, so the replay shows the right line after the file is
+  reformatted.
+- A marked value that is the part a view draws, such as the bucket array a
+  resize is building, is drawn by that view.
+- The text account reports a change in the number of buckets.
 
 - Added `Model`, a reference implementation that `explore` and `replay` run
   alongside the structure under test (`model=`). After every step, results

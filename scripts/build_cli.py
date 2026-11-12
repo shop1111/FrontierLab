@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Build and smoke-check a local FrontierLab native CLI artifact."""
+"""Build and smoke-check the native FrontierLab command-line tools.
+
+Builds `frontierlab` (the trace CLI, from cmd/main) and `frontierlab-instrument`
+(the mark inserter, from the separate instrument/ module) into _dist/, each with
+a SHA256 file, and checks that both start.
+"""
 
 from __future__ import annotations
 
@@ -12,52 +17,44 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "_dist"
-EXECUTABLE = "frontierlab.exe" if os.name == "nt" else "frontierlab"
-SOURCE = (
-    ROOT
-    / "_build"
-    / "native"
-    / "release"
-    / "build"
-    / "cmd"
-    / "main"
-    / ("main.exe" if os.name == "nt" else "main")
-)
+SUFFIX = ".exe" if os.name == "nt" else ""
+VERSION = "1.0.0"
+
+
+def build(module: Path, package: str, name: str, probe: list[str], expect: str) -> None:
+    subprocess.run(
+        ["moon", "build", package, "--target", "native", "--release", "--deny-warn"],
+        cwd=module,
+        check=True,
+    )
+    source = module / "_build" / "native" / "release" / "build" / package / f"main{SUFFIX}"
+    if not source.is_file():
+        raise FileNotFoundError(f"MoonBit native executable not found: {source}")
+    DIST.mkdir(exist_ok=True)
+    target = DIST / f"{name}{SUFFIX}"
+    shutil.copy2(source, target)
+    digest = hashlib.sha256(target.read_bytes()).hexdigest()
+    target.with_name(f"{target.name}.sha256").write_text(
+        f"{digest}  {target.name}\n", encoding="utf-8"
+    )
+    output = subprocess.run(
+        [str(target), *probe], cwd=ROOT, check=True, capture_output=True, text=True
+    ).stdout
+    if expect not in output:
+        raise RuntimeError(f"Unexpected output from {target.name}: {output!r}")
+    print(f"Built {target}")
+    print(f"SHA256 {digest}")
 
 
 def main() -> int:
-    subprocess.run(
-        [
-            "moon",
-            "build",
-            "cmd/main",
-            "--target",
-            "native",
-            "--release",
-            "--deny-warn",
-        ],
-        cwd=ROOT,
-        check=True,
+    build(ROOT, "cmd/main", "frontierlab", ["--version"], f"FrontierLab {VERSION}")
+    build(
+        ROOT / "instrument",
+        "main",
+        "frontierlab-instrument",
+        ["--help"],
+        "frontierlab-instrument <file.mbt> --fn NAME",
     )
-    if not SOURCE.is_file():
-        raise FileNotFoundError(f"MoonBit native executable not found: {SOURCE}")
-    DIST.mkdir(exist_ok=True)
-    target = DIST / EXECUTABLE
-    shutil.copy2(SOURCE, target)
-    digest = hashlib.sha256(target.read_bytes()).hexdigest()
-    checksum = target.with_name(f"{target.name}.sha256")
-    checksum.write_text(f"{digest}  {target.name}\n", encoding="utf-8")
-    probe = subprocess.run(
-        [str(target), "--version"],
-        cwd=ROOT,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    if "FrontierLab 0.12.0" not in probe.stdout:
-        raise RuntimeError(f"Unexpected version output: {probe.stdout!r}")
-    print(f"Built {target}")
-    print(f"SHA256 {digest}")
     return 0
 
 

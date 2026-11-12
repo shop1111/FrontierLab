@@ -186,6 +186,7 @@ test "change lines cover every kind of entity" {
   inspect(
     change_lines(before, after, diff(before, after)).join("\n"),
     content=(
+      #|t: 1 -> 2 buckets
       #|list: [1, 2] -> [1]
       #|- gone: [3]
       #|~ edge a -> b: 1 -> 2
@@ -197,6 +198,7 @@ test "change lines cover every kind of entity" {
   inspect(
     change_lines(after, before, diff(after, before)).join("\n"),
     content=(
+      #|t: 2 -> 1 buckets
       #|list: [1] -> [1, 2]
       #|+ gone: [3]
       #|+ node x

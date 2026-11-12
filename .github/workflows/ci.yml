@@ -75,6 +75,15 @@ jobs:
           grep -q 'test "get finds every key after a grow" {' /tmp/explore-views.txt
           node scripts/check_renderer.mjs /tmp/explore-views.html
 
+      - name: Line-by-line instrumentation round trip
+        run: |
+          (cd instrument && moon test --deny-warn)
+          (cd instrument && moon run main -- ../examples/explore_views/main.mbt --fn HashMap::grow --watch wider)
+          moon run examples/explore_views | tee /tmp/explore-views-lines.txt
+          grep -q 'main.mbt:34 (before: wider\[i\].push(entry))' /tmp/explore-views-lines.txt
+          (cd instrument && moon run main -- --remove ../examples/explore_views/main.mbt)
+          git diff --exit-code examples/explore_views/main.mbt
+
       - name: Benchmark correctness smoke
         run: |
           moon run bench --target native -- 100 1000 | tee /tmp/benchmark-smoke.csv

@@ -188,6 +188,7 @@ test "a buckets view draws a hash table and its resize" {
       #|  fields: [size=1] -> [size=2]
       #|  + bb: 2 in bucket 0
       #|Step 3: put ["ccc",3]
+      #|  buckets: 2 -> 4 buckets
       #|  fields: [size=2] -> [size=3]
       #|  + ccc: 3 in bucket 1
       #|Step 4: get "ccc" -> None
