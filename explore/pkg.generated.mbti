@@ -9,6 +9,9 @@ import {
 }
 
 // Values
+#callsite(autofill(loc))
+pub fn[T : @json.ToJson] auto_mark(T, Int32, String, loc~ : SourceLoc) -> Unit
+
 pub fn[S : @json.ToJson] explore(() -> S, Array[Op[S]], invariant? : (S) -> String?, check? : (S, Step) -> String?, model? : Model, views? : Array[View], cases? : Int32, max_steps? : Int32, max_arg? : Int32, max_shrinks? : Int32, seed? : UInt64, title? : String, options? : @frontierlab.TraceOptions) -> Exploration? raise @frontierlab.TraceError
 
 #callsite(autofill(loc))

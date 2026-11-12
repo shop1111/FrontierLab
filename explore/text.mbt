@@ -76,12 +76,21 @@ fn moved_line(old : Entity, new : Entity) -> String {
 fn change_lines(before : Snapshot, after : Snapshot, d : Diff) -> Array[String] {
   let lines : Array[String] = []
   let lists : Map[String, @frontierlab.SequenceState] = Map([])
+  // Empty buckets hold no entities, so a resize shows as a new bucket count.
+  let buckets : Map[String, Int32] = Map([])
   for object in before.objects {
-    if object is Sequence(state) {
-      lists[state.id] = state
+    match object {
+      Sequence(state) => lists[state.id] = state
+      Sets(state) => buckets[state.id] = state.groups.length()
+      _ => ()
     }
   }
   for object in after.objects {
+    if object is Sets(state) &&
+      buckets.get(state.id) is Some(was) &&
+      was != state.groups.length() {
+      lines.push("\{state.label}: \{was} -> \{state.groups.length()} buckets")
+    }
     guard object is Sequence(state) else { continue }
     match lists.get(state.id) {
       Some(was) =>

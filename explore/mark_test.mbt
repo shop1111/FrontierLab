@@ -183,3 +183,63 @@ test "marks of a part skip views that do not fit" {
     ),
   )
 }
+
+///|
+#derive(ToJson)
+struct Chained {
+  mut slots : Array[Array[Int32]]
+}
+
+///|
+test "inserted marks name the line and draw a part with its view" {
+  // What `frontierlab-instrument --fn widen --watch wider` produces, after
+  // `moon fmt` moved each mark onto its own line.
+  let widen = (t : Chained) => {
+    let wider : Array[Array[Int32]] = [[], [], [], []]
+    @explore.auto_mark(wider, 200, "for i, slot in t.slots {")
+    for i, slot in t.slots {
+      @explore.auto_mark(wider, 202, "wider[i] = slot")
+      wider[i] = slot
+    }
+    @explore.auto_mark(wider, 205, "t.slots = wider")
+    t.slots = wider
+    t
+  }
+  let replay = @explore.replay(
+    () => { slots: [[1], [2]], },
+    [@explore.Op::without_arg("widen", widen)],
+    @explore.Step::parse("widen"),
+    views=[Buckets("slots")],
+  )
+  inspect(
+    replay.explain(),
+    content=(
+      #|Initial state:
+      #|  slots:
+      #|    0: 1
+      #|    1: 2
+      #|Step 1: widen
+      #|  at explore/mark_test.mbt:200 (before: for i, slot in t.slots {):
+      #|    State:
+      #|      0: -
+      #|      1: -
+      #|      2: -
+      #|      3: -
+      #|  at explore/mark_test.mbt:202 (before: wider[i] = slot):
+      #|    (no change)
+      #|  at explore/mark_test.mbt:202 (before: wider[i] = slot):
+      #|    + 1 in bucket 0
+      #|  at explore/mark_test.mbt:205 (before: t.slots = wider):
+      #|    + 2 in bucket 1
+      #|  slots: 2 -> 4 buckets
+      #|All 1 steps passed. Final state:
+      #|  slots:
+      #|    0: 1
+      #|    1: 2
+      #|    2: -
+      #|    3: -
+    ),
+  )
+  // Outside a replay an inserted mark does nothing.
+  @explore.auto_mark(1, 1, "x")
+}

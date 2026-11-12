@@ -36,14 +36,40 @@ pub fn[T : ToJson] mark(
   note~ : String = "",
   loc~ : SourceLoc,
 ) -> Unit {
-  if !recorder.on {
-    return
+  if recorder.on {
+    keep(line_of(loc), note, () => value.to_json())
   }
+}
+
+///|
+/// Keeps a mark unless the step already has `max_marks`; the value is only
+/// converted when it is kept.
+fn keep(place : String, note : String, value : () -> Json) -> Unit {
   if recorder.marks.length() >= max_marks {
     recorder.dropped += 1
-    return
+  } else {
+    recorder.marks.push({ place, note, value: value(), })
   }
-  recorder.marks.push({ place: line_of(loc), note, value: value.to_json(), })
+}
+
+///|
+/// The mark that `frontierlab-instrument` inserts before a statement: records
+/// `value` before line `line`, whose source text is `code`, runs.
+///
+/// The line is passed explicitly so that it stays right when the
+/// instrumented file is reformatted. Write `mark` by hand; this form is
+/// generated, and the tool removes every call to it with `--remove`.
+#callsite(autofill(loc))
+pub fn[T : ToJson] auto_mark(
+  value : T,
+  line : Int32,
+  code : String,
+  loc~ : SourceLoc,
+) -> Unit {
+  if recorder.on {
+    let file = loc.to_string().split(":").next().unwrap().to_owned()
+    keep("\{file}:\{line}", "before: " + code, () => value.to_json())
+  }
 }
 
 ///|
@@ -69,16 +95,40 @@ fn take_marks() -> (Array[Mark], Int32) {
 }
 
 ///|
-/// The views that fit a marked value: a mark of the whole state gets every
-/// view, a mark of a part only the node identity.
-fn views_for(views : Array[View], value : Json) -> Array[View] {
-  views.filter(fn(view) {
+/// Draws a marked value with the views that fit it. A mark of the whole state
+/// gets every view. A mark of the part one view draws, such as the bucket
+/// array a resize is building, is drawn by that view. Anything else gets the
+/// default drawing, with node identity.
+fn mark_snapshot(
+  value : Json,
+  views : Array[View],
+) -> Snapshot raise @frontierlab.TraceError {
+  let ids = views.filter(fn(view) { view is NodeId(_) })
+  let parts = views.filter(fn(view) { !(view is NodeId(_)) })
+  let found = parts.filter(fn(view) {
     match view {
-      NodeId(_) => true
-      Graph(path) | Buckets(path) | Matrix(path) =>
+      Graph(path) | Buckets(path) | Matrix(path) | NodeId(path) =>
         lookup(value, path) is Some(_)
     }
   })
+  if found.is_empty() {
+    for view in parts {
+      let whole = match view {
+        Graph(_) => Graph("")
+        Buckets(_) => Buckets("")
+        _ => Matrix("")
+      }
+      // A value of another shape makes the view raise; try the next one.
+      try snapshot(value, ids + [whole]) catch {
+        _ => continue
+      } noraise {
+        shot => return shot
+      }
+    }
+  }
+  snapshot(value, ids + found) catch {
+    _ => snapshot(value, ids)
+  }
 }
 
 ///|
@@ -94,10 +144,7 @@ fn record_marks(
 ) -> Unit raise @frontierlab.TraceError {
   let mut previous : Snapshot? = None
   for mark in marks {
-    // A marked part may not have the shape the views expect.
-    let shot = snapshot(mark.value, views_for(views, mark.value)) catch {
-      _ => snapshot(mark.value, [])
-    }
+    let shot = mark_snapshot(mark.value, views)
     let note = if mark.note == "" { "" } else { " (" + mark.note + ")" }
     log.push("  at " + mark.place + note + ":")
     let (lines, highlighted) = match previous {
