@@ -15,7 +15,7 @@ import {
 
 name = "shop1111/frontierlab"
 
-version = "1.0.0"
+version = "0.13.0"
 
 readme = "README.md"
 

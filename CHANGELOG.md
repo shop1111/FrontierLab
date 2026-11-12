@@ -1,15 +1,16 @@
 # Changelog
 
-## 1.0.0 - 2026-11-12
+## 0.13.0 - 2026-11-12
 
-FrontierLab 1.0 finds where a data structure goes wrong and shows it step by
-step, down to single lines inside an operation. `explore` now compares
+This feature-complete release finds where a data structure goes wrong and
+shows it step by step, down to single lines inside an operation. `explore` now compares
 against a reference implementation, takes arguments of any type, draws
 graphs, hash tables, and matrices, explains every step in plain text, turns a
 found bug into a regression test, and records states inside operations, by
 hand with `mark` or automatically with the new `frontierlab-instrument` tool.
-From this release on the public API follows semantic versioning. `Step.arg`
-and `Op` change shape in this release; see below.
+It is meant to become 1.0.0 once Mooncakes accepts major versions above 0;
+until then the version stays at 0.x. `Step.arg` and `Op` change shape in this
+release; see below.
 
 - Added `frontierlab-instrument`, a separate tool in the `instrument/`
   module. It parses a MoonBit file with `moonbitlang/parser` and inserts

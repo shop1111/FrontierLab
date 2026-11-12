@@ -18,7 +18,7 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "_dist"
 SUFFIX = ".exe" if os.name == "nt" else ""
-VERSION = "1.0.0"
+VERSION = "0.13.0"
 
 
 def build(module: Path, package: str, name: str, probe: list[str], expect: str) -> None:
