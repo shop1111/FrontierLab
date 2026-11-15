@@ -211,6 +211,27 @@ Step 3: put ["f",0]
 - `--watch` 默认是函数的第一个参数。局部变量只在它的作用域里记录：`let` 之后，或绑定它的
   循环体内。被记录的部分如果正好是某个视图画的那一块（这里 `wider` 就是 `buckets`），
   也按那个视图画。
+- 想同时看几个变量，用逗号分隔或重复 `--watch`，例如 `--watch self,wider`。每一行记录
+  当时在作用域里的那几个，回放里各画各的、以变量名为标题（`self.buckets`、`wider`），
+  某个变量进入作用域时整个显示出来，之后每处变化都注明属于哪个变量；整数这类普通值的
+  变化写成 `moved: 0 -> 1`。`--watch self,wider` 时 `grow` 的回放：
+
+  ```text
+  at examples/explore_views/main.mbt:28 (before: let wider : ...):
+    self.buckets:
+      0: "": 0, f: 0
+      1: ant: 0
+    self: [size=3]
+  at examples/explore_views/main.mbt:32 (before: for i, bucket in self.buckets {):
+    + wider:
+        0: -
+        1: -
+        2: -
+        3: -
+  ...
+  at examples/explore_views/main.mbt:34 (before: wider[i].push(entry)):
+    + "": 0 in bucket 0 (wider)
+  ```
 - 标记插在语句所在的那一行，并带着原来的行号，所以文件行号不变；即使 `moon fmt` 把标记
   挪到单独的行，回放里显示的仍是原来的行号，`--remove` 也能把整行删掉，文件逐字节恢复。
 - 闭包和局部函数的函数体不插。插入后会重新解析一遍，解析失败就不写文件。
@@ -311,7 +332,7 @@ FrontierLab 不需要知道你的类型，它读 `derive(ToJson)` 的输出：
 - 每一步仍要把整个结构转换成快照，几千步的脚本请用 `window`，见下文的优化记录。
   回放页面里只存每一步的变化，所以页面本身不会随步数膨胀。
 - 默认只看到每次操作前后的结构。操作内部要手动加 `mark`，或用 `frontierlab-instrument`
-  自动插入；自动插入只记录一个变量，这个变量需要实现 `ToJson`。
+  自动插入；被记录的变量需要实现 `ToJson`。
 
 ## 数组算法：`TracedArray`
 
@@ -517,8 +538,6 @@ GitHub Release 提供 Windows 可执行文件 `frontierlab.exe` 和
 
 ## 后续方向
 
-- **一行记录多个变量**：`frontierlab-instrument` 现在每行只记录一个变量；同时看
-  `self` 和局部变量需要把它们画进同一个场景。
 - **跟随调用**：自动插入目前只处理点名的函数，它调用的辅助函数要另外点名。
 
 0.13 是功能完整的版本。Mooncakes 目前只接受 0.x 版本号，等它开放 1.x 后会以 1.0.0

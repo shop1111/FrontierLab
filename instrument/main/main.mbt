@@ -1,13 +1,15 @@
 ///|
 let usage : String =
   #|Usage:
-  #|  frontierlab-instrument <file.mbt> --fn NAME [--watch VAR] [--fn ...] [--pkg ALIAS] [--stdout]
+  #|  frontierlab-instrument <file.mbt> --fn NAME [--watch VAR[,VAR...]] [--fn ...] [--pkg ALIAS] [--stdout]
   #|  frontierlab-instrument --remove <file.mbt>... [--pkg ALIAS]
   #|
   #|Inserts `@explore.auto_mark(VAR, LINE, "code")` before every statement of each
   #|function NAME (`insert` or `Type::insert`), so that `@explore.replay` shows
-  #|VAR before each line runs. VAR defaults to the first parameter. The file
-  #|is changed in place unless --stdout is given; --remove takes the marks out.
+  #|VAR before each line runs. VAR defaults to the first parameter. Several
+  #|variables, given as `--watch self,wider` or repeated `--watch`, are drawn
+  #|side by side, each where it is in scope. The file is changed in place
+  #|unless --stdout is given; --remove takes the marks out.
 
 ///|
 fn run(args : Array[String]) -> Int32 raise {
@@ -25,7 +27,15 @@ fn run(args : Array[String]) -> Int32 raise {
       }
       "--watch" if i + 1 < args.length() && !targets.is_empty() => {
         let last = targets.length() - 1
-        targets[last] = @lib.Target::new(targets[last].name, watch=args[i + 1])
+        let names = args[i + 1]
+          .split(",")
+          .map(name => name.trim(chars=" ").to_owned())
+          .filter(name => name != "")
+          .collect()
+        targets[last] = @lib.Target::new(
+          targets[last].name,
+          watch=targets[last].watch + names,
+        )
         i += 2
       }
       "--pkg" if i + 1 < args.length() => {
@@ -85,7 +95,9 @@ fn run(args : Array[String]) -> Int32 raise {
     }
     for f in done {
       println(
-        "Marked \{f.lines.length()} lines of \{f.name} in \{file}, recording `\{f.watch}`.",
+        "Marked \{f.lines.length()} lines of \{f.name} in \{file}, recording " +
+        f.watch.map(name => "`\{name}`").join(", ") +
+        ".",
       )
     }
     println(

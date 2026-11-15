@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+- `frontierlab-instrument` records several variables per line:
+  `--watch self,wider`, or `--watch` repeated. Each line records the watched
+  variables in scope there, and the replay draws each one on its own, labeled
+  with its name, such as `self.buckets` and `wider`. A variable that is the
+  part a view draws is drawn by that view.
+- Added `@explore.auto_mark_vars` and `@explore.watched`, the calls the tool
+  inserts for several variables. The variables are converted to JSON only
+  while `replay` records.
+- `instrument`'s `Target.watch` and `Instrumented.watch` are now arrays of
+  names (`Target::new(name, watch=["wider"])`).
+- The text account shows a part that appears, such as a variable coming into
+  scope or a grid replacing a list, as a whole instead of one line per cell,
+  names a part that goes away, and reports a change of a plain value, such as
+  `moved: 0 -> 1`, which it used to report as no change. With several
+  variables, each change names the variable it belongs to, as in
+  `+ f: 0 in bucket 0 (wider)`.
+
 ## 0.13.1 - 2026-11-12
 
 - Fixed shrinking, which in 0.13.0 could stop at a longer sequence than

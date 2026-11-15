@@ -4,7 +4,11 @@ priv struct Mark {
   /// `file.mbt:line` of the `mark` call.
   place : String
   note : String
+  /// The marked value; for `auto_mark_vars`, an object from each recorded
+  /// variable's name to its value.
   value : Json
+  /// Whether `value` holds named variables, each drawn on its own.
+  named : Bool
 }
 
 ///|
@@ -37,18 +41,23 @@ pub fn[T : ToJson] mark(
   loc~ : SourceLoc,
 ) -> Unit {
   if recorder.on {
-    keep(line_of(loc), note, () => value.to_json())
+    keep(line_of(loc), note, false, () => value.to_json())
   }
 }
 
 ///|
 /// Keeps a mark unless the step already has `max_marks`; the value is only
 /// converted when it is kept.
-fn keep(place : String, note : String, value : () -> Json) -> Unit {
+fn keep(
+  place : String,
+  note : String,
+  named : Bool,
+  value : () -> Json,
+) -> Unit {
   if recorder.marks.length() >= max_marks {
     recorder.dropped += 1
   } else {
-    recorder.marks.push({ place, note, value: value(), })
+    recorder.marks.push({ place, note, value: value(), named, })
   }
 }
 
@@ -67,9 +76,47 @@ pub fn[T : ToJson] auto_mark(
   loc~ : SourceLoc,
 ) -> Unit {
   if recorder.on {
-    let file = loc.to_string().split(":").next().unwrap().to_owned()
-    keep("\{file}:\{line}", "before: " + code, () => value.to_json())
+    keep(line_at(loc, line), "before: " + code, false, () => value.to_json())
   }
+}
+
+///|
+/// The mark that `frontierlab-instrument` inserts when it records several
+/// variables: records each `(name, value)` that `values` returns before line
+/// `line`, whose source text is `code`, runs.
+///
+/// `values` lists only the variables in scope at that line, and runs only
+/// while `replay` records, so converting them costs nothing elsewhere. Each
+/// variable is drawn on its own, labeled with its name, and a variable that
+/// is the part a view draws is drawn by that view. Write `mark` by hand; this
+/// form is generated, and the tool removes every call to it with `--remove`.
+#callsite(autofill(loc))
+pub fn auto_mark_vars(
+  values : () -> Array[(String, Json)],
+  line : Int32,
+  code : String,
+  loc~ : SourceLoc,
+) -> Unit {
+  if recorder.on {
+    keep(line_at(loc, line), "before: " + code, true, () => {
+      Json::object(Map::from_array(values()))
+    })
+  }
+}
+
+///|
+/// One variable for `auto_mark_vars`: its name and its value as JSON. The
+/// tool generates these calls inside the function that `auto_mark_vars`
+/// runs only while recording.
+pub fn[T : ToJson] watched(name : String, value : T) -> (String, Json) {
+  (name, value.to_json())
+}
+
+///|
+/// `file.mbt:line`, with the file of `loc` and the line given.
+fn line_at(loc : SourceLoc, line : Int32) -> String {
+  let file = loc.to_string().split(":").next().unwrap().to_owned()
+  "\{file}:\{line}"
 }
 
 ///|
@@ -132,6 +179,101 @@ fn mark_snapshot(
 }
 
 ///|
+/// Draws each variable of a named mark the way `mark_snapshot` draws a
+/// marked value, and labels its parts with the variable's name, so that the
+/// variables sit side by side in one scene.
+fn named_snapshot(
+  value : Json,
+  views : Array[View],
+) -> Snapshot raise @frontierlab.TraceError {
+  guard value is Object(vars) else { return mark_snapshot(value, views) }
+  let objects : Array[@frontierlab.SceneObject] = []
+  let entities : Array[Entity] = []
+  for name, part in vars {
+    let shot = mark_snapshot(part, views)
+    for object in shot.objects {
+      objects.push(renamed(object, name))
+    }
+    for entity in shot.entities {
+      let object_id = var_object_id(name, entity.object_id)
+      entities.push({ ..entity, object_id, key: object_id + "::" + entity.id, })
+    }
+  }
+  { objects, entities, }
+}
+
+///|
+/// The id of a part of variable `name`, so that the parts of different
+/// variables stay apart.
+fn var_object_id(name : String, id : String) -> String {
+  "var:\{name}/\{id}"
+}
+
+///|
+/// Whether `id` is the default drawing of a state or of one variable, which
+/// is always a forest.
+fn is_default_drawing(id : String) -> Bool {
+  id == "state" || (id.has_prefix("var:") && id.has_suffix("/state"))
+}
+
+///|
+/// A part's label with the variable's name: `wider` for the whole value,
+/// `self.buckets` for a field drawn by a view.
+fn var_label(name : String, id : String, label : String) -> String {
+  if label == "State" || id == "fields" {
+    name
+  } else if label.has_prefix("State: ") {
+    name + label[5:].to_owned()
+  } else {
+    name + "." + label
+  }
+}
+
+///|
+fn renamed(
+  object : @frontierlab.SceneObject,
+  name : String,
+) -> @frontierlab.SceneObject raise @frontierlab.TraceError {
+  match object {
+    Sequence(s) =>
+      Sequence(
+        @frontierlab.SequenceState::new(
+          id=var_object_id(name, s.id),
+          label=var_label(name, s.id, s.label),
+          items=s.items,
+        ),
+      )
+    Sets(s) =>
+      Sets(
+        @frontierlab.SetState::new(
+          id=var_object_id(name, s.id),
+          label=var_label(name, s.id, s.label),
+          groups=s.groups,
+        ),
+      )
+    Graph(s) =>
+      Graph(
+        @frontierlab.GraphState::new(
+          id=var_object_id(name, s.id),
+          label=var_label(name, s.id, s.label),
+          nodes=s.nodes,
+          edges=s.edges,
+        ),
+      )
+    Grid(s) =>
+      Grid(
+        @frontierlab.GridState::new(
+          id=var_object_id(name, s.id),
+          label=var_label(name, s.id, s.label),
+          width=s.width,
+          height=s.height,
+          cells=s.cells,
+        ),
+      )
+  }
+}
+
+///|
 /// Adds a trace step for every mark of one step, and the same in text: the
 /// first mark as an outline, later marks as changes from the one before.
 fn record_marks(
@@ -143,8 +285,19 @@ fn record_marks(
   views : Array[View],
 ) -> Unit raise @frontierlab.TraceError {
   let mut previous : Snapshot? = None
+  let mut was_named = false
   for mark in marks {
-    let shot = mark_snapshot(mark.value, views)
+    // A hand-written mark after inserted ones of several variables, or the
+    // other way round, draws other parts: start again from an outline.
+    if mark.named != was_named {
+      previous = None
+    }
+    was_named = mark.named
+    let shot = if mark.named {
+      named_snapshot(mark.value, views)
+    } else {
+      mark_snapshot(mark.value, views)
+    }
     let note = if mark.note == "" { "" } else { " (" + mark.note + ")" }
     log.push("  at " + mark.place + note + ":")
     let (lines, highlighted) = match previous {

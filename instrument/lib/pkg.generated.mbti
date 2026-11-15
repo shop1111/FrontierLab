@@ -20,15 +20,15 @@ pub impl Show for InstrumentError
 // Types and methods
 pub struct Instrumented {
   name : String
-  watch : String
+  watch : Array[String]
   lines : Array[Int32]
 }
 
 pub struct Target {
   name : String
-  watch : String?
+  watch : Array[String]
 }
-pub fn Target::new(String, watch? : String) -> Self
+pub fn Target::new(String, watch? : Array[String]) -> Self
 
 // Type aliases
 
