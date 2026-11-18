@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.14.0 - 2026-11-18
+
+Line-by-line replay can now watch several variables at once, such as the
+table being resized and the new bucket array it is filling, side by side in
+one scene.
 
 - `frontierlab-instrument` records several variables per line:
   `--watch self,wider`, or `--watch` repeated. Each line records the watched
