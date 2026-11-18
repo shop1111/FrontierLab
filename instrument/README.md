@@ -20,6 +20,11 @@ frontierlab-instrument --remove src/hashmap.mbt
 - `--watch VAR` (after an `--fn`) chooses the variable to record. By default
   it is the function's first parameter. A local is recorded only where it is
   in scope: after its `let`, or inside the loop that binds it.
+- `--watch self,wider` (or `--watch` repeated) records several variables.
+  Each line records those in scope there, and the replay draws each one on
+  its own, labeled with its name (`self.buckets`, `wider`). The tool then
+  inserts `@explore.auto_mark_vars(() => [@explore.watched("self", self), ...],
+  LINE, "code")`; the values are converted only while `replay` records.
 - `--stdout` prints the instrumented source instead of changing the file.
 - `--pkg ALIAS` is the name under which the file's package imports
   `shop1111/frontierlab/explore` (default `explore`). That package must import

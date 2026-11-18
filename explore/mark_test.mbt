@@ -168,8 +168,8 @@ test "marks of a part skip views that do not fit" {
       #|    State: [0, 0]
       #|  at explore/mark_test.mbt:142 (whole):
       #|    - State: [0, 0]
-      #|    + (0, 0) = 0
-      #|    + (1, 0) = 0
+      #|    + cells:
+      #|        0 0
       #|  at explore/mark_test.mbt:144 (after):
       #|    ~ (0, 0): 0 -> 1
       #|  ~ (0, 0): 0 -> 1
@@ -242,4 +242,153 @@ test "inserted marks name the line and draw a part with its view" {
   )
   // Outside a replay an inserted mark does nothing.
   @explore.auto_mark(1, 1, "x")
+}
+
+///|
+test "inserted marks of several variables draw each one under its name" {
+  // What `frontierlab-instrument --fn widen --watch t,wider,moved` produces:
+  // a variable is listed only where it is in scope.
+  let widen = (t : Chained) => {
+    @explore.auto_mark_vars(
+      () => [@explore.watched("t", t)],
+      300,
+      "let wider = ...",
+    )
+    let wider : Array[Array[Int32]] = [[], [], [], []]
+    @explore.auto_mark_vars(
+      () => [@explore.watched("t", t), @explore.watched("wider", wider)],
+      301,
+      "let mut moved = 0",
+    )
+    let mut moved = 0
+    for i, slot in t.slots {
+      @explore.auto_mark_vars(
+        () => {
+          [
+            @explore.watched("t", t),
+            @explore.watched("wider", wider),
+            @explore.watched("moved", moved),
+          ]
+        },
+        303,
+        "wider[i] = slot",
+      )
+      wider[i] = slot
+      moved += 1
+    }
+    @explore.auto_mark_vars(
+      () => {
+        [
+          @explore.watched("t", t),
+          @explore.watched("wider", wider),
+          @explore.watched("moved", moved),
+        ]
+      },
+      306,
+      "t.slots = wider",
+    )
+    t.slots = wider
+    // A hand-written mark after them is drawn from scratch.
+    @explore.mark(t, note="done")
+    t
+  }
+  let replay = @explore.replay(
+    () => { slots: [[1], [2]], },
+    [@explore.Op::without_arg("widen", widen)],
+    @explore.Step::parse("widen"),
+    views=[Buckets("slots")],
+  )
+  inspect(
+    replay.explain(),
+    content=(
+      #|Initial state:
+      #|  slots:
+      #|    0: 1
+      #|    1: 2
+      #|Step 1: widen
+      #|  at explore/mark_test.mbt:300 (before: let wider = ...):
+      #|    t.slots:
+      #|      0: 1
+      #|      1: 2
+      #|  at explore/mark_test.mbt:301 (before: let mut moved = 0):
+      #|    + wider:
+      #|        0: -
+      #|        1: -
+      #|        2: -
+      #|        3: -
+      #|  at explore/mark_test.mbt:303 (before: wider[i] = slot):
+      #|    + moved: 0
+      #|  at explore/mark_test.mbt:303 (before: wider[i] = slot):
+      #|    moved: 0 -> 1
+      #|    + 1 in bucket 0 (wider)
+      #|  at explore/mark_test.mbt:306 (before: t.slots = wider):
+      #|    moved: 1 -> 2
+      #|    + 2 in bucket 1 (wider)
+      #|  at explore/mark_test.mbt:292 (done):
+      #|    slots:
+      #|      0: 1
+      #|      1: 2
+      #|      2: -
+      #|      3: -
+      #|  slots: 2 -> 4 buckets
+      #|All 1 steps passed. Final state:
+      #|  slots:
+      #|    0: 1
+      #|    1: 2
+      #|    2: -
+      #|    3: -
+    ),
+  )
+  // Each variable is its own object in the player, labeled with its name.
+  let labels = replay.trace.steps[4].scene.objects.map(object => {
+    match object {
+      Sequence(s) => s.label
+      Sets(s) => s.label
+      Graph(s) => s.label
+      Grid(s) => s.label
+    }
+  })
+  assert_eq(labels, ["t.slots", "wider", "moved: 2"])
+}
+
+///|
+test "variables of every drawing keep their names and leave with their scope" {
+  let touch = (g : Grid2) => {
+    let row = g.cells[0]
+    @explore.auto_mark_vars(
+      () => [@explore.watched("g", g), @explore.watched("row", row)],
+      400,
+      "g.cells[0][0] = 1",
+    )
+    g.cells[0][0] = 1
+    // `g` is no longer watched here, as after the scope of a local.
+    @explore.auto_mark_vars(() => [@explore.watched("row", row)], 402, "g")
+    g
+  }
+  let replay = @explore.replay(
+    () => { cells: [[0, 0]], },
+    [@explore.Op::without_arg("touch", touch)],
+    @explore.Step::parse("touch"),
+    views=[Matrix("cells")],
+  )
+  inspect(
+    replay.explain(),
+    content=(
+      #|Initial state:
+      #|  cells:
+      #|    0 0
+      #|Step 1: touch
+      #|  at explore/mark_test.mbt:400 (before: g.cells[0][0] = 1):
+      #|    g.cells:
+      #|      0 0
+      #|    row: [0, 0]
+      #|  at explore/mark_test.mbt:402 (before: g):
+      #|    row: [0, 0] -> [1, 0]
+      #|    - g.cells
+      #|  ~ (0, 0): 0 -> 1
+      #|All 1 steps passed. Final state:
+      #|  cells:
+      #|    1 0
+    ),
+  )
 }

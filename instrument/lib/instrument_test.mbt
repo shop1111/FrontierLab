@@ -42,7 +42,7 @@ test "marks go before every statement, once per line" {
     ),
   )
   assert_eq(done[0].name, "insert")
-  assert_eq(done[0].watch, "t")
+  assert_eq(done[0].watch, ["t"])
   assert_eq(done[0].lines, [2, 3, 4, 5, 7, 8, 11, 12, 14, 15, 16])
   // Removing the marks restores the source exactly.
   assert_eq(@lib.remove(out), (source, 11))
@@ -68,7 +68,7 @@ test "a local is watched only where it is in scope" {
   let (out, done) = @lib.instrument(
     source,
     [
-      @lib.Target::new("HashMap::grow", watch="wider"),
+      @lib.Target::new("HashMap::grow", watch=["wider"]),
       @lib.Target::new("other"),
     ],
     pkg="ex",
@@ -93,13 +93,13 @@ test "a local is watched only where it is in scope" {
     ),
   )
   assert_eq(done.map(f => (f.name, f.watch)), [
-    ("HashMap::grow", "wider"),
-    ("other", "x"),
+    ("HashMap::grow", ["wider"]),
+    ("other", ["x"]),
   ])
   // A method can also be named without its type, and loop variables can be
   // watched inside their loop.
   let (looped, _) = @lib.instrument(source, [
-    @lib.Target::new("grow", watch="entry"),
+    @lib.Target::new("grow", watch=["entry"]),
   ])
   let marked = looped
     .split("\n")
@@ -142,13 +142,13 @@ test "notes are quoted, shortened and survive removal" {
 ///|
 test "problems are reported instead of writing a broken file" {
   let errors = [
-    ("fn f(x : Int) -> Int {\n  x\n}", "g", None),
-    ("fn f() -> Int {\n  1\n}", "f", None),
-    ("fn f(x : Int) -> Int {\n  @explore.auto_mark(x, \"x\"); x\n}", "f", None),
-    ("fn f(x : Int) -> Int {\n  x +\n}", "f", None),
+    ("fn f(x : Int) -> Int {\n  x\n}", "g", []),
+    ("fn f() -> Int {\n  1\n}", "f", []),
+    ("fn f(x : Int) -> Int {\n  @explore.auto_mark(x, \"x\"); x\n}", "f", []),
+    ("fn f(x : Int) -> Int {\n  x +\n}", "f", []),
   ].map(case => {
     let (source, name, watch) = case
-    try @lib.instrument(source, [@lib.Target::new(name, watch?)]) catch {
+    try @lib.instrument(source, [@lib.Target::new(name, watch~)]) catch {
       error => error.to_string()
     } noraise {
       _ => "instrumented"
@@ -178,4 +178,43 @@ test "marks moved onto their own lines by moon fmt are removed whole" {
   assert_eq(@lib.remove(formatted), (source, 2))
   let crlf = formatted.replace_all(old="\n", new="\r\n")
   assert_eq(@lib.remove(crlf).0, source.replace_all(old="\n", new="\r\n"))
+}
+
+///|
+test "several variables are recorded together, each where it is in scope" {
+  let source =
+    #|fn HashMap::grow(self : HashMap) -> Unit {
+    #|  let wider = Array::makei(self.buckets.length() * 2, _ => [])
+    #|  for i, bucket in self.buckets {
+    #|    wider[i] = bucket
+    #|  }
+    #|  self.buckets = wider
+    #|}
+  let (out, done) = @lib.instrument(source, [
+    @lib.Target::new("HashMap::grow", watch=["self", "wider", "bucket"]),
+  ])
+  inspect(
+    out,
+    content=(
+      #|fn HashMap::grow(self : HashMap) -> Unit {
+      #|  @explore.auto_mark_vars(() => [@explore.watched("self", self)], 2, "let wider = Array::makei(self.buckets.length() * 2, _ => [])"); let wider = Array::makei(self.buckets.length() * 2, _ => [])
+      #|  @explore.auto_mark_vars(() => [@explore.watched("self", self), @explore.watched("wider", wider)], 3, "for i, bucket in self.buckets {"); for i, bucket in self.buckets {
+      #|    @explore.auto_mark_vars(() => [@explore.watched("self", self), @explore.watched("wider", wider), @explore.watched("bucket", bucket)], 4, "wider[i] = bucket"); wider[i] = bucket
+      #|  }
+      #|  @explore.auto_mark_vars(() => [@explore.watched("self", self), @explore.watched("wider", wider)], 6, "self.buckets = wider"); self.buckets = wider
+      #|}
+    ),
+  )
+  assert_eq(done[0].watch, ["self", "wider", "bucket"])
+  assert_eq(done[0].lines, [2, 3, 4, 6])
+  assert_eq(@lib.remove(out), (source, 4))
+  // A function that is only named like the inserted calls stays.
+  let kept = "fn f(x : Int) -> Int {\n  @explore.auto_marker(x)\n}"
+  assert_eq(@lib.remove(kept), (kept, 0))
+  // Lines where no watched variable is in scope get no mark.
+  let (late, done) = @lib.instrument(source, [
+    @lib.Target::new("grow", watch=["wider", "bucket"]),
+  ])
+  assert_eq(done[0].lines, [3, 4, 6])
+  assert_false(late.contains("watched(\"self\""))
 }

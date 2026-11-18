@@ -1,15 +1,15 @@
 ///|
-/// A function to instrument, and the variable to record before each of its
+/// A function to instrument, and the variables to record before each of its
 /// statements.
 pub struct Target {
   /// `name` or `Type::name`.
   name : String
-  /// `None` records the function's first parameter.
-  watch : String?
+  /// Empty records the function's first parameter.
+  watch : Array[String]
 }
 
 ///|
-pub fn Target::new(name : String, watch? : String) -> Target {
+pub fn Target::new(name : String, watch~ : Array[String] = []) -> Target {
   { name, watch, }
 }
 
@@ -17,7 +17,7 @@ pub fn Target::new(name : String, watch? : String) -> Target {
 /// What `instrument` did to one function.
 pub struct Instrumented {
   name : String
-  watch : String
+  watch : Array[String]
   /// One-based line numbers that got a mark.
   lines : Array[Int32]
 }
@@ -49,9 +49,32 @@ pub impl Show for InstrumentError with fn output(self, logger) {
 }
 
 ///|
-/// The call inserted before each statement.
+/// What every inserted call starts with: `auto_mark(` for one variable,
+/// `auto_mark_vars(` for several.
 fn call_prefix(pkg : String) -> String {
-  "@" + pkg + ".auto_mark("
+  "@" + pkg + ".auto_mark"
+}
+
+///|
+/// The call inserted before line `line`, whose code is `code`, recording the
+/// variables in scope there. One watched variable is passed directly; several
+/// go through a function that runs only while `replay` records.
+fn call_text(
+  pkg : String,
+  watch : Array[String],
+  in_scope : Array[String],
+  line : Int32,
+  code : String,
+) -> String {
+  let tail = ", \{line}, " + quoted(code) + "); "
+  if watch.length() == 1 {
+    call_prefix(pkg) + "(" + in_scope[0] + tail
+  } else {
+    let values = in_scope
+      .map(name => "@" + pkg + ".watched(" + quoted(name) + ", " + name + ")")
+      .join(", ")
+    call_prefix(pkg) + "_vars(() => [" + values + "]" + tail
+  }
 }
 
 ///|
@@ -77,12 +100,13 @@ fn quoted(text : String) -> String {
 /// Finds where statements start inside one function body.
 priv struct Finder {
   source : String
-  watch : String
-  /// Whether `watch` is in scope at the current statement: always for a
-  /// parameter, and after its `let` for a local.
-  mut active : Bool
-  /// Character offsets, at most one per line.
-  starts : Array[Int32]
+  watch : Array[String]
+  /// Whether each watched variable is in scope at the current statement:
+  /// always for a parameter, and after its `let` for a local.
+  mut active : Array[Bool]
+  /// Character offsets, at most one per line, with the watched variables in
+  /// scope there.
+  starts : Array[(Int32, Array[String])]
   lines : Map[Int32, Bool]
 }
 
@@ -100,12 +124,15 @@ fn binds(pattern : @syntax.Pattern, name : String) -> Bool {
 }
 
 ///|
-/// Runs `f` with `watch` in scope when `bound`, and restores the scope after.
-fn Finder::scoped(self : Finder, bound : Bool, f : () -> Unit) -> Unit {
+/// Runs `f` with the watched variables that `bound` accepts in scope, and
+/// restores the scope after.
+fn Finder::scoped(
+  self : Finder,
+  bound : (String) -> Bool,
+  f : () -> Unit,
+) -> Unit {
   let saved = self.active
-  if bound {
-    self.active = true
-  }
+  self.active = self.watch.mapi((i, name) => saved[i] || bound(name))
   f()
   self.active = saved
 }
@@ -113,9 +140,15 @@ fn Finder::scoped(self : Finder, bound : Bool, f : () -> Unit) -> Unit {
 ///|
 fn Finder::statement(self : Finder, e : @syntax.Expr) -> Unit {
   let start = e.loc().start
-  if self.active && !self.lines.contains(start.lnum) {
+  let in_scope = []
+  for i, name in self.watch {
+    if self.active[i] {
+      in_scope.push(name)
+    }
+  }
+  if !in_scope.is_empty() && !self.lines.contains(start.lnum) {
     self.lines[start.lnum] = true
-    self.starts.push(start.cnum)
+    self.starts.push((start.cnum, in_scope))
   }
 }
 
@@ -151,12 +184,12 @@ fn Finder::block(self : Finder, e : @syntax.Expr) -> Unit {
     Let(pattern~, expr~, body~, ..) => {
       self.statement(e)
       self.inner(expr)
-      self.scoped(binds(pattern, self.watch), () => self.block(body))
+      self.scoped(name => binds(pattern, name), () => self.block(body))
     }
     LetMut(binder~, expr~, body~, ..) => {
       self.statement(e)
       self.inner(expr)
-      self.scoped(binder.name == self.watch, () => self.block(body))
+      self.scoped(name => binder.name == name, () => self.block(body))
     }
     // Local functions run later, with their own variables; skip their bodies.
     LetFn(body~, ..) | LetAnd(body~, ..) => {
@@ -212,7 +245,7 @@ fn Finder::inner(self : Finder, e : @syntax.Expr) -> Unit {
       }
     }
     For(binders~, body~, for_else~, ..) => {
-      let bound = binders.iter().any(fn(pair) { pair.0.name == self.watch })
+      let bound = name => binders.iter().any(pair => pair.0.name == name)
       self.scoped(bound, () => self.nested(body))
       if for_else is Some(other) {
         self.nested(other)
@@ -220,7 +253,7 @@ fn Finder::inner(self : Finder, e : @syntax.Expr) -> Unit {
     }
     ForEach(patterns~, expr~, body~, else_block~, ..) => {
       self.inner(expr)
-      let bound = patterns.iter().any(fn(p) { binds(p, self.watch) })
+      let bound = name => patterns.iter().any(p => binds(p, name))
       self.scoped(bound, () => self.nested(body))
       if else_block is Some(other) {
         self.nested(other)
@@ -315,7 +348,9 @@ fn parse(source : String) -> @list.List[@syntax.Impl] raise InstrumentError {
 ///|
 /// Inserts `@explore.auto_mark(watch, line, "source line")` before every statement
 /// of each target function, at most once per line, so that `replay` shows the
-/// watched value before each line runs.
+/// watched value before each line runs. With several watched variables it
+/// inserts `@explore.auto_mark_vars` with those in scope at each line, and
+/// lines where none is in scope get no mark.
 ///
 /// Marks go on the line of the statement they precede, so line numbers do not
 /// change and the player shows the original ones. Bodies of local functions
@@ -345,24 +380,26 @@ pub fn instrument(
         continue
       }
       found = true
-      let watch = match target.watch {
-        Some(name) => name
-        None =>
-          match first_parameter(fun_decl) {
-            Some(name) => name
-            None => raise NothingToWatch(function_name(fun_decl))
-          }
+      let watch = if target.watch.is_empty() {
+        match first_parameter(fun_decl) {
+          Some(name) => [name]
+          None => raise NothingToWatch(function_name(fun_decl))
+        }
+      } else {
+        target.watch
       }
+      let params = parameters(fun_decl)
       let finder = {
         source,
         watch,
-        active: parameters(fun_decl).contains(watch),
+        active: watch.map(name => params.contains(name)),
         starts: [],
         lines: {},
       }
       finder.block(expr)
       let marked = []
-      for start in finder.starts {
+      for pair in finder.starts {
+        let (start, in_scope) = pair
         // The statement's line, from its offset.
         let mut line = 0
         let mut seen = 0
@@ -373,11 +410,7 @@ pub fn instrument(
         inserts.push(
           (
             start,
-            call_prefix(pkg) +
-            watch +
-            ", \{line + 1}, " +
-            quoted(line_code(lines[line])) +
-            "); ",
+            call_text(pkg, watch, in_scope, line + 1, line_code(lines[line])),
           ),
         )
         marked.push(line + 1)
@@ -415,8 +448,18 @@ pub fn remove(source : String, pkg~ : String = "explore") -> (String, Int32) {
   let blank = fn(c : Int32) { c == ' '.to_int() || c == '\t'.to_int() }
   while source.clamped_view(start=i).find(prefix) is Some(k) {
     let at = i + k
-    // Skip to the closing parenthesis, stepping over string literals.
     let mut j = at + prefix.length()
+    if source.clamped_view(start=j).has_prefix("_vars(") {
+      j += "_vars(".length()
+    } else if source.clamped_view(start=j).has_prefix("(") {
+      j += 1
+    } else {
+      // Another name that starts the same way: keep it.
+      out.write_string(source.clamped_view(start=i, end=j).to_owned())
+      i = j
+      continue
+    }
+    // Skip to the closing parenthesis, stepping over string literals.
     let mut depth = 1
     let mut in_string = false
     while j < source.length() && depth > 0 {

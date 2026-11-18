@@ -75,6 +75,10 @@ fn moved_line(old : Entity, new : Entity) -> String {
 /// sequences, whose items shift together.
 fn change_lines(before : Snapshot, after : Snapshot, d : Diff) -> Array[String] {
   let lines : Array[String] = []
+  let after_ids : Map[String, Bool] = Map([])
+  for object in after.objects {
+    after_ids[object_id(object)] = true
+  }
   let lists : Map[String, @frontierlab.SequenceState] = Map([])
   // Empty buckets hold no entities, so a resize shows as a new bucket count.
   let buckets : Map[String, Int32] = Map([])
@@ -104,16 +108,60 @@ fn change_lines(before : Snapshot, after : Snapshot, d : Diff) -> Array[String] 
   for _, list in lists {
     lines.push("- \{list.label}: \{list_text(list)}")
   }
+  // A part that appears, such as a variable coming into scope, is shown
+  // whole; one that goes away is named. Sequences are handled above.
+  let earlier : Map[String, @frontierlab.SceneObject] = Map([])
+  for object in before.objects {
+    earlier[object_id(object)] = object
+  }
+  let appeared : Map[String, Bool] = Map([])
+  for object in after.objects {
+    let id = object_id(object)
+    match (earlier.get(id), object) {
+      (_, Sequence(_)) => ()
+      (None, _) => {
+        appeared[id] = true
+        for i, line in outline([object]) {
+          lines.push(if i == 0 { "+ " + line } else { "  " + line })
+        }
+      }
+      // A plain value has no entities; its text is in the label.
+      (Some(Graph(was)), Graph(now)) if was.nodes.is_empty() &&
+        now.nodes.is_empty() &&
+        was.label != now.label => lines.push(label_change(was.label, now.label))
+      _ => ()
+    }
+    earlier.remove(id)
+  }
+  for _, object in earlier {
+    if !(object is Sequence(_)) {
+      lines.push("- " + object_label(object))
+    }
+  }
+  // With several variables, say whose part changed.
+  let labels : Map[String, String] = Map([])
+  for object in after.objects {
+    labels[object_id(object)] = object_label(object)
+  }
+  let whose = fn(line : String, entity : Entity) {
+    if entity.object_id.has_prefix("var:") &&
+      labels.get(entity.object_id) is Some(label) {
+      "\{line} (\{label})"
+    } else {
+      line
+    }
+  }
   for pair in d.changed {
     match pair {
       (_, { kind: Item, .. }) => ()
-      (None, entity) => lines.push(added_line(entity))
-      (Some(was), entity) => lines.push(moved_line(was, entity))
+      (_, entity) if appeared.contains(entity.object_id) => ()
+      (None, entity) => lines.push(whose(added_line(entity), entity))
+      (Some(was), entity) => lines.push(whose(moved_line(was, entity), entity))
     }
   }
   for entity in d.removed {
-    if !(entity.kind is Item) {
-      lines.push(removed_line(entity))
+    if !(entity.kind is Item) && after_ids.contains(entity.object_id) {
+      lines.push(whose(removed_line(entity), entity))
     }
   }
   lines
@@ -152,7 +200,7 @@ fn outline(objects : Array[@frontierlab.SceneObject]) -> Array[String] {
       }
       Graph(state) =>
         // The default drawing is always a forest; views draw any graph.
-        if state.id == "state" {
+        if is_default_drawing(state.id) {
           tree_outline(state, lines)
         } else {
           adjacency_outline(state, lines)
@@ -228,4 +276,32 @@ fn adjacency_outline(
     let list = if targets.is_empty() { "-" } else { targets.join(", ") }
     lines.push("  \{shown(node.label)} -> \{list}")
   }
+}
+
+///|
+fn object_id(object : @frontierlab.SceneObject) -> String {
+  match object {
+    Sequence(s) => s.id
+    Sets(s) => s.id
+    Graph(s) => s.id
+    Grid(s) => s.id
+  }
+}
+
+///|
+fn object_label(object : @frontierlab.SceneObject) -> String {
+  match object {
+    Sequence(s) => s.label
+    Sets(s) => s.label
+    Graph(s) => s.label
+    Grid(s) => s.label
+  }
+}
+
+///|
+/// `moved: 0 -> 1` for labels `moved: 0` and `moved: 1`.
+fn label_change(was : String, now : String) -> String {
+  // Both labels name the same part, so only the text after `: ` differs.
+  let cut = now.find(": ").unwrap_or(-2) + 2
+  was + " -> " + now[cut:].to_owned()
 }

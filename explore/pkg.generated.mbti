@@ -12,12 +12,17 @@ import {
 #callsite(autofill(loc))
 pub fn[T : @json.ToJson] auto_mark(T, Int32, String, loc~ : SourceLoc) -> Unit
 
+#callsite(autofill(loc))
+pub fn auto_mark_vars(() -> Array[(String, @json.Json)], Int32, String, loc~ : SourceLoc) -> Unit
+
 pub fn[S : @json.ToJson] explore(() -> S, Array[Op[S]], invariant? : (S) -> String?, check? : (S, Step) -> String?, model? : Model, views? : Array[View], cases? : Int32, max_steps? : Int32, max_arg? : Int32, max_shrinks? : Int32, seed? : UInt64, title? : String, options? : @frontierlab.TraceOptions) -> Exploration? raise @frontierlab.TraceError
 
 #callsite(autofill(loc))
 pub fn[T : @json.ToJson] mark(T, note? : String, loc~ : SourceLoc) -> Unit
 
 pub fn[S : @json.ToJson] replay(() -> S, Array[Op[S]], Array[Step], invariant? : (S) -> String?, check? : (S, Step) -> String?, model? : Model, views? : Array[View], window? : Int32, title? : String, options? : @frontierlab.TraceOptions) -> Replay raise @frontierlab.TraceError
+
+pub fn[T : @json.ToJson] watched(String, T) -> (String, @json.Json)
 
 // Errors
 
