@@ -301,9 +301,7 @@ fn object_label(object : @frontierlab.SceneObject) -> String {
 ///|
 /// `moved: 0 -> 1` for labels `moved: 0` and `moved: 1`.
 fn label_change(was : String, now : String) -> String {
-  match (was.find(": "), now.find(": ")) {
-    (Some(i), Some(j)) if was[:i] == now[:j] =>
-      was + " -> " + now[j + 2:].to_owned()
-    _ => was + " -> " + now
-  }
+  // Both labels name the same part, so only the text after `: ` differs.
+  let cut = now.find(": ").unwrap_or(-2) + 2
+  was + " -> " + now[cut:].to_owned()
 }

@@ -350,3 +350,45 @@ test "inserted marks of several variables draw each one under its name" {
   })
   assert_eq(labels, ["t.slots", "wider", "moved: 2"])
 }
+
+///|
+test "variables of every drawing keep their names and leave with their scope" {
+  let touch = (g : Grid2) => {
+    let row = g.cells[0]
+    @explore.auto_mark_vars(
+      () => [@explore.watched("g", g), @explore.watched("row", row)],
+      400,
+      "g.cells[0][0] = 1",
+    )
+    g.cells[0][0] = 1
+    // `g` is no longer watched here, as after the scope of a local.
+    @explore.auto_mark_vars(() => [@explore.watched("row", row)], 402, "g")
+    g
+  }
+  let replay = @explore.replay(
+    () => { cells: [[0, 0]], },
+    [@explore.Op::without_arg("touch", touch)],
+    @explore.Step::parse("touch"),
+    views=[Matrix("cells")],
+  )
+  inspect(
+    replay.explain(),
+    content=(
+      #|Initial state:
+      #|  cells:
+      #|    0 0
+      #|Step 1: touch
+      #|  at explore/mark_test.mbt:400 (before: g.cells[0][0] = 1):
+      #|    g.cells:
+      #|      0 0
+      #|    row: [0, 0]
+      #|  at explore/mark_test.mbt:402 (before: g):
+      #|    row: [0, 0] -> [1, 0]
+      #|    - g.cells
+      #|  ~ (0, 0): 0 -> 1
+      #|All 1 steps passed. Final state:
+      #|  cells:
+      #|    1 0
+    ),
+  )
+}

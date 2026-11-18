@@ -183,10 +183,9 @@ fn mark_snapshot(
 /// marked value, and labels its parts with the variable's name, so that the
 /// variables sit side by side in one scene.
 fn named_snapshot(
-  value : Json,
+  vars : Map[String, Json],
   views : Array[View],
 ) -> Snapshot raise @frontierlab.TraceError {
-  guard value is Object(vars) else { return mark_snapshot(value, views) }
   let objects : Array[@frontierlab.SceneObject] = []
   let entities : Array[Entity] = []
   for name, part in vars {
@@ -293,10 +292,9 @@ fn record_marks(
       previous = None
     }
     was_named = mark.named
-    let shot = if mark.named {
-      named_snapshot(mark.value, views)
-    } else {
-      mark_snapshot(mark.value, views)
+    let shot = match mark.value {
+      Object(vars) if mark.named => named_snapshot(vars, views)
+      value => mark_snapshot(value, views)
     }
     let note = if mark.note == "" { "" } else { " (" + mark.note + ")" }
     log.push("  at " + mark.place + note + ":")
