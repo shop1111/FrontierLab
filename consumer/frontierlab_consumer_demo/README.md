@@ -1,7 +1,7 @@
 # FrontierLab published-package consumer
 
 This directory is a standalone MoonBit project that depends on
-`shop1111/frontierlab@0.13.1` from Mooncakes. It does not use a local path
+`shop1111/frontierlab@0.14.0` from Mooncakes. It does not use a local path
 override or copy FrontierLab source code.
 
 It plays the part of an external user who has written their own data
@@ -26,7 +26,7 @@ moon test --target all --deny-warn
 moon run . -- evidence
 ```
 
-`moon tree` must resolve exactly `shop1111/frontierlab@0.13.1`. The
+`moon tree` must resolve exactly `shop1111/frontierlab@0.14.0`. The
 executable does three things:
 
 1. `explore` searches random `push`/`pop` sequences, finds the bug, and
